@@ -276,7 +276,7 @@ def get_matrix(df):
 
     samples.append('Mass')
 
-    t = df[samples].set_index('Mass').rename(columns={'index':'SampleID'})
+    t = df[samples].set_index('Mass').rename(columns={'index': 'SampleID'})
 
     t = t.replace(0, np.nan)
 
