@@ -1,0 +1,9 @@
+Class,OC_low,OC_high,HC_low,HC_high
+Lipid,0,0.3,1.5,2.5
+Unsaturated HC,0,0.125,0.8,1.5
+Condensed HC,0,0.95,0.2,0.8
+Protein,0.3,0.55,1.5,2.3
+Amino sugar,0.55,0.7,1.5,2.2
+Carbohydrate,0.7,1.5,1.5,2.5
+Lignin,0.125,0.65,0.8,1.5
+Tannin,0.65,1.1,0.8,1.5
