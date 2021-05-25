@@ -13,8 +13,10 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(RColorBrewer)
   library(ggnewscale)
-  require(ggpubr)
-  require(rstatix)
+  library(ggpubr)
+  library(rstatix)
+  library(KEGGREST)
+  library(vegan)
 }) 
 
 # Values between two '%' are to be replaced by the correct values during the python script
@@ -43,7 +45,7 @@ classification <- read_csv(classification.file, col_types = cols())
 # Intensity data file
 df_longer <- df %>%
   pivot_longer(metadata$SampleID, names_to = 'SampleID', values_to = 'NormIntensity') %>% 
-  filter(NormIntensity > 0)
+  filter(NormIntensity != 0)
 df_longer <- left_join(df_longer, metadata, by = 'SampleID')
 
 # Class composition
@@ -72,6 +74,11 @@ class_rect <-  geom_rect(data = classification,
                          inherit.aes = FALSE, 
                          linetype = 'dashed') 
 
+## Set samples color names
+
+my_colors <- get_palette('Dark2', length(unique(df_longer$%group1%)))
+names(my_colors) <- unique(df_longer$%group1%) 
+
 for(var in c('GFE', 'AI_mod', 'DBE')){
   var_s = syms(var)
   vk_plot <- ggplot(df_longer,
@@ -87,74 +94,12 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
          color = var) +
     new_scale_color() +
     class_rect  +
-    scale_color_brewer(palette = 'Dark2') +
+    scale_color_manual(values = get_palette('d3', 8)) +
     theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
     facet_wrap(%group1% ~ %group2%)
   
   filename <- file.path(my_outdir, paste0('vk_', var, '.png'))
-  ggsave(filename, vk_plot, dpi = 300, width = 8)
-}
-
-## Group comparisons
-
-# Grouping variable 1
-
-df_w <- df_longer %>% 
-  pivot_wider(values_from = '%group1%', names_from = '%group1%', names_prefix = 'GRP_') %>% 
-  select(Mass, HC, OC, contains('GRP_')) %>% 
-  group_by(Mass) %>% 
-  fill(contains('GRP_'), .direction = 'downup')  %>% 
-  distinct() %>% 
-  unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
-
-vk_plot <- ggplot(df_w,
-                  aes(x = OC,
-                      y = HC,
-                      color = Presence)) +
-  geom_point() +
-  theme_bw() +
-  scale_color_brewer(palette = 'Paired') +
-  new_scale_color() +
-  class_rect  +
-  scale_color_brewer(palette = 'Dark2') +
-  labs(x = 'O:C',
-       y = 'H:C',
-       title = paste0('Van Krevelen Diagram by %group1%')) +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
-
-filename <- file.path(my_outdir, 'comparison_vk_%group1%.png')
-ggsave(filename, vk_plot, dpi = 300, width = 8)
-
-# Grouping variable 2
-
-group2 <- '%group2%'
-
-if(!is.null(group2)){
-  df_w <- df_longer %>% 
-    pivot_wider(values_from = '%group2%', names_from = '%group2%', names_prefix = 'GRP_') %>% 
-    select(Mass, HC, OC, contains('GRP_')) %>% 
-    group_by(Mass) %>% 
-    fill(contains('GRP_'), .direction = 'downup')  %>% 
-    distinct() %>% 
-    unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
-  
-  vk_plot <- ggplot(df_w,
-                    aes(x = OC,
-                        y = HC,
-                        color = Presence)) +
-    geom_point() +
-    theme_bw() +
-    scale_color_brewer(palette = 'Paired') +
-    new_scale_color() +
-    class_rect  +
-    scale_color_brewer(palette = 'Dark2') +
-    labs(x = 'O:C',
-         y = 'H:C',
-         title = paste0('Van Krevelen Diagram by %group2%')) +
-    theme(plot.title = element_text(face = 'bold', hjust = 0.5))
-  
-  filename <- file.path(my_outdir, 'comparison_vk_%group2%.png')
-  ggsave(filename, vk_plot, dpi = 300, width = 8)
+  ggsave(filename, vk_plot, dpi = 300, height = 8, width = 15)
 }
 
 
@@ -165,8 +110,8 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
   density_plot <- ggplot(df_longer,
                          aes(x = (!!! var_s),
                              fill = %group1%)) +
-    geom_density(alpha = 0.4) +
-    scale_fill_brewer(palette = 'Dark2') +
+    geom_density(alpha = 0.7) +
+    scale_fill_manual(values = my_colors) +
     theme_bw() +
     labs(title = paste(var, 'density plot'),
          x = var) +
@@ -181,7 +126,7 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
 for(var in c('GFE', 'AI_mod', 'NOSC')){
   
   var_s = syms(var)
-  formula <- formula(paste0(var, ' ~ Habitat'))
+  formula <- formula(paste0(var, ' ~ %group1%'))
   stat.test <- df_longer %>% 
     group_by(%group2%) %>% 
     tukey_hsd(formula) %>% 
@@ -191,9 +136,9 @@ for(var in c('GFE', 'AI_mod', 'NOSC')){
                         aes(x = %group1%,
                             y = (!!! var_s),
                             fill = %group1%)) +
-    geom_violin(alpha = 0.5) +
+    geom_violin(alpha = 0.7) +
     geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_fill_manual(values = my_colors) +
     theme_bw() +
     stat_pvalue_manual(stat.test,
                        label = 'p.adj.signif', inherit.aes = FALSE,
@@ -205,6 +150,55 @@ for(var in c('GFE', 'AI_mod', 'NOSC')){
   
   filename <- file.path(my_outdir, paste0('violin_plot_', var, '.png'))
   ggsave(filename, violin_plot, dpi = 300, width = 8)
+}
+
+#### Weighted Thermodynamical indices ####
+
+# Magnitude-weighted values
+
+for(var in c('GFE', 'AI_mod', 'NOSC')){
+  
+  var_s = syms(var)
+  newnames <- paste0(var, c('_weighted', '_magniture_average'))
+  
+  weighted_df <- df_longer %>%  
+    mutate(w = (!!! var_s) * NormIntensity) %>% 
+    select(Mass, SampleID, NormIntensity, !!! var_s, w) %>% 
+    group_by(SampleID) %>% 
+    add_tally(w, name = 'sum_w') %>% 
+    add_tally(NormIntensity, name = 'sum_intensity') %>% 
+    ungroup() %>% 
+    mutate(m_avg = sum_w/sum_intensity) %>% 
+    select(SampleID, !!! var_s, w, m_avg) %>% 
+    rename(!!newnames[1] := w, !!newnames[2] := m_avg) %>% 
+    pivot_longer(-SampleID, names_to = 'weighted_idx', values_to = 'value') %>% 
+    left_join(metadata, by = 'SampleID')
+  
+  stat.test <- weighted_df %>%
+    group_by(weighted_idx) %>% 
+    tukey_hsd(value ~ %group1%) %>% 
+    add_y_position(scales = 'free_y', step.increase = 1)
+  
+  weighted_plot <- ggplot(weighted_df) +
+    geom_boxplot(aes(x = %group1%,
+                     y = value,
+                     fill = %group1%)) +
+    stat_pvalue_manual(stat.test,
+                       label = 'p.adj.signif', inherit.aes = FALSE,
+                       hide.ns = TRUE) +
+    facet_wrap(~weighted_idx, scales = 'free_y') +
+    theme_bw() +
+    labs(title = paste0(var, ' - Weighted abundance'),
+         caption = '"_weighted" index are calculated by multiplying the index (i.e. GFE, DBE or IA) times
+         the normalized intensity per each of the detected masses.
+         "_magniture average" index are calculated by dividing
+         the total sum of the "_weighted" index by the total sum of the normalized 
+         intensities per each of the samples.') +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  
+  filename <- file.path(my_outdir, paste0(var, '_weighted_abundance.png'))
+  ggsave(filename, weighted_plot, dpi = 300)
+  
 }
 
 #### Plot - Class comp bar####
@@ -242,3 +236,316 @@ el_bar <- el_comp %>%
 
 filename <- file.path(my_outdir, 'Elemental_composition.png')
 ggsave(filename, el_bar, dpi = 300)
+
+#### Chemodiversity index ####
+
+intensity_matrix <- df %>% 
+  column_to_rownames(var = 'Mass') %>% 
+  select(all_of(metadata$SampleID)) %>% 
+  t()
+
+richness <- specaccum(intensity_matrix, method = 'random', permutations = 100)
+
+richness.long <- as_tibble(t(richness$perm))
+colnames(richness.long) <- 1:ncol(richness.long)
+
+richness.long <- richness.long %>% 
+  pivot_longer(everything(), names_to = 'Sites', values_to = 'Richness')
+
+richness.long$Sites <- as.numeric(richness.long$Sites)
+
+richness.plot <- ggplot(richness.long,
+                        aes(x = Sites,
+                            y = Richness,
+                            group = Sites)) +
+  geom_boxplot(fill = 'yellow') +
+  theme_bw()
+
+filename <- file.path(my_outdir, 'richness_plot.png')
+ggsave(filename, richness.plot)
+
+shannon_diversity <- diversity(intensity_matrix, index = 'shannon')
+pielou_evenness <- shannon_diversity / log(specnumber(intensity_matrix))
+chemodiversity_index <- tibble(SampleID = names(shannon_diversity), shannon_index = shannon_diversity, evenness = pielou_evenness)
+chemodiversity_index <- left_join(chemodiversity_index, metadata, by = 'SampleID')
+
+shannon.plot <- ggplot(chemodiversity_index,
+                       aes(x = %group1%,
+                           y = shannon_index,
+                           fill = %group1%)) +
+  geom_boxplot() +
+  scale_fill_manual(values = my_colors) +
+  theme_bw() +
+  labs(title = 'Shannon diversity',
+       y = 'Shannon diversity index',
+       fill = '%group1%') +
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+        axis.title.x = element_blank())
+
+filename <- file.path(my_outdir, 'shannon_index.png')
+ggsave(filename, shannon.plot)
+
+pielou.plot <- ggplot(chemodiversity_index,
+                      aes(x = %group1%,
+                          y = evenness,
+                          fill = %group1%)) +
+  geom_boxplot() +
+  scale_fill_manual(values = my_colors) +
+  theme_bw() +
+  labs(title = "Pielou's evenness",
+       y = 'Evenness',
+       fill = '%group1%') +
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+        axis.title.x = element_blank())
+
+filename <- file.path(my_outdir, 'pielou_evenness.png')
+ggsave(filename, pielou.plot)
+
+#### Comparisons ####
+
+### Grouping variable 1
+
+group1 <- '%group1%'
+group1_s <- syms(group1)
+
+comparison_dir <- file.path(my_outdir, paste0('Comparisons-', group1))
+dir.create(comparison_dir)
+
+## Group comparison
+
+df_w <- df_longer %>% 
+  pivot_wider(names_from = all_of(group1), values_from = group1, names_prefix = 'GRP_') %>% 
+  select(Mass, HC, OC, contains('GRP_')) %>% 
+  group_by(Mass) %>% 
+  fill(contains('GRP_'), .direction = 'downup')  %>% 
+  distinct() %>% 
+  unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+
+vk_plot <- ggplot(df_w,
+                  aes(x = OC,
+                      y = HC,
+                      color = Presence)) +
+  geom_point() +
+  theme_bw() +
+  scale_color_brewer(palette = 'Paired', guide = guide_legend(order = 2)) +
+  new_scale_color() +
+  class_rect  +
+  scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+  labs(x = 'O:C',
+       y = 'H:C',
+       title = paste0('Van Krevelen Diagram by ', group1)) +
+  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+
+filename <- file.path(comparison_dir, paste0('VK_', group1, '_all_data.png'))
+ggsave(filename, vk_plot, dpi = 300, height = 8)
+
+## Pairwise comparisons
+
+# Get all combinations possible for group 1
+
+comb_g1 <- combn(unique(df_longer$'%group1%'), 2)
+
+my_colors <- get_palette('Dark2', length(unique(df_longer$'%group1%')) + ncol(comb_g1))
+color_names <- unique(df_longer$'%group1%')
+for(i in 1:ncol(comb_g1)){
+  color_names <- append(color_names, paste0(comb_g1[1,i], ', ', comb_g1[2,i]))
+}
+names(my_colors) <- color_names
+
+for(i in 1:ncol(comb_g1)){
+  val1 <- comb_g1[1, i]
+  val2 <- comb_g1[2, i]
+  
+  df_comb <- df_longer %>% 
+    filter((!!! group1_s) == val1 | (!!! group1_s) == val2) %>% 
+    pivot_wider(names_from = all_of(group1), values_from = group1, names_prefix = 'GRP_') %>% 
+    select(Mass, HC, OC, Class, GFE, DBE, contains('GRP_')) %>% 
+    group_by(Mass) %>% 
+    fill(contains('GRP_'), .direction = 'downup')  %>% 
+    distinct() %>% 
+    unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+  
+  vk_plot <- ggplot(df_comb,
+                    aes(x = OC,
+                        y = HC,
+                        color = Presence)) +
+    geom_point() +
+    theme_bw() +
+    scale_color_manual(values = my_colors, guide = guide_legend(order = 1)) +
+    new_scale_color() +
+    class_rect  +
+    scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+    labs(x = 'O:C',
+         y = 'H:C',
+         title = 'Van Krevelen Diagram') +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+          legend.position = 'bottom')
+  
+  stat.test <- df_comb %>%
+    ungroup() %>% 
+    tukey_hsd(GFE ~ Presence) %>% 
+    add_y_position(step.increase = 1)
+  
+  
+  violin_plot <- ggplot(df_comb,
+                        aes(x = Presence,
+                            y = GFE,
+                            fill = Presence)) +
+    geom_violin(alpha = 0.5) +
+    geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
+    scale_fill_manual(values = my_colors) +
+    theme_bw() +
+    labs(title = 'GFE') +
+    stat_pvalue_manual(stat.test,
+                       label = 'p.adj.signif', inherit.aes = FALSE,
+                       hide.ns = TRUE) +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+          legend.position = 'None',
+          axis.title.x = element_blank())
+  
+  class_bar <- df_comb %>% 
+    group_by(Presence)  %>% 
+    count(Class) %>%
+    mutate(count_perc=n/sum(n)*100) %>% 
+    ggplot(aes(x = Presence,
+               y = count_perc,
+               fill = Class)) +
+    geom_col() +
+    theme_bw() +
+    scale_fill_brewer(palette = 'Set3') +
+    labs(title = 'Class Composition') +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+          axis.title = element_blank(),
+          legend.position = 'bottom')
+  
+  combined_plot <- ggarrange(vk_plot, ggarrange(class_bar, violin_plot, nrow =2, align = 'v'), ncol = 2, widths = c(1.5, 1))
+  combined_plot <- annotate_figure(combined_plot, top = text_grob(paste0(val1, ' vs ', val2), face = 'bold', size = 20))
+  
+  filename <- file.path(comparison_dir, paste0('combined_graph_', val1, '_vs_', val2, '.png'))
+  ggsave(filename, combined_plot, dpi = 300, width = 18, height = 8)
+}
+
+## Grouping variable 2
+
+group2 <- '%group2%'
+group2_s <- syms(group2)
+
+comparison_dir <- file.path(my_outdir, paste0('Comparisons-', group2))
+dir.create(comparison_dir)
+
+if(group2 != 'NULL'){
+  df_w <- df_longer %>% 
+    pivot_wider(names_from = all_of(group2), values_from = group2, names_prefix = 'GRP_') %>% 
+    select(Mass, HC, OC, contains('GRP_')) %>% 
+    group_by(Mass) %>% 
+    fill(contains('GRP_'), .direction = 'downup')  %>% 
+    distinct() %>% 
+    unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+  
+  vk_plot <- ggplot(df_w,
+                    aes(x = OC,
+                        y = HC,
+                        color = Presence)) +
+    geom_point() +
+    theme_bw() +
+    scale_color_brewer(palette = 'Paired') +
+    new_scale_color() +
+    class_rect  +
+    scale_color_brewer(palette = 'Dark2') +
+    labs(x = 'O:C',
+         y = 'H:C',
+         title = paste0('Van Krevelen Diagram by ', group2)) +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  
+  filename <- file.path(comparison_dir, paste0('VK_', group2, '_all_data.png'))
+  ggsave(filename, vk_plot, dpi = 300, height = 8)
+  
+  ## Pairwise comparisons
+  
+  # Get all combinations possible for group 1
+  
+  comb_g2 <- combn(unique(df_longer$'%group2%'), 2)
+  
+  my_colors <- get_palette('jco', length(unique(df_longer$'%group2%')) + ncol(comb_g1))
+  color_names <- unique(df_longer$'%group2%')
+  for(i in 1:ncol(comb_g2)){
+    color_names <- append(color_names, paste0(comb_g2[1,i], ', ', comb_g2[2,i]))
+  }
+  names(my_colors) <- color_names
+  
+  
+  for(i in 1:ncol(comb_g2)){
+    val1 <- comb_g2[1, i]
+    val2 <- comb_g2[2, i]
+    
+    df_comb <- df_longer %>% 
+      filter((!!! group2_s) == val1 | (!!! group2_s) == val2) %>% 
+      pivot_wider(names_from = all_of(group2), values_from = group2, names_prefix = 'GRP_') %>% 
+      select(Mass, HC, OC, Class, GFE, DBE, contains('GRP_')) %>% 
+      group_by(Mass) %>% 
+      fill(contains('GRP_'), .direction = 'downup')  %>% 
+      distinct() %>% 
+      unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+    
+    vk_plot <- ggplot(df_comb,
+                      aes(x = OC,
+                          y = HC,
+                          color = Presence)) +
+      geom_point() +
+      theme_bw() +
+      scale_color_manual(values = my_colors, guide = guide_legend(order = 2)) +
+      new_scale_color() +
+      class_rect  +
+      scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+      labs(x = 'O:C',
+           y = 'H:C',
+           title = 'Van Krevelen Diagram') +
+      theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+            legend.position = 'bottom')
+    
+    stat.test <- df_comb %>%
+      ungroup() %>% 
+      tukey_hsd(GFE ~ Presence) %>% 
+      add_y_position(step.increase = 1)
+    
+    
+    violin_plot <- ggplot(df_comb,
+                          aes(x = Presence,
+                              y = GFE,
+                              fill = Presence)) +
+      geom_violin(alpha = 0.5) +
+      geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
+      scale_fill_manual(values = my_colors) +
+      theme_bw() +
+      labs(title = 'GFE') +
+      stat_pvalue_manual(stat.test,
+                         label = 'p.adj.signif', inherit.aes = FALSE,
+                         hide.ns = TRUE) +
+      theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+            legend.position = 'None',
+            axis.title.x = element_blank())
+    
+    class_bar <- df_comb %>% 
+      group_by(Presence)  %>% 
+      count(Class) %>%
+      mutate(count_perc=n/sum(n)*100) %>% 
+      ggplot(aes(x = Presence,
+                 y = count_perc,
+                 fill = Class)) +
+      geom_col() +
+      theme_bw() +
+      scale_fill_brewer(palette = 'Set3') +
+      labs(title = 'Class Composition') +
+      theme(plot.title = element_text(face = 'bold', hjust = 0.5),
+            axis.title = element_blank(),
+            legend.position = 'bottom')
+    
+    combined_plot <- ggarrange(vk_plot, ggarrange(class_bar, violin_plot, nrow =2, align = 'v'), ncol = 2, widths = c(1.5, 1))
+    combined_plot <- annotate_figure(combined_plot, top = text_grob(paste0(val1, ' vs ', val2), face = 'bold', size = 20))
+    
+    filename <- file.path(comparison_dir, paste0('combined_graph_', val1, '_vs_', val2, '.png'))
+    ggsave(filename, combined_plot, dpi = 300, width = 18, height = 8)
+  }
+  
+}
+
