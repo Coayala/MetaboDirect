@@ -194,19 +194,6 @@ def molecular_formula(df):
 
 
 # --------------------------------------------------------------
-def normalize_intensities(df):
-    """ Normalize intensities (divide by the max value) """
-    
-    samples = get_list_samples(df)
-
-    for col in samples:
-        max_value = df[col].max()
-        df[col] = df[col]/max_value
-        
-    return df
-
-
-# --------------------------------------------------------------
 def get_summary(df, on = 'Class'):
     """ Get summary of class or elemental composition """
     
@@ -216,20 +203,16 @@ def get_summary(df, on = 'Class'):
 
     t = df[samples]
     
-    t = t.melt(id_vars = [on], var_name = 'SampleID', value_name = 'NormIntensity')
+    t = t.melt(id_vars=[on], var_name='SampleID', value_name='NormIntensity')
 
     t = t[t['NormIntensity']>0].reset_index(drop=True)
     
     comp = t.groupby(['SampleID', on
-                        ]).size().reset_index().rename(columns={ 0 : 'Count'})
+                        ]).size().reset_index().rename(columns={0: 'Count'})
 
-    comp = pd.pivot_table(comp, index = 'SampleID', values='Count', columns=on)
+    comp = pd.pivot_table(comp, index='SampleID', values='Count', columns=on)
 
-    # comp['Total_Peaks_with_Formula'] = comp.sum(axis=1)
-
-    comp_p = round(comp.div(comp.sum(axis=1), axis=0)*100,2).reset_index()
-
-    # comp_p = comp_p.melt(id_vars = ['SampleID'], var_name = on, value_name = 'Percent')
+    comp_p = round(comp.div(comp.sum(axis=1), axis=0)*100, 2).reset_index()
     
     return comp_p
 
@@ -255,7 +238,6 @@ def get_summary_indices(df, on='NOSC'):
     t_agg = t_agg.reset_index()
 
     t_agg[[on+'_w_mean', on+'_w_std']] = ''
-
 
     for sample in t['SampleID'].unique():
         # print(sample)
