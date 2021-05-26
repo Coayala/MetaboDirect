@@ -37,7 +37,7 @@ def get_args():
                         type=str)
 
     parser.add_argument('metadata_file',
-                        help='Name of the file with the sample information (metadata) in tabular format',
+                        help='Name of the file with the sample information (metadata) in .csv format',
                         metavar='METADATA',
                         type=str)
 
@@ -62,7 +62,7 @@ def get_args():
                         metavar='STR',
                         type=str,
                         nargs='+',
-                        default=['group1', 'group2'])
+                        required=True)
 
     parser.add_argument('-f',
                         '--filter_by',
