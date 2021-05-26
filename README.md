@@ -42,6 +42,6 @@ Information about the arguments can be obtaining using the option -h/--help
 ```
 ./run_metabodirect.py -h
 ```
-For more information please check the [User Manual]().
+For more information please check the [User Manual](https://coayala.github.io/MetaboDirect/).
 
 
