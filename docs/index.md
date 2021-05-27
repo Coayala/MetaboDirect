@@ -102,11 +102,11 @@ Information about the arguments can be obtained using the -h/--help function.
 
 ### 1. Data pre-processing
 
-![Data pre-processing](/docs/pre_processing.png)
+![Data pre-processing](https://raw.githubusercontent.com/Coayala/MetaboDirect/docs/pre_processing.png)
 
 ### 2. Data diagnostics
 
-![Data diagnostics](/docs/diagnostics.png)
+![Data diagnostics](diagnostics.png)
 
 ### 3. Data exploration
 
