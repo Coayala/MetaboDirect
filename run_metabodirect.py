@@ -101,7 +101,7 @@ def get_args():
                       help='Available methods to normalize data',
                       metavar='STR',
                       type=str,
-                      choices=['mean', 'median', 'z-score', 'sum', 'max', 'minmax', 'binary', 'none'],
+                      choices=['mean', 'median', 'zscore', 'sum', 'max', 'minmax', 'binary', 'none'],
                       default='max')
 
     norm.add_argument('--norm_subset',
@@ -287,7 +287,7 @@ def data_normalization(df, norm_method, norm_subset, subset_parameter=1, log=Fal
         norm_data = (input_data - sample_mean) / (sample_max - sample_min)
     elif norm_method == 'median':
         norm_data = (input_data - sample_median) / (sample_max - sample_min)
-    elif norm_method == 'z-score':
+    elif norm_method == 'zscore':
         norm_data = (input_data - sample_mean) / sample_std
     elif norm_method == 'sum':
         norm_data = input_data / sample_sum

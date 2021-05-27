@@ -32,7 +32,7 @@ df_formula <- df %>%
   select(Mass, MolecularFormula)
 
 compound_df <- tibble(Mass = NA, MolecularFormula = NA, KEGG_id = NA, KEGG_name = NA, KEGG_formula = NA,
-                      KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, .rows = 0)
+                      KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, KEGG_enzyme = NA, KEGG_reaction = NA, .rows = 0)
 
 for(i in 1:nrow(df_formula)){
   formula <- df_formula$MolecularFormula[i]
@@ -48,12 +48,15 @@ for(i in 1:nrow(df_formula)){
                        KEGG_formula = cpd_info[[j]]$FORMULA,
                        KEGG_pathway = ifelse(!is.null(cpd_info[[j]]$PATHWAY), paste(cpd_info[[j]]$PATHWAY, collapse = ';'), NA),
                        KEGG_module = ifelse(!is.null(cpd_info[[j]]$MODULE), paste(cpd_info[[j]]$MODULE, collapse = ';'), NA),
-                       KEGG_brite = ifelse(!is.null(cpd_info[[j]]$BRITE), paste(cpd_info[[j]]$BRITE, collapse = ';'), NA))
+                       KEGG_brite = ifelse(!is.null(cpd_info[[j]]$BRITE), paste(cpd_info[[j]]$BRITE, collapse = ';'), NA),
+                       KEGG_enzyme = ifelse(!is.null(cpd_info[[j]]$ENZYME), paste(cpd_info[[j]]$ENZYME, collapse = ';'), NA),
+                       KEGG_reaction = ifelse(!is.null(cpd_info[[j]]$REACTION), paste(cpd_info[[j]]$REACTION, collapse = ';'), NA))
       }
     }
   } else {
     temp <- tibble(Mass = df_formula$Mass[i], MolecularFormula = df_formula$MolecularFormula[i], KEGG_id = NA, 
-                   KEGG_name = NA, KEGG_formula = NA, KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA)
+                   KEGG_name = NA, KEGG_formula = NA, KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, 
+                   KEGG_enzyme = NA, KEGG_reaction = NA)
   }
   compound_df <- rbind(compound_df, temp)
 }
