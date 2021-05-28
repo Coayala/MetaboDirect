@@ -169,29 +169,42 @@ This script will produce a heatmap as a result with the "SPANS score" of the com
 
 <p align="center"><img src="pre_processing.png" width=1200 alt="Data pre-processing"></p>
 
-DUring this step this step samples will samples will be filtered out based on the `-f` option. Detected peaks will also be filtered out inf the `-m` option was specificied. After filtering elemental ratios will be calculated. Compound classes will be defined based on elemental ratios, the boundaries to determine compound classes can be found (or modified) in the file `/path/to/MetaboDirect/data/compound_class_table.csv`. Thermodynamic indices are calculated based on the assigned molecular formula as follows:
+During this step this step samples will samples will be filtered out based on the `-f` option. Detected peaks will also be filtered out inf the `-m` option was specificied. After filtering elemental ratios will be calculated. Compound classes will be defined based on elemental ratios, the boundaries to determine compound classes can be found (or modified) in the file `/path/to/MetaboDirect/data/compound_class_table.csv`. Thermodynamic indices are calculated based on the assigned molecular formula as follows:
 
 |Index|Formula|
 |---|---|
 |Nominal Oxidation State of Carbon (NOSC)|<img src="https://render.githubusercontent.com/render/math?math=NOSC = \frac{4C + H -3N -2O +5P -2S}{C}%2B4">|
 |Gibbs Free Energy (GFE)|<img src="https://render.githubusercontent.com/render/math?math=GFE=60.3-28.5 * NOSC">|
-|Double Bond Equivalent (DBE)|<img src="https://render.githubusercontent.com/render/math?math=DBE = 1%2B0.5(2C-H%2BN%2BP">|
+|Double Bond Equivalent (DBE)|<img src="https://render.githubusercontent.com/render/math?math=DBE = 1 %2B 0.5(2C-H %2B N %2B P)">|
+|Aromatic Index (AI)|<img src="https://render.githubusercontent.com/render/math?math=AI = 1 %2B C - O - S - \frac{0.5(H %2B P %2B N)}{C - O - S - N - P}">|
+
+Data will be normalized during this step to be used in all of the subsequent analysis.
 
 ### 2. Data diagnostics
 
 <p align="center"><img src="diagnostics.png" width=325 alt="Data diagnostics"></p>
 
+In this step the number of molecular formulas that were assigned per each sample will be plotted. In addition the error (in ppm) during the formula assigment will also be plotted based on the grouping variables.
+
 ### 3. Data exploration
 
 <p align="center"><img src="exploration.png" width=400 alt="Data exploration"></p>
+
+This step will generate and run an R script named `data_exploration.R`. This part of the analysis will generate plots for the elemental and compound class composition, Van Krevelen diagrams of the detected masses, violin and density plots of the previoulsy mentioned thermodynamic indices as well as plot of the diversity indices. In addition, it will generate directories that contain plots of the pairwise comparisons among the different values in the specified grouping variables.
+
+If the option `-k` was selected another R script named `KEGG_annotation.R` will also be run and generated. It will produce an additional .csv file with the KEGG annotation.
 
 ### 4. Statistical Analysis
 
 <p align="center"><img src="statistics.png" width=325 alt="Statistical Analysis"></p>
 
+This step will generate and run an R script named `data_statistics.R`. During this step a Permutational multivariate analysis of variance (PERMANOVA) test will be applied to the dataset. Plots with the ordination of the samples using Non-metric Multidimensional Scaling (NMDS) and Principal Component Analysis (PCA) will be also generated.
+
 ### 5. Transformation Networks
 
 <p align="center"><img src="transformations.png" width=700 alt="Transformation Networks"></p>
+
+This
 
 ## References
 
