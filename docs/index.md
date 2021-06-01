@@ -204,7 +204,7 @@ This step will generate and run an R script named `data_statistics.R`. During th
 
 <p align="center"><img src="transformations.png" width=700 alt="Transformation Networks"></p>
 
-This
+This step is optional since it is time consuming and it requires that Cytoscape is installed on your computer. During this step, the differences in the molecular weight of each of the peaks that were assigned a molecular formula will be calculated. Biochemical transformation will be determined and assigned based on the provided *biochemical transformation key*. The transformation key provided by default has biochemical transformations that are commonly observed on soil samples, this file can be found in the `/path/to/MetaboDirect/data/` directory with the name `transf_key.csv`. A different biochemical transformation key can be provided when running MetaboDirect using the `-b` option. Once transformation are calculated, transformation networks will be generated using Cytoscape. This networks will have the nodes colored based on the compound classes determined during the *pre-processing* step and the edges wil be colored based on the type of biochemical transformation. Finally an R script named `network_stats.R` will be generated and run to plot network statistics.
 
 ## References
 
