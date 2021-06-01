@@ -95,7 +95,7 @@ nmds_plot <- ggplot(nmds.scores,
                         y = NMDS2,
                         color = %group1%,
                         shape = %group2%)) +
-  geom_point() +
+  geom_point(size = 2.5) +
   scale_color_manual(values = my_colors) +
   theme_bw() +
   labs(title = 'NMDS plot') +
@@ -147,7 +147,7 @@ pca_plot <- ggplot(pca_coordinates,
                        y = PC2,
                        color = %group1%,
                        shape = %group2%)) +
-  geom_point() +
+  geom_point(size = 2.5) +
   scale_color_manual(values = my_colors) +
   new_scale_color() +
   geom_segment(data = var_loadings,
@@ -235,14 +235,14 @@ pca_plot <- ggplot(pca_coordinates,
                        y = PC2,
                        color = %group1%,
                        shape = %group2%)) +
-  geom_point() +
+  geom_point(size = 2.5) +
   scale_color_manual(values = my_colors) +
   new_scale_color() +
   geom_segment(data = var_loadings,
                aes(x = 0,
                    y = 0,
-                   xend = Dim.1 * 5,
-                   yend = Dim.2 * 5, 
+                   xend = Dim.1 * 2,
+                   yend = Dim.2 * 2, 
                    color = name), 
                inherit.aes = FALSE,
                arrow = arrow(length = unit(0.03, 'npc')),

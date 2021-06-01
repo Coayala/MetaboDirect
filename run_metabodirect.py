@@ -489,6 +489,9 @@ def calculate_transformations(df, keys, path):
         result_counts = pd.DataFrame(
             result_df.groupby(['SampleID', 'Group', 'Transformation']).size().reset_index(name='Counts'))
 
+        total_transformations = sum(result_counts['Counts'])
+
+        result_counts['Perc_Counts'] = result_counts['Counts'] / total_transformations
         result_counts = result_counts.sort_values(by="Counts")
 
         # Save final_counts

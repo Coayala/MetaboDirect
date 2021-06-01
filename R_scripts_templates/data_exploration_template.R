@@ -105,7 +105,7 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
 
 #### Plot - Density Diagram ####
 
-for(var in c('GFE', 'AI_mod', 'DBE')){
+for(var in c('GFE', 'AI', 'DBE')){
   var_s = syms(var)
   density_plot <- ggplot(df_longer,
                          aes(x = (!!! var_s),
@@ -123,7 +123,7 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
 }
 #### Plot - Violin ####
 
-for(var in c('GFE', 'AI_mod', 'NOSC')){
+for(var in c('GFE', 'AI', 'DBE')){
   
   var_s = syms(var)
   formula <- formula(paste0(var, ' ~ %group1%'))
@@ -156,7 +156,7 @@ for(var in c('GFE', 'AI_mod', 'NOSC')){
 
 # Magnitude-weighted values
 
-for(var in c('GFE', 'AI_mod', 'NOSC')){
+for(var in c('GFE', 'AI', 'DBE')){
   
   var_s = syms(var)
   newnames <- paste0(var, c('_weighted', '_magniture_average'))
@@ -196,7 +196,7 @@ for(var in c('GFE', 'AI_mod', 'NOSC')){
          intensities per each of the samples.') +
     theme(plot.title = element_text(face = 'bold', hjust = 0.5))
   
-  filename <- file.path(my_outdir, paste0(var, '_weighted_abundance.png'))
+  filename <- file.path(my_outdir, paste0('weighted_abundance_',var, '.png'))
   ggsave(filename, weighted_plot, dpi = 300)
   
 }
@@ -216,7 +216,7 @@ class_bar <- class_comp %>%
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   facet_grid(cols = vars(%group2%))
 
-filename <- file.path(my_outdir, 'Class_composition.png')
+filename <- file.path(my_outdir, 'Composition_by_class.png')
 ggsave(filename, class_bar, dpi = 300)
 
 #### Plot - Elemental comp bar####
@@ -234,7 +234,7 @@ el_bar <- el_comp %>%
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   facet_grid(cols = vars(%group2%))
 
-filename <- file.path(my_outdir, 'Elemental_composition.png')
+filename <- file.path(my_outdir, 'Composition_by_element.png')
 ggsave(filename, el_bar, dpi = 300)
 
 #### Chemodiversity index ####
@@ -261,7 +261,7 @@ richness.plot <- ggplot(richness.long,
   geom_boxplot(fill = 'yellow') +
   theme_bw()
 
-filename <- file.path(my_outdir, 'richness_plot.png')
+filename <- file.path(my_outdir, 'Diversity_plot_richness.png')
 ggsave(filename, richness.plot)
 
 shannon_diversity <- diversity(intensity_matrix, index = 'shannon')
@@ -282,7 +282,7 @@ shannon.plot <- ggplot(chemodiversity_index,
   theme(plot.title = element_text(face = 'bold', hjust = 0.5),
         axis.title.x = element_blank())
 
-filename <- file.path(my_outdir, 'shannon_index.png')
+filename <- file.path(my_outdir, 'Diversity_plot_shannon_index.png')
 ggsave(filename, shannon.plot)
 
 pielou.plot <- ggplot(chemodiversity_index,
@@ -298,7 +298,7 @@ pielou.plot <- ggplot(chemodiversity_index,
   theme(plot.title = element_text(face = 'bold', hjust = 0.5),
         axis.title.x = element_blank())
 
-filename <- file.path(my_outdir, 'pielou_evenness.png')
+filename <- file.path(my_outdir, 'Diversity_plot_pielou_evenness.png')
 ggsave(filename, pielou.plot)
 
 #### Comparisons ####
@@ -336,8 +336,28 @@ vk_plot <- ggplot(df_w,
        title = paste0('Van Krevelen Diagram by ', group1)) +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
 
-filename <- file.path(comparison_dir, paste0('VK_', group1, '_all_data.png'))
+filename <- file.path(comparison_dir, paste0('vk_', group1, '_all_data.png'))
 ggsave(filename, vk_plot, dpi = 300, height = 8)
+
+## Upset plot all features group 1
+
+group_list <- list()
+i <- 1
+
+for(val in unique(df_longer$'Habitat')){
+  list_mass <- df_longer %>%
+    filter((!!! group1_s) == val) %>% 
+    pull(Mass)
+  group_list[i] <- list(list_mass)
+  i <- i + 1
+}
+
+names(group_list) <- unique(df_longer$'Habitat')
+
+filename <- file.path(comparison_dir, paste0('upset_plot_', group1, '_all_data.png'))
+png(filename, width = 2400, height = 2400, res = 300)
+upset(fromList(group_list), order.by = "freq")
+dev.off()
 
 ## Pairwise comparisons
 
@@ -423,6 +443,24 @@ for(i in 1:ncol(comb_g1)){
   
   filename <- file.path(comparison_dir, paste0('combined_graph_', val1, '_vs_', val2, '.png'))
   ggsave(filename, combined_plot, dpi = 300, width = 18, height = 8)
+  
+  ## Upset plot
+  
+  list1 <- df_longer %>% 
+    filter((!!! group1_s) == val1) %>% 
+    pull(Mass)
+  
+  list2 <- df_longer %>% 
+    filter((!!! group1_s) == val2) %>% 
+    pull(Mass)
+  
+  group_list <- list(list1, list2)
+  names(group_list) <- c(val1, val2)
+  
+  filename <- file.path(comparison_dir, paste0('upset_plot_', val1, '_vs_', val2, '.png'))
+  png(filename, width = 2400, height = 2400, res = 300)
+  upset(fromList(group_list), order.by = "freq")
+  dev.off()
 }
 
 ## Grouping variable 2
@@ -460,9 +498,30 @@ if(group2 != 'NULL'){
   filename <- file.path(comparison_dir, paste0('VK_', group2, '_all_data.png'))
   ggsave(filename, vk_plot, dpi = 300, height = 8)
   
+  ## Upset plot all features group 2
+  
+  group_list <- list()
+  i <- 1
+  
+  for(val in unique(df_longer$'Habitat')){
+    list_mass <- df_longer %>%
+      filter((!!! group2_s) == val) %>% 
+      pull(Mass)
+    group_list[i] <- list(list_mass)
+    i <- i + 1
+  }
+  
+  names(group_list) <- unique(df_longer$'Habitat')
+  
+  filename <- file.path(comparison_dir, paste0('upset_plot_', group2, '_all_data.png'))
+  png(filename, width = 2400, height = 2400, res = 300)
+  upset(fromList(group_list), order.by = "freq")
+  dev.off()
+  
+  
   ## Pairwise comparisons
   
-  # Get all combinations possible for group 1
+  # Get all combinations possible for group 2
   
   comb_g2 <- combn(unique(df_longer$'%group2%'), 2)
   
@@ -545,6 +604,24 @@ if(group2 != 'NULL'){
     
     filename <- file.path(comparison_dir, paste0('combined_graph_', val1, '_vs_', val2, '.png'))
     ggsave(filename, combined_plot, dpi = 300, width = 18, height = 8)
+    
+    ## Upset plot
+    
+    list1 <- df_longer %>% 
+      filter((!!! group2_s) == val1) %>% 
+      pull(Mass)
+    
+    list2 <- df_longer %>% 
+      filter((!!! group2_s) == val2) %>% 
+      pull(Mass)
+    
+    group_list <- list(list1, list2)
+    names(group_list) <- c(val1, val2)
+    
+    filename <- file.path(comparison_dir, paste0('upset_plot_', val1, '_vs_', val2, '.png'))
+    png(filename, width = 2400, height = 2400, res = 300)
+    upset(fromList(group_list), order.by = "freq")
+    dev.off()
   }
   
 }
