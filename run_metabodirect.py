@@ -25,7 +25,7 @@ from functions_metabodirect import *
 
 # --------------------------------------------------
 def get_args():
-    """Get command-line arguments"""
+    """Get command-line arguments."""
 
     parser = argparse.ArgumentParser(
         description='Program for running all the MetaboDirect analysis pipeline',
@@ -130,6 +130,8 @@ def get_args():
 
     args = parser.parse_args()
 
+    # Check that command line arguments are specified properly
+
     if not os.path.isfile(args.data_file):
         parser.error(f'File {args.data_file} does not exist')
 
@@ -154,7 +156,7 @@ def get_args():
 
 # --------------------------------------------------
 def make_directories(outdir):
-    """Create and return a list of directories for the outputs of each step of the pipeline"""
+    """Create and return a list of directories for the outputs of each step of the pipeline."""
     project_name = outdir
     preprocess_dir = '1_preprocessing_output'
     diagnostics_dir = '2_diagnostics'
@@ -181,15 +183,19 @@ def make_directories(outdir):
 
 # --------------------------------------------------
 def sample_filtering(df, metadata, filter_by, path):
-    """Filter samples based on selected features and values"""
+    """Filter samples based on selected features and values."""
+
+    # Get the variable a values specified for sample filtering
     filter_col = filter_by[0]
     filter_values = filter_by[1].split(sep=',')
 
+    # Saving a new metadata file containing only the samples remaining after filtering
     filt_metadata = pd.DataFrame()
     for i in filter_values:
         filt_metadata = filt_metadata.append(metadata[metadata[filter_col] == i])
     filt_metadata.to_csv(os.path.join(path, 'filtered_metadata.csv'), index=False)
 
+    # Saving a new input file containing only the samples remaining after filtering
     from_formularity = [
         'Mass', 'C', 'H', 'O', 'N', 'C13', 'S', 'P', 'Na', 'El_comp', 'Class',
         'NeutralMass', 'Error_ppm', 'Candidates'
@@ -204,16 +210,19 @@ def sample_filtering(df, metadata, filter_by, path):
 
 # --------------------------------------------------
 def data_filtering(df, filter_values):
-    """Filter data based on a specified m/z range, presence of isotopes and quality"""
+    """Filter data based on a specified m/z range, presence of isotopes and quality."""
 
     print(f'Number of m/z in provided file: {df.shape[0]}')
+    # Filtering masses determined to be isotopic
     filt_df, n_excluded = filter_C13(df)
     print(f'Number of masses excluded because of C13 isotope: {n_excluded}')
     print(f'Number of m/z remaining after isotope-filtering: {filt_df.shape[0]}')
 
+    # Filter peaks based in m/z range
     filt_df = filter_mz(filt_df, filter_values[0], filter_values[1]) if filter_values else filt_df
     print(f'Number of m/z remaining after m/z-filtering: {filt_df.shape[0]}')
 
+    # Filter samples with error higher than 0.5 ppm
     filt_df = filter_error_ppm(filt_df, err_range=0.5)
     print(f'Number of m/z after error filtering (0.5 ppm): {filt_df.shape[0]}')
 
@@ -222,7 +231,7 @@ def data_filtering(df, filter_values):
 
 # --------------------------------------------------
 def thermo_idx_and_classes(df, path):
-    """Calculate thermodynamic indices and the associated class of compounds based on the molecular formula"""
+    """Calculate thermodynamic indices and the associated class of compounds based on the molecular formula."""
 
     df = calculate_ratios(df)
     df = calculate_classes(df)
@@ -284,17 +293,17 @@ def data_normalization(df, norm_method, norm_subset, subset_parameter=1, log=Fal
 
     # Normalize data based on chosen method
     if norm_method == 'mean':
-        norm_data = (input_data - sample_mean) / (sample_max - sample_min)
+        norm_data = (input_data-sample_mean) / (sample_max-sample_min)
     elif norm_method == 'median':
-        norm_data = (input_data - sample_median) / (sample_max - sample_min)
+        norm_data = (input_data-sample_median) / (sample_max-sample_min)
     elif norm_method == 'zscore':
-        norm_data = (input_data - sample_mean) / sample_std
+        norm_data = (input_data-sample_mean) / sample_std
     elif norm_method == 'sum':
         norm_data = input_data / sample_sum
     elif norm_method == 'max':
         norm_data = input_data / sample_max
     elif norm_method == 'minmax':
-        norm_data = (input_data - sample_min) / (sample_max - sample_min)
+        norm_data = (input_data-sample_min) / (sample_max-sample_min)
     elif norm_method == 'binary':
         norm_data = input_data.copy()
         norm_data[norm_data > 0] = 1
@@ -312,7 +321,7 @@ def data_normalization(df, norm_method, norm_subset, subset_parameter=1, log=Fal
 
 # --------------------------------------------------
 def calculate_summaries(df, path):
-    """Get summaries for class composition, elemental composition and thermodynamic indices"""
+    """Get summaries for class composition, elemental composition and thermodynamic indices."""
 
     class_comp = get_summary(df, on='Class')
     el_comp = get_summary(df, on='El_comp')
@@ -331,8 +340,9 @@ def calculate_summaries(df, path):
 
 # --------------------------------------------------
 def formula_per_sample(df, metadata, path):
-    """Calculate and plot the number of samples that have molecular formula"""
+    """Calculate and plot the number of samples that have molecular formula."""
 
+    # Calculating the number of samples that were assigned a molecular formula
     stats_per_sample = pd.DataFrame(df.groupby(['SampleID'])[['Mass']].size()).rename(columns={0: 'Counts'})
     stats_per_sample = stats_per_sample.reset_index()
     stats_per_sample = stats_per_sample.merge(metadata, on='SampleID')
@@ -342,6 +352,7 @@ def formula_per_sample(df, metadata, path):
     sns.set_style('ticks')
     plt.rcParams['figure.figsize'] = (15, 5)
 
+    # Plotting the number of molecular formulas per each of the samples
     p = sns.barplot(x="SampleID",
                     y="Counts",
                     hue=metadata.columns[2],
@@ -364,7 +375,7 @@ def formula_per_sample(df, metadata, path):
 
 # --------------------------------------------------
 def error_per_group(df, group, path):
-    """Calculate and plot error distribution per sample"""
+    """Calculate and plot error distribution per sample."""
     error = df.groupby([group[0], 'Mass'] if len(group) == 1
                        else [group[0], group[1], 'Mass'])['Error_ppm'].agg(['mean']).reset_index()
     error.to_csv(os.path.join(path, 'error_distribution_per_group.csv'), index=False)
@@ -388,10 +399,14 @@ def error_per_group(df, group, path):
 
 # --------------------------------------------------
 def write_r_script(rscript, outdir, metadata_file, groups, norm_method='max'):
-    """Function to write R scripts based on the provided Rscripts templates"""
+    """Write R scripts based on the provided Rscripts templates"""
+
+    # Fixing the paths obtained in Windows, so they can work well in R and in Python
     current_dir = os.getcwd().replace('\\', '/')
     metadata_file = metadata_file.replace('\\', '/')
     metabo_home = os.path.split(os.path.realpath(__file__))[0].replace('\\', '/')
+
+    # Modify the specified R script template with the desired values
     r_in = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'R_scripts_templates', rscript)
     r_in = open(r_in)
     r_file = os.path.join(outdir, rscript.replace('_template', ''))
@@ -412,9 +427,12 @@ def write_r_script(rscript, outdir, metadata_file, groups, norm_method='max'):
 
 # --------------------------------------------------
 def run_r(rscript):
-    """Function to execute R scripts"""
+    """Execute R scripts"""
+
+    # Check if the script is being run in Windows, or Linux and Mac so the correct Rscript executable is chosen
     rscript_exe = 'Rscript.exe' if system() == 'Windows' else 'Rscript'
 
+    # Execute the R script
     if which(rscript_exe) is not None:
         r_cmd = [rscript_exe, rscript]
         p = subprocess.Popen(
@@ -445,6 +463,9 @@ def get_keys(keyfile):
 # --------------------------------------------------
 def calculate_transformations(df, keys, path):
     """Function to calculate transformations for transformation networks"""
+
+    # Create a dataframe that has the masses of the peaks that are present in each sample, and 0 in the peaks that are
+    # not in that sample
     df_transf = pd.pivot_table(df, values='NormIntensity', index=['Mass'],
                                columns=['SampleID']).reset_index()
     df_transf['Mass'] = df_transf['Mass'].astype(float).apply(lambda x: '%.6f' % x)
@@ -522,6 +543,7 @@ def summarize_transformations(path):
 # --------------------------------------------------
 def get_node_table(df, path):
     """Create a node table for the transformation networks"""
+
     node_table = df[['Mass', 'C', 'H', 'O', 'N', 'S', 'P', 'OC', 'HC', 'NOSC',
                      'GFE', 'Class', 'MolecularFormula', 'El_comp']].drop_duplicates('Mass')
 
@@ -534,14 +556,18 @@ def get_node_table(df, path):
 # --------------------------------------------------
 def create_cytoscape_network(node_table, path):
     """Create a cytoscape network using the node table"""
+
     node_table['Mass'] = round(node_table['Mass'], 4)
     node_table['Mass'] = node_table['Mass'].astype(str)
     node_table = node_table.rename(columns={'Mass': 'id'})
 
+    # Create a vector of colors for the compound classes
     mol_classes = list(np.unique(node_table['Class']))
     node_colors = sns.color_palette('Set3', len(mol_classes)).as_hex()
 
     network_stats = []
+
+    # Create a list of the transformation files to be used as the edge tables for the networks
     files_path = os.path.join(path, 'transf_by_sample', 'transformations_*.csv')
     edge_files = glob.glob(files_path)
 
@@ -551,6 +577,7 @@ def create_cytoscape_network(node_table, path):
         edge_table['Feature_X'] = edge_table['Feature_X'].astype(str)
         edge_table['Feature_Y'] = round(edge_table['Feature_Y'], 4)
         edge_table['Feature_Y'] = edge_table['Feature_Y'].astype(str)
+        # Renaming columns for clarity
         edge_table = edge_table.rename(columns={'Feature_X': 'source', 'Feature_Y': 'target'})
         print(f'Creating transformations network for sample: {edge_table.SampleID.unique()[0]}')
         with pd.option_context('mode.chained_assignment', None):
@@ -560,15 +587,19 @@ def create_cytoscape_network(node_table, path):
                                                 interaction_type_list='Transformation',
                                                 title=edge_table.SampleID.unique()[0],
                                                 collection='Transformation networks')
+            # Load node table with data information
             p4c.load_table_data(node_table, data_key_column='id')
 
+        # Create a vector of colors for the transformation groups
         transformation_group = list(np.unique(edge_table['Group']))
         edge_colors = sns.color_palette('dark', len(transformation_group)).as_hex()
 
+        # Coloring the table based on compound classes and transformation groups
         p4c.set_node_shape_default('ELLIPSE')
         p4c.set_node_color_mapping('Class', mol_classes, node_colors, mapping_type='d')
         p4c.set_edge_color_mapping('Group', transformation_group, edge_colors, mapping_type='d')
 
+        # Run the Network Analyzer command for cytoscape and capture its output in a list of lists
         network_analyzer = p4c.commands_post('analyzer analyze')
         network_stats.append(
             {'SampleID': edge_table.SampleID.unique()[0],
@@ -679,8 +710,6 @@ def main():
     print(f'Find results and R script in the directory: {os.path.abspath(list_dir[3])}')
 
     print('------------------------\nStarting transformation network analysis\n------------------------\n')
-
-    df.to_csv('df.csv', index=False)
 
     if not args.transformation_analysis:
         print('Transformation analysis not selected. '
