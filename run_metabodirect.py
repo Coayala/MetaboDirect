@@ -484,7 +484,7 @@ def calculate_transformations(df, keys, path):
 
         # make m/z substractions in all versus all fashion
         # doing all vs all the subtractions and filter
-        result_tuples = [(x, y, round(abs(x - y), 6)) for x, y in combinations(mz_list, 2) if 1 < x - y < 766]
+        result_tuples = [(x, y, round(abs(x - y), 6)) for x, y in combinations(mz_list, 2) if 1 < abs(x - y) < 766]
 
         result_tuples = [(
             r[0], r[1], r[2],
