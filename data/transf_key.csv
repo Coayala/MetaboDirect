@@ -1,52 +1,52 @@
 Group,Transformation,Formula,mf
-AminoAcid,Alanine_(-H2O),C3H5NO,71.03711384
-AminoAcid,Arginine_(-H2O),C6H12N4O,156.1011111
-AminoAcid,Asparagine_(-H2O),C4H6N2O2,114.0429275
-AminoAcid,Aspartic_Acid_(-H2O),C4H5NO3,115.0269431
-AminoAcid,Cysteine_(-H2O),C3H5NOS,103.0091856
-AminoAcid,Cystine_(-H2O),C6H10N2O3S2,222.0132859
-AminoAcid,Glutamic_Acid_(-H2O),C5H7NO3,129.0425932
-AminoAcid,Glutamine_(-H2O),C5H8N2O2,128.0585776
-AminoAcid,Glycine_(-H2O),C2H3NO,57.02146376
-AminoAcid,Histidine_(-H2O),C6H7N3O,137.0589119
-AminoAcid,Isoleucine_(-H2O),C6H11NO,113.0840641
-AminoAcid,Leucine_(-H2O),C6H11NO,113.0840641
-AminoAcid,Lysine_(-H2O),C6H12N2O,128.0949631
-AminoAcid,Methionine_(-H2O),C5H9NOS,131.0404858
-AminoAcid,Phenylalanine_(-H2O),C9H9NO,147.068414
-AminoAcid,Proline_(-H2O),C5H7NO,97.05276391
-AminoAcid,Serine_(-H2O),C3H5NO2,87.03202848
-AminoAcid,Threonine_(-H2O),C4H7NO2,101.0476785
-AminoAcid,Tryptophan_(-H2O),C11H10N2O,186.079313
-AminoAcid,Tyrosine_(-H2O),C9H9NO2,163.0633286
-AminoAcid,Valine_(-H2O),C5H9NO,99.06841398
-AminoAcid,Glutathione_(-H2O),C10H15N3O5S,289.0732426
-AminoAcid,Adenine_(-H),C5H4N5,134.0466702
-AminoAcid,Adenosine_(-H2O),C10H11N5O3,249.0861894
-AminoAcid,Adenosine_5_diphosphate_(-H2O),C10H13N5O9P2,409.0188541
-AminoAcid,Adenosine_5_monophosphate_(-H2O),C10H12N5O6P,329.0525217
-AminoAcid,Cytidine_5_diphosphate_(-H2O),C9H13N3O10P2,385.0076207
-AminoAcid,Cytidine_5_monophsophate_(-H2O),C9H12N3O7P,305.0412884
-AminoAcid,Cytosine_(-H),C4H4N3O,110.0354368
-AminoAcid,Guanosine_5_diphosphate_(-H2O),C10H13N5O10P2,425.0137687
-AminoAcid,Guanosine_5_monophosphate_(-H2O),C10H12N5O7P,345.0474364
-AminoAcid,Guanine_(-H),C5H4N5O,150.0415848
-AminoAcid,Guanosine_(-H2O),C10H11N5O4,265.081104
-AminoAcid,Deoxythymidine_5_diphosphate_(-H2O),C10H14N2O10P2,384.0123717
-AminoAcid,Thymidine_(-H2O),C10H12N2O4,224.079707
-AminoAcid,Thymine_(-H),C5H5N2O2,125.0351025
-AminoAcid,Thymidine_5_monophosphate_(-H2O),C10H13N2O7P,304.0460394
-AminoAcid,Uridine_5_diphosphate_(-H2O),C9H12N2O11P2,385.9916363
-AminoAcid,Uridine_5_monophosphate_(-H2O),C9H11N2O8P,306.0253039
-AminoAcid,Uracil_(-H),C4H3N2O2,111.0194524
-AminoAcid,Uridine_(-H2O),C9H10N2O5,226.0589716
-AminoAcid,Transamination_(-O),NH4,2.039459
-AminoAcid,Adenosine-5_-phosphosulfate,C10H14N5O10PS,427.019905
-AminoAcid,Arginine_Conjugation_(-OH),C6H13N4O2,156.10111
-AminoAcid,Cysteine_Conjugation_1_(-H),C3H6NO2S,119.0041
-AminoAcid,Cysteine_Conjugation_2,C3H7NO2S,121.01975
-AminoAcid,Glutamine_Conjugation_(-OH),C5H9N2O3,128.05858
-AminoAcid,Glycine_Conjugation_(-OH),C2H4NO2,57.02146
+Amino Acid,Alanine_(-H2O),C3H5NO,71.03711384
+Amino Acid,Arginine_(-H2O),C6H12N4O,156.1011111
+Amino Acid,Asparagine_(-H2O),C4H6N2O2,114.0429275
+Amino Acid,Aspartic_Acid_(-H2O),C4H5NO3,115.0269431
+Amino Acid,Cysteine_(-H2O),C3H5NOS,103.0091856
+Amino Acid,Cystine_(-H2O),C6H10N2O3S2,222.0132859
+Amino Acid,Glutamic_Acid_(-H2O),C5H7NO3,129.0425932
+Amino Acid,Glutamine_(-H2O),C5H8N2O2,128.0585776
+Amino Acid,Glycine_(-H2O),C2H3NO,57.02146376
+Amino Acid,Histidine_(-H2O),C6H7N3O,137.0589119
+Amino Acid,Isoleucine_(-H2O),C6H11NO,113.0840641
+Amino Acid,Leucine_(-H2O),C6H11NO,113.0840641
+Amino Acid,Lysine_(-H2O),C6H12N2O,128.0949631
+Amino Acid,Methionine_(-H2O),C5H9NOS,131.0404858
+Amino Acid,Phenylalanine_(-H2O),C9H9NO,147.068414
+Amino Acid,Proline_(-H2O),C5H7NO,97.05276391
+Amino Acid,Serine_(-H2O),C3H5NO2,87.03202848
+Amino Acid,Threonine_(-H2O),C4H7NO2,101.0476785
+Amino Acid,Tryptophan_(-H2O),C11H10N2O,186.079313
+Amino Acid,Tyrosine_(-H2O),C9H9NO2,163.0633286
+Amino Acid,Valine_(-H2O),C5H9NO,99.06841398
+Amino Acid,Glutathione_(-H2O),C10H15N3O5S,289.0732426
+Amino Acid,Adenine_(-H),C5H4N5,134.0466702
+Amino Acid,Adenosine_(-H2O),C10H11N5O3,249.0861894
+Amino Acid,Adenosine_5_diphosphate_(-H2O),C10H13N5O9P2,409.0188541
+Amino Acid,Adenosine_5_monophosphate_(-H2O),C10H12N5O6P,329.0525217
+Amino Acid,Cytidine_5_diphosphate_(-H2O),C9H13N3O10P2,385.0076207
+Amino Acid,Cytidine_5_monophsophate_(-H2O),C9H12N3O7P,305.0412884
+Amino Acid,Cytosine_(-H),C4H4N3O,110.0354368
+Amino Acid,Guanosine_5_diphosphate_(-H2O),C10H13N5O10P2,425.0137687
+Amino Acid,Guanosine_5_monophosphate_(-H2O),C10H12N5O7P,345.0474364
+Amino Acid,Guanine_(-H),C5H4N5O,150.0415848
+Amino Acid,Guanosine_(-H2O),C10H11N5O4,265.081104
+Amino Acid,Deoxythymidine_5_diphosphate_(-H2O),C10H14N2O10P2,384.0123717
+Amino Acid,Thymidine_(-H2O),C10H12N2O4,224.079707
+Amino Acid,Thymine_(-H),C5H5N2O2,125.0351025
+Amino Acid,Thymidine_5_monophosphate_(-H2O),C10H13N2O7P,304.0460394
+Amino Acid,Uridine_5_diphosphate_(-H2O),C9H12N2O11P2,385.9916363
+Amino Acid,Uridine_5_monophosphate_(-H2O),C9H11N2O8P,306.0253039
+Amino Acid,Uracil_(-H),C4H3N2O2,111.0194524
+Amino Acid,Uridine_(-H2O),C9H10N2O5,226.0589716
+Amino Acid,Transamination_(-O),NH4,2.039459
+Amino Acid,Adenosine-5_-phosphosulfate,C10H14N5O10PS,427.019905
+Amino Acid,Arginine_Conjugation_(-OH),C6H13N4O2,156.10111
+Amino Acid,Cysteine_Conjugation_1_(-H),C3H6NO2S,119.0041
+Amino Acid,Cysteine_Conjugation_2,C3H7NO2S,121.01975
+Amino Acid,Glutamine_Conjugation_(-OH),C5H9N2O3,128.05858
+Amino Acid,Glycine_Conjugation_(-OH),C2H4NO2,57.02146
 Sugar,C6H10O5,C6H10O5,162.0528236
 Sugar,C6H10O6,C6H10O6,178.0477382
 Sugar,Disaccharide_(-H2O),C12H20O11,340.1005618
@@ -94,7 +94,7 @@ Abiotic,Oxidative_Deamination_to_Ketone_(-H3N),O,1.03163
 Abiotic,Oxidative_Debromination_(-Br),HO,61.9156
 Abiotic,Oxidative_Dechlorination_(-Cl),HO,17.96611
 Abiotic,Oxidative_Defluorination_(-F),HO,1.99566
-Abiotic,Reduction_,H2,2.01565
+Abiotic,Reduction,H2,2.01565
 Abiotic,Reductive_Debromination_(-Br),H,77.91051
 Abiotic,Reductive_Dechlorination_(-Cl),H,33.96103
 Abiotic,Reductive_Defluorination_(-F),H,17.99058
