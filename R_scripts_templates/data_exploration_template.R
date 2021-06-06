@@ -17,6 +17,7 @@ suppressPackageStartupMessages({
   library(rstatix)
   library(KEGGREST)
   library(vegan)
+  library(UpSetR)
 }) 
 
 # Values between two '%' are to be replaced by the correct values during the python script
