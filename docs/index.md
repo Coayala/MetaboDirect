@@ -3,7 +3,9 @@
 ## Introduction
 
 **MetaboDirect** is a Python and R based pipeline for the analysis of Direct Injection FT-ICR Mass Spectrometry data.
-The MetaboDirect pipeline takes a Formularity (Tolić et al., 2017) *report* and a *sample information* file as inputs and automatically performs all the analysis described below including: sample filtering, m/z filtering, normalization of intensities, thermodynamic index calculation, annotation of molecular formulas using the KEGG database (Kanehisa & Goto, 2000), statistical analysis and construction of transformation networks using Cytoscape (Shannon et al., 2003)
+The MetaboDirect pipeline takes a Formularity (Tolić et al., 2017) *report* and a *sample information* file as inputs and automatically performs all the analysis described below including: sample filtering, m/z filtering, normalization of intensities, thermodynamic index calculation, annotation of molecular formulas using the KEGG database (Kanehisa & Goto, 2000), statistical analysis and construction of transformation networks using Cytoscape (Shannon et al., 2003).
+
+An companion script `test_normalization.py` is included to help selecting the best normalization method, and should be run before the main MetaboDirect pipeline. For more information about the companion script check the section: **(Optional Step) Test normalization methods**
 
 ## Quick Start
 
@@ -17,6 +19,12 @@ Information about the arguments can be obtained using the -h/--help function.
 ```
 /path/to/MetaboDirect/run_metabodirect.py -h
 ```
+
+If using Anaconda Promtp in Windows, the preferred command is:
+
+```
+python /path/to/MetaboDirect/run_metabodirect.py -h
+````
 
 ```
 usage: run_metabodirect.py [-h] [-o OUTDIR] [-m INT INT] -g STR [STR ...] [-f STR STR] [-b STR] [-t] [-k] [-n STR] [--norm_subset STR] [--subset_parameter STR] [--log_transform]
@@ -42,7 +50,7 @@ optional arguments:
   -b STR, --biochem_key STR
                         File with the biochemical key to use for the transformation network (default: Default key)
   -t, --transformation_analysis
-                        Set this option to perform a transformation netwokr analysis of the samples (default: False)
+                        Set this option to perform a transformation network analysis of the samples (default: False)
   -k, --kegg_annotation
                         Set this option to perform annotation of the molecular formulas usingthe KEGG database (default: False)
 
@@ -59,6 +67,13 @@ Normalization methods:
   --log_transform       Set this option to log transform the data. (Program will fail if there are peaks with intensities of 0. Consider tranforming this values into 1 if log
                         transformation is desired (default: False)
 ```
+
+#### Test data example command
+
+```
+python /path/to/MetaboDirect\MetaboDirect\run_metabodirect.py Report.csv metadata.csv -o group_meeting -m 200 400 -g Habitat Depth -f Testing Yes -t -k  
+```
+
 
 ## MetaboDirect arguments
 
@@ -158,7 +173,7 @@ A companion script called `normalization_test.py` is included to help in the dec
 Information about the arguments can be obtained using the -h/--help function.
 
 ```
-/path/to/MetaboDirect/normalization_test.py -h
+/path/to/MetaboDirect/test_normalization.py
 ```
 This python script will generate an R script that utilizes a modified `spans_procedure()` function from the `pmartR` package (Stratton et al., 2019; Thompson et al., 2021). 
 This script will produce a heatmap as a result with the "SPANS score" of the combination of each of the available normalization methods and data subset methods and subset parameters.
