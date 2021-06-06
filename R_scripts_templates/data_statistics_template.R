@@ -29,7 +29,7 @@ my_classcomp.file <- file.path('%outdir%', '1_preprocessing_output', 'class_comp
 my_metadata.file <- file.path('%metadata%')
 my_outdir <- file.path('%outdir%', '4_statistics')
 
-norm_method <- '%norm_method'
+norm_method <- '%norm_method%'
 
 #### Import data ####
 

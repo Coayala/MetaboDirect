@@ -82,7 +82,7 @@ def get_args():
 
     parser.add_argument('-t',
                         '--transformation_analysis',
-                        help='Set this option to perform a transformation netwokr analysis of the samples',
+                        help='Set this option to perform a transformation network analysis of the samples',
                         action='store_true',
                         default=False)
 
@@ -98,7 +98,8 @@ def get_args():
 
     norm.add_argument('-n',
                       '--norm_method',
-                      help='Available methods to normalize data',
+                      help="Available methods to normalize data are: 'mean', 'median', 'zscore', "
+                           "'sum', 'max', 'minmax', 'binary', 'none'",
                       metavar='STR',
                       type=str,
                       choices=['mean', 'median', 'zscore', 'sum', 'max', 'minmax', 'binary', 'none'],
