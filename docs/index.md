@@ -68,12 +68,11 @@ Normalization methods:
                         transformation is desired (default: False)
 ```
 
-#### Test data example command
+#### Example using test data
 
 ```
-python /path/to/MetaboDirect\MetaboDirect\run_metabodirect.py Report.csv metadata.csv -o group_meeting -m 200 400 -g Habitat Depth -f Testing Yes -t -k  
+python /path/to/MetaboDirect/run_metabodirect.py /path/to/MetaboDirect/data/Report.csv /path/to/MetaboDirect/data/metadata.csv -o test -m 200 400 -g Habitat Depth -f Testing Yes -t -k  
 ```
-
 
 ## MetaboDirect arguments
 
