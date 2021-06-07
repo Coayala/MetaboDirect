@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
 
 #### Defining paths and variables ####
 
-setwd('C:/Users/Chris/Desktop/UofA/test_metabo')
+setwd('%currentdir%')
 
 my_data.file <- file.path('%outdir%', '5_transformations', 'network_summary_statistics.csv')
 my_metadata.file <- file.path('%metadata%')
