@@ -266,10 +266,10 @@ def get_matrix(df):
 
     # print(t.shape)
 
-    t = t.dropna(axis=0, thresh = n_samples)
+    t = t.dropna(axis=0, thresh= n_samples)
 
     # print(t.shape)
-
+    
     t = t.replace(np.nan, 0)
     
     matrix = t.copy()

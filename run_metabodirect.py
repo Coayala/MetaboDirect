@@ -705,7 +705,7 @@ def main():
     data_statistics_script = write_r_script('data_statistics_template.R', outdir=list_dir[3],
                                             metadata_file=args.metadata_file if not args.filter_by
                                             else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                            groups=args.group)
+                                            groups=args.group, norm_method=args.norm_method)
     print(f'Running R script: {os.path.abspath(data_statistics_script)}')
     run_r(data_statistics_script)
     print(f'Find results and R script in the directory: {os.path.abspath(list_dir[3])}')
