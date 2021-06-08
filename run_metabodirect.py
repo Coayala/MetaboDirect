@@ -231,21 +231,14 @@ def data_filtering(df, filter_values):
 
 
 # --------------------------------------------------
-def thermo_idx_and_classes(df, path):
+def thermo_idx_and_classes(df
+                           ):
     """Calculate thermodynamic indices and the associated class of compounds based on the molecular formula."""
 
     df = calculate_ratios(df)
     df = calculate_classes(df)
-    df_formulas = df[df['C'] > 0]
 
-    filename = os.path.join(path, 'Report_processed.csv')
-    df.to_csv(filename, index=False)
-    filename = os.path.join(path, 'Report_processed_MolecFormulas.csv')
-    df_formulas.to_csv(filename, index=False)
-
-    print(f'Report saved as: {filename}')
-
-    return df_formulas
+    return df
 
 
 # --------------------------------------------------
@@ -653,15 +646,24 @@ def main():
         print('Option -f not detected, all samples will be used')
 
     df = data_filtering(df, args.mass_filter)
-    df = thermo_idx_and_classes(df, path=list_dir[0])
+    df = thermo_idx_and_classes(df)
     df = data_normalization(df, args.norm_method, args.norm_subset, args.subset_parameter, args.log_transform)
-    calculate_summaries(df, path=list_dir[0])
-    matrix_features = get_matrix(df)
+
+    df_formulas = df[df['C'] > 0]
+
+    filename = os.path.join(list_dir[0], 'Report_processed.csv')
+    df.to_csv(filename, index=False)
+    filename = os.path.join(list_dir[0], 'Report_processed_MolecFormulas.csv')
+    df_formulas.to_csv(filename, index=False)
+    print(f'Report saved as: {filename}')
+
+    calculate_summaries(df_formulas, path=list_dir[0])
+    matrix_features = get_matrix(df_formulas)
     matrix_features.to_csv(os.path.join(list_dir[0], 'matrix_features.csv'))
 
-    colnames = [col for col in list(df.columns) if col not in list(metadata['SampleID'])]
-    df = df.melt(id_vars=colnames,
-                 var_name='SampleID', value_name='NormIntensity')
+    colnames = [col for col in list(df_formulas.columns) if col not in list(metadata['SampleID'])]
+    df = df_formulas.melt(id_vars=colnames,
+                          var_name='SampleID', value_name='NormIntensity')
     df = df[df['NormIntensity'] > 0].reset_index(drop=True)
     df = df.merge(metadata, on='SampleID')
 
