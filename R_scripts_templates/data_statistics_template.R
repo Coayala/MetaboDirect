@@ -34,7 +34,8 @@ norm_method <- '%norm_method%'
 #### Import data ####
 
 matrix <-  read_csv(my_matrix.file, col_types = cols()) %>% 
-  column_to_rownames(var = 'Mass')
+  column_to_rownames(var = 'Mass')%>% 
+  t()
 class_comp <- read_csv(my_classcomp.file, col_types = cols()) %>% 
   column_to_rownames(var = 'SampleID')
 metadata <- read_csv(my_metadata.file, col_types = cols())
@@ -45,8 +46,7 @@ df <- read_csv(my_report.file)
 
 # Intensity data file
 
-matrix <- t(matrix)
-matrix[is.na(matrix)] <- 0
+matrix <- matrix[metadata$SampleID,]
 
 class_comp[is.na(class_comp)] <- 0
 
