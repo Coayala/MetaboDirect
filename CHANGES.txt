@@ -1,1 +1,3 @@
 v0.1.0, 6/9/2021 -- Initial release
+v0.1.1, 6/9/2021 -- Bug fixing
+v0.1.2, 6/9/2021 -- Latest stable release
