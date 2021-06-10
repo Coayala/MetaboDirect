@@ -1,2 +1,5 @@
+include *.txt
+recursive-include docs *.md
 include metabodirect\data\*.csv
 include metabodirect\R_scripts_templates\*.R
+include metabodirect\*.R
