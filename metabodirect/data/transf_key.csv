@@ -1,0 +1,126 @@
+Group,Transformation,Formula,mf
+Amino Acid,Alanine_(-H2O),C3H5NO,71.03711384
+Amino Acid,Arginine_(-H2O),C6H12N4O,156.1011111
+Amino Acid,Asparagine_(-H2O),C4H6N2O2,114.0429275
+Amino Acid,Aspartic_Acid_(-H2O),C4H5NO3,115.0269431
+Amino Acid,Cysteine_(-H2O),C3H5NOS,103.0091856
+Amino Acid,Cystine_(-H2O),C6H10N2O3S2,222.0132859
+Amino Acid,Glutamic_Acid_(-H2O),C5H7NO3,129.0425932
+Amino Acid,Glutamine_(-H2O),C5H8N2O2,128.0585776
+Amino Acid,Glycine_(-H2O),C2H3NO,57.02146376
+Amino Acid,Histidine_(-H2O),C6H7N3O,137.0589119
+Amino Acid,Isoleucine_(-H2O),C6H11NO,113.0840641
+Amino Acid,Leucine_(-H2O),C6H11NO,113.0840641
+Amino Acid,Lysine_(-H2O),C6H12N2O,128.0949631
+Amino Acid,Methionine_(-H2O),C5H9NOS,131.0404858
+Amino Acid,Phenylalanine_(-H2O),C9H9NO,147.068414
+Amino Acid,Proline_(-H2O),C5H7NO,97.05276391
+Amino Acid,Serine_(-H2O),C3H5NO2,87.03202848
+Amino Acid,Threonine_(-H2O),C4H7NO2,101.0476785
+Amino Acid,Tryptophan_(-H2O),C11H10N2O,186.079313
+Amino Acid,Tyrosine_(-H2O),C9H9NO2,163.0633286
+Amino Acid,Valine_(-H2O),C5H9NO,99.06841398
+Amino Acid,Glutathione_(-H2O),C10H15N3O5S,289.0732426
+Amino Acid,Adenine_(-H),C5H4N5,134.0466702
+Amino Acid,Adenosine_(-H2O),C10H11N5O3,249.0861894
+Amino Acid,Adenosine_5_diphosphate_(-H2O),C10H13N5O9P2,409.0188541
+Amino Acid,Adenosine_5_monophosphate_(-H2O),C10H12N5O6P,329.0525217
+Amino Acid,Cytidine_5_diphosphate_(-H2O),C9H13N3O10P2,385.0076207
+Amino Acid,Cytidine_5_monophsophate_(-H2O),C9H12N3O7P,305.0412884
+Amino Acid,Cytosine_(-H),C4H4N3O,110.0354368
+Amino Acid,Guanosine_5_diphosphate_(-H2O),C10H13N5O10P2,425.0137687
+Amino Acid,Guanosine_5_monophosphate_(-H2O),C10H12N5O7P,345.0474364
+Amino Acid,Guanine_(-H),C5H4N5O,150.0415848
+Amino Acid,Guanosine_(-H2O),C10H11N5O4,265.081104
+Amino Acid,Deoxythymidine_5_diphosphate_(-H2O),C10H14N2O10P2,384.0123717
+Amino Acid,Thymidine_(-H2O),C10H12N2O4,224.079707
+Amino Acid,Thymine_(-H),C5H5N2O2,125.0351025
+Amino Acid,Thymidine_5_monophosphate_(-H2O),C10H13N2O7P,304.0460394
+Amino Acid,Uridine_5_diphosphate_(-H2O),C9H12N2O11P2,385.9916363
+Amino Acid,Uridine_5_monophosphate_(-H2O),C9H11N2O8P,306.0253039
+Amino Acid,Uracil_(-H),C4H3N2O2,111.0194524
+Amino Acid,Uridine_(-H2O),C9H10N2O5,226.0589716
+Amino Acid,Transamination_(-O),NH4,2.039459
+Amino Acid,Adenosine-5_-phosphosulfate,C10H14N5O10PS,427.019905
+Amino Acid,Arginine_Conjugation_(-OH),C6H13N4O2,156.10111
+Amino Acid,Cysteine_Conjugation_1_(-H),C3H6NO2S,119.0041
+Amino Acid,Cysteine_Conjugation_2,C3H7NO2S,121.01975
+Amino Acid,Glutamine_Conjugation_(-OH),C5H9N2O3,128.05858
+Amino Acid,Glycine_Conjugation_(-OH),C2H4NO2,57.02146
+Sugar,C6H10O5,C6H10O5,162.0528236
+Sugar,C6H10O6,C6H10O6,178.0477382
+Sugar,Disaccharide_(-H2O),C12H20O11,340.1005618
+Sugar,D-Ribose_(-H2O)_(ribosylation),C5H8O4,132.0422589
+Sugar,Erythrose_(-H2O),C4H8O4,102.031695
+Sugar,Glucose-N-Phosphate_(-H2O),C6H11O8P,242.0191559
+Sugar,Glucoside_Conjugation_(-H),C6H11O5,162.05282
+Sugar,Glucuronic_Acid_(-H2O),C6H8O6,176.0320881
+Sugar,Glucuronide_Conjugation_(-H),C6H9O6,176.03209
+Sugar,Glyoxylate_(-H2O),C2O2,55.98982928
+Sugar,Monosaccharide_(-H2O),C6H10O5,162.0528236
+Sugar,Trisaccharide_(-H2O),C18H30O15,486.1584707
+Abiotic,Acetone_(-H),C3H5O,57.03403983
+Abiotic,Adenylate_(-H2O),C10H12N5O6P,329.0525217
+Abiotic,Biotinyl_(-H),C10H15N2O3S,243.0803393
+Abiotic,Biotinyl_(-H2O),C10H14N2O2S,226.0775996
+Abiotic,Acetotacetate_(-H2O),C4H4O2,84.02112943
+Abiotic,Isoprene_addition_(-H),C5H7,67.05477526
+Abiotic,Acetylation_(-H2O),C2H2O,42.01056471
+Abiotic,Acetylation_(-H),C2H3O2,59.01330439
+Abiotic,CHO2,CHO2,44.99765432
+Abiotic,C2H2,C2H2,26.01565007
+Abiotic,Carboxylation,CO2,43.98982928
+Abiotic,Condensation/dehydration,H2O,18.01056471
+Abiotic,Acetylation_(-OH),C2H3O,42.01056
+Abiotic,Carbon/dehydrogenation,C13,1.00335
+Abiotic,Dehydration,H2O,18.01056
+Abiotic,Desaturation,H2,2.01565
+Abiotic,Ethyl_addition_(-H2O),C2H4,28.03130015
+Abiotic,Formic_Acid_(-H2O),CO,27.99491464
+Abiotic,GSH_Conjugation_(on_Bromine)_(-Br),C10H16N3O6S,227.15764
+Abiotic,GSH_Conjugation_(on_Chlorine)_(-Cl),C10H16N3O6S,271.10713
+Abiotic,GSH_Conjugation_(on_Fluorine)_(-F),C10H16N3O6S,287.07758
+Abiotic,GSH_Conjugation_1,C10H15N3O6S,305.06816
+Abiotic,GSH_Conjugation_2,C10H17N3O6S,307.08381
+Abiotic,Hydration,H2O,18.01056
+Abiotic,Hydrogenation/dehydrogenation,H2,2.015650074
+Abiotic,Hydroxylation_(-H),O,15.99491464
+Abiotic,Methanol_(-H2O),CH2,14.01565007
+Abiotic,Methylation_(-H),CH3,14.01565
+Abiotic,Nitro_Reduction_(-O2),H2,29.97418
+Abiotic,Oxidation,O,15.99491
+Abiotic,Oxidative_Deamination_to_Alcohol_(-H2N),HO,0.98402
+Abiotic,Oxidative_Deamination_to_Ketone_(-H3N),O,1.03163
+Abiotic,Oxidative_Debromination_(-Br),HO,61.9156
+Abiotic,Oxidative_Dechlorination_(-Cl),HO,17.96611
+Abiotic,Oxidative_Defluorination_(-F),HO,1.99566
+Abiotic,Reduction,H2,2.01565
+Abiotic,Reductive_Debromination_(-Br),H,77.91051
+Abiotic,Reductive_Dechlorination_(-Cl),H,33.96103
+Abiotic,Reductive_Defluorination_(-F),H,17.99058
+Abiotic,sulfate_(-H2O),SO3,79.95681572
+Abiotic,Inorganic_Phosphate,P,30.9737634
+Abiotic,ketol_group_(-H2O),C2H2O,42.01056471
+Abiotic,Phosphate,HPO3,79.96633236
+Abiotic,Primary_amine,NH2,16.01872408
+Abiotic,Pyrophosphate,PP,61.9475268
+Abiotic,Secondary_amine,NH,15.01089905
+Abiotic,Sulfation_(-H),HO3S,79.95681
+Abiotic,Tertiary_amine,N,14.00307401
+Other,Co-enzyme_A_(-H),C21H34N7O16P3S,765.0995656
+Other,Co-enzyme_A_(-H2O),C21H33N7O15P3S,748.0968259
+Other,Carbamoyl_P_transfer_(-H2PO4),CH2ON,44.01363872
+Other,Pyridoxal_phosphate_(-H2O),C8H8NO5P,229.0140109
+Other,Malonyl_group_(-H2O),C3H2O3,86.00039399
+Other,Palmitoylation_(-H2O),C16H30O,238.2296658
+Other,Urea_addition_(-H),CH3N2O,59.02453777
+Other,Diphosphate,H3O6P2,160.9404898
+Other,Alliin,C6H11NO3S,177.045966
+Other,Indolylmethyl_glucosinolate,C16H20N2O9S2,448.061027
+Other,O-Acetylserine,C5H9NO4,147.053159
+Other,Ornitine_Conjugation_(-OH),C5H11N2O2,114.07931
+Other,Palmitoyl_Conjugation_(-H),C16H31O,238.22967
+Other,Phytochelatin,C10H16N3O6S-,306.075984
+Other,Stearyl_Conjugation_(-H),C18H35O,266.26097
+Other,Taurine_Conjugation_(-OH),C2H6NO3S,107.0041
+Other,Thiourea_to_Urea_(-S),O,15.97716
