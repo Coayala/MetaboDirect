@@ -120,7 +120,7 @@ for(var in c('GFE', 'AI', 'DBE')){
     facet_wrap(%group1% ~ %group2%)
   
   filename <- file.path(my_outdir, paste0('density_plot_', var, '.png'))
-  ggsave(filename, density_plot, dpi = 300)
+  ggsave(filename, density_plot, dpi = 300, width = 8, height = 8)
 }
 #### Plot - Violin ####
 
@@ -150,7 +150,7 @@ for(var in c('GFE', 'AI', 'DBE')){
     facet_grid(cols = vars(%group2%))
   
   filename <- file.path(my_outdir, paste0('violin_plot_', var, '.png'))
-  ggsave(filename, violin_plot, dpi = 300, width = 8)
+  ggsave(filename, violin_plot, dpi = 300, width = 8, height = 8)
 }
 
 #### Weighted Thermodynamical indices ####
@@ -198,7 +198,7 @@ for(var in c('GFE', 'AI', 'DBE')){
     theme(plot.title = element_text(face = 'bold', hjust = 0.5))
   
   filename <- file.path(my_outdir, paste0('weighted_abundance_',var, '.png'))
-  ggsave(filename, weighted_plot, dpi = 300)
+  ggsave(filename, weighted_plot, dpi = 300, width = 8, height = 8)
   
 }
 
@@ -218,7 +218,7 @@ class_bar <- class_comp %>%
   facet_grid(cols = vars(%group2%))
 
 filename <- file.path(my_outdir, 'Composition_by_class.png')
-ggsave(filename, class_bar, dpi = 300)
+ggsave(filename, class_bar, dpi = 300, width = 8, height = 8)
 
 #### Plot - Elemental comp bar####
 
@@ -236,7 +236,7 @@ el_bar <- el_comp %>%
   facet_grid(cols = vars(%group2%))
 
 filename <- file.path(my_outdir, 'Composition_by_element.png')
-ggsave(filename, el_bar, dpi = 300)
+ggsave(filename, el_bar, dpi = 300, width = 8, height = 8)
 
 #### Chemodiversity index ####
 
@@ -263,44 +263,32 @@ richness.plot <- ggplot(richness.long,
   theme_bw()
 
 filename <- file.path(my_outdir, 'Diversity_plot_richness.png')
-ggsave(filename, richness.plot)
+ggsave(filename, richness.plot, dpi = 300, width = 8, height = 8)
 
-shannon_diversity <- diversity(intensity_matrix, index = 'shannon')
-pielou_evenness <- shannon_diversity / log(specnumber(intensity_matrix))
-chemodiversity_index <- tibble(SampleID = names(shannon_diversity), shannon_index = shannon_diversity, evenness = pielou_evenness)
-chemodiversity_index <- left_join(chemodiversity_index, metadata, by = 'SampleID')
+sample_pool <- metadata$'%group1%'
+names(sample_pool) <- metadata$SampleID
 
-shannon.plot <- ggplot(chemodiversity_index,
-                       aes(x = %group1%,
-                           y = shannon_index,
-                           fill = %group1%)) +
-  geom_boxplot() +
-  scale_fill_manual(values = my_colors) +
+chemodiversity_estimators <- specpool(intensity_matrix, sample_pool, smallsample = FALSE) %>% 
+  rownames_to_column(var = '%group1%')
+
+chemodiversity_plot <- ggplot(chemodiversity_estimators,
+                              aes(x = %group1%,
+                                  y = chao,
+                                  color = %group1%)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymax = chao + chao.se,
+                    ymin = chao - chao.se),
+                width = .1) +
   theme_bw() +
-  labs(title = 'Shannon diversity',
-       y = 'Shannon diversity index',
-       fill = '%group1%') +
+  scale_fill_brewer(palette = 'Accent') +
+  labs(title = 'Chemodiversity index',
+       subtitle = 'Chao richness estimator') +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5),
-        axis.title.x = element_blank())
+        plot.subtitle = element_text(face = 'italic', hjust = 0.5))
+chemodiversity_plot
 
-filename <- file.path(my_outdir, 'Diversity_plot_shannon_index.png')
-ggsave(filename, shannon.plot)
-
-pielou.plot <- ggplot(chemodiversity_index,
-                      aes(x = %group1%,
-                          y = evenness,
-                          fill = %group1%)) +
-  geom_boxplot() +
-  scale_fill_manual(values = my_colors) +
-  theme_bw() +
-  labs(title = "Pielou's evenness",
-       y = 'Evenness',
-       fill = '%group1%') +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5),
-        axis.title.x = element_blank())
-
-filename <- file.path(my_outdir, 'Diversity_plot_pielou_evenness.png')
-ggsave(filename, pielou.plot)
+filename <- file.path(my_outdir, 'Chemodiversity_plot.png')
+ggsave(filename, chemodiversity_plot, dpi = 300, width = 8, height = 8)
 
 #### Comparisons ####
 
@@ -315,7 +303,7 @@ dir.create(comparison_dir)
 ## Group comparison
 
 df_w <- df_longer %>% 
-  pivot_wider(names_from = all_of(group1), values_from = group1, names_prefix = 'GRP_') %>% 
+  pivot_wider(names_from = all_of(group1), values_from = all_of(group1), names_prefix = 'GRP_') %>% 
   select(Mass, HC, OC, contains('GRP_')) %>% 
   group_by(Mass) %>% 
   fill(contains('GRP_'), .direction = 'downup')  %>% 
@@ -338,7 +326,7 @@ vk_plot <- ggplot(df_w,
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
 
 filename <- file.path(comparison_dir, paste0('vk_', group1, '_all_data.png'))
-ggsave(filename, vk_plot, dpi = 300, height = 8)
+ggsave(filename, vk_plot, dpi = 300, width = 8, height = 8)
 
 ## Upset plot all features group 1
 
@@ -379,7 +367,7 @@ for(i in 1:ncol(comb_g1)){
   
   df_comb <- df_longer %>% 
     filter((!!! group1_s) == val1 | (!!! group1_s) == val2) %>% 
-    pivot_wider(names_from = all_of(group1), values_from = group1, names_prefix = 'GRP_') %>% 
+    pivot_wider(names_from = all_of(group1), values_from = all_of(group1), names_prefix = 'GRP_') %>% 
     select(Mass, HC, OC, Class, GFE, DBE, contains('GRP_')) %>% 
     group_by(Mass) %>% 
     fill(contains('GRP_'), .direction = 'downup')  %>% 
@@ -460,7 +448,7 @@ for(i in 1:ncol(comb_g1)){
   
   filename <- file.path(comparison_dir, paste0('upset_plot_', val1, '_vs_', val2, '.png'))
   png(filename, width = 2400, height = 2400, res = 300)
-  upset(fromList(group_list), order.by = "freq")
+  print(upset(fromList(group_list), order.by = "freq"))
   dev.off()
 }
 
@@ -474,7 +462,7 @@ dir.create(comparison_dir)
 
 if(group2 != 'NULL'){
   df_w <- df_longer %>% 
-    pivot_wider(names_from = all_of(group2), values_from = group2, names_prefix = 'GRP_') %>% 
+    pivot_wider(names_from = all_of(group2), values_from = all_of(group2), names_prefix = 'GRP_') %>% 
     select(Mass, HC, OC, contains('GRP_')) %>% 
     group_by(Mass) %>% 
     fill(contains('GRP_'), .direction = 'downup')  %>% 
@@ -497,7 +485,7 @@ if(group2 != 'NULL'){
     theme(plot.title = element_text(face = 'bold', hjust = 0.5))
   
   filename <- file.path(comparison_dir, paste0('VK_', group2, '_all_data.png'))
-  ggsave(filename, vk_plot, dpi = 300, height = 8)
+  ggsave(filename, vk_plot, dpi = 300, width = 8, height = 8)
   
   ## Upset plot all features group 2
   
@@ -540,7 +528,7 @@ if(group2 != 'NULL'){
     
     df_comb <- df_longer %>% 
       filter((!!! group2_s) == val1 | (!!! group2_s) == val2) %>% 
-      pivot_wider(names_from = all_of(group2), values_from = group2, names_prefix = 'GRP_') %>% 
+      pivot_wider(names_from = all_of(group2), values_from = all_of(group2), names_prefix = 'GRP_') %>% 
       select(Mass, HC, OC, Class, GFE, DBE, contains('GRP_')) %>% 
       group_by(Mass) %>% 
       fill(contains('GRP_'), .direction = 'downup')  %>% 
@@ -621,7 +609,7 @@ if(group2 != 'NULL'){
     
     filename <- file.path(comparison_dir, paste0('upset_plot_', val1, '_vs_', val2, '.png'))
     png(filename, width = 2400, height = 2400, res = 300)
-    upset(fromList(group_list), order.by = "freq")
+    print(upset(fromList(group_list), order.by = "freq"))
     dev.off()
   }
   

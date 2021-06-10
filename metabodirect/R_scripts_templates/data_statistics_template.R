@@ -52,9 +52,9 @@ class_comp[is.na(class_comp)] <- 0
 
 #### NMDS ####
 
-if(norm_method %in% c('max', 'minmax', 'sum', 'none')){
+if(norm_method %in% c('max', 'sum', 'none')){
   dm.method = 'bray'
-}else if(norm_method %in% c('mean', 'median', 'z_score')){
+}else if(norm_method %in% c('mean', 'median', 'z_score', 'minmax')){
   dm.method = 'euclidean'
 }else {
   dm.method = 'jaccard'

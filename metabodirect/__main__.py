@@ -92,9 +92,9 @@ def main():
                                                           else os.path.join(list_dir[0], 'filtered_metadata.csv'),
                                                           groups=args.group)
         r_control.run_r(kegg_annotation_script)
-        print(f'Find results and R script in the directory: {os.path.abspath(list_dir[2])}')
+        print(f'\nFind results and R script in the directory: {os.path.abspath(list_dir[2])}')
     else:
-        print('KEGG annotation not selected. If you wish to perform a KEGG annotation run the script again using'
+        print('\nKEGG annotation not selected. If you wish to perform a KEGG annotation run the script again using'
               'the -k/--kegg_annotation option')
 
     print('\n------------------------\nData Exploration finished\n------------------------\n')

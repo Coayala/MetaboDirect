@@ -51,7 +51,7 @@ def run_r(rscript):
         # if out:
         #     print(out)
 
-        if err:
-            print(err)
+        # if err:
+        #     print(err)
     else:
         print('Rscript not accesible')
