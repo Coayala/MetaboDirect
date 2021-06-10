@@ -35,6 +35,7 @@ setup(
     entry_points={
         "console_scripts": [
             "metabodirect=metabodirect.__main__:main",
+            "test_normalization=metabodirect.test_normalization:main"
         ]
     },
 )
