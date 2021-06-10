@@ -50,7 +50,7 @@ MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8
 Information about the arguments can be obtaining using the option -h/--help
 
 ```
-./run_metabodirect.py -h
+metabodirect -h
 ```
 For more information please check the [User Manual](https://coayala.github.io/MetaboDirect/).
 
