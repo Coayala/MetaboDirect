@@ -87,7 +87,9 @@ def get_args():
                       default='max')
 
     norm.add_argument('--norm_subset',
-                      help='Subset of the data to use for normalization purpouses. LOS uses peaks in the top L '
+                      help='Subset of the data to use for normalization purpouses. '
+                           'Available subset methods: ALL, LOS, PPP'
+                           'LOS uses peaks in the top L '
                            'order statistics, PPP uses peaks having a minimum percentage of observed values.',
                       metavar='STR',
                       type=str,
@@ -99,8 +101,8 @@ def get_args():
                       help='If using a sample subset for nomalization, this parameter defines the subsample of peaks '
                            'that will be used for normalization.'
                            'If not defined, the default values will be 0.3 for LOS and 0.5 for PPP',
-                      metavar='STR',
-                      type=str
+                      metavar='FLOAT',
+                      type=float
                       )
 
     norm.add_argument('--log_transform',
