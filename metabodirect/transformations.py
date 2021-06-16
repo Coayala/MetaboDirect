@@ -40,10 +40,10 @@ def calculate_transformations(df, keys, path):
     i = 1
 
     for sample in sorted(df_transf.columns):
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]\t{i}\\{len(df_transf.columns)}\t{sample}')
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}] {i}\\{len(df_transf.columns)}\t{sample}')
 
         mz_list = set(float(x) for x in df_transf[sample] if float(x) > 0)
-        print('   Total m/z values', len(mz_list))
+        print('\t\tTotal m/z values', len(mz_list))
 
         # make m/z substractions in all versus all fashion
         # doing all vs all the subtractions and filter
@@ -155,7 +155,7 @@ def create_cytoscape_network(node_table, path):
         edge_table['Feature_Y'] = edge_table['Feature_Y'].astype(str)
         # Renaming columns for clarity
         edge_table = edge_table.rename(columns={'Feature_X': 'source', 'Feature_Y': 'target'})
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]\t{i}\\{len(edge_files)}'
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}] {i}\\{len(edge_files)}'
               f'\tCreating network for sample: {edge_table.SampleID.unique()[0]}')
         with pd.option_context('mode.chained_assignment', None):
             p4c.create_network_from_data_frames(None, edge_table,
