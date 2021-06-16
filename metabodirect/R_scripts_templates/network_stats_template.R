@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
   library(ggnewscale)
   library(ggpubr)
   library(rstatix)
+  library(pheatmap)
 }) 
 
 # Values between two '%' are to be replaced by the correct values during the python script
@@ -24,21 +25,59 @@ suppressPackageStartupMessages({
 setwd('%currentdir%')
 
 my_data.file <- file.path('%outdir%', '5_transformations', 'network_summary_statistics.csv')
+my_transf_counts.file <- file.path('%outdir%', '5_transformations', 'Transformations_summary_counts.csv')
 my_metadata.file <- file.path('%metadata%')
 my_outdir <- file.path('%outdir%', '5_transformations')
 
 #### Import data ####
 
 network_data <-  read_csv(my_data.file, col_types = cols())
+transf_counts <- read_csv(my_transf_counts.file, col_types = cols())
 metadata <- read_csv(my_metadata.file, col_types = cols())
 
 #### Reformat data files ####
+
+### Change all metadata columns to factors to avoid problems at plotting
+
+for(i in 2:ncol(metadata)){
+  metadata[,i] <- factor(as_vector(metadata[,i])) 
+}
 
 network_data_longer <- network_data %>%
   pivot_longer(!SampleID, names_to = "Parameters", values_to = "Value") %>% 
   left_join(metadata, by = 'SampleID')
 
-#### Plot stats summary
+transf_counts_wide <- transf_counts %>% 
+  select(SampleID, Transformation, Perc_Counts) %>% 
+  column_to_rownames(var = 'SampleID') %>% 
+  pivot_wider(names_from = 'Transformation', values_from = 'Perc_Counts') %>% 
+  t()
+
+
+#### Heatmap of percentage of transformations ####
+
+col_annot <- metadata %>% 
+  select(SampleID, %group1%, %group2%) %>% 
+  column_to_rownames(var = 'SampleID')
+
+row_annot <- transf_counts %>% 
+  select(Transformation, Group) %>% 
+  distinct() %>% 
+  column_to_rownames(var = 'Transformation')
+
+mapcolor <- colorRampPalette(brewer.pal(11, 'RdYlBu'))(100)[100:1]
+
+filename <- filename <- file.path(my_outdir, 'percentage_transformations.pdf')
+pdf(filename, height = 10, width = 8)
+pheatmap(transf_counts_wide,
+         annotation_col = col_annot,
+         annotation_row = row_annot,
+         color = mapcolor,
+         main = 'Transformations (%) per sample')
+dev.off()
+
+
+#### Plot stats summary ####
 
 my_colors <- get_palette('Dark2', length(unique(network_data_longer$%group1%)))
 names(my_colors) <- unique(network_data_longer$%group1%) 

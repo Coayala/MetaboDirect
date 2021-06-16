@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import metabodirect
 
 
 # --------------------------------------------------
@@ -13,7 +14,7 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('data_file',
-                        help='Name of the file with the DI-MS data in .csv format',
+                        help='Name of the file with the Direct Injection MS data in .csv format',
                         metavar='DATA',
                         type=str)
 
@@ -61,11 +62,10 @@ def get_args():
                         type=str,
                         default='Default key')
 
-    parser.add_argument('-t',
-                        '--transformation_analysis',
-                        help='Set this option to perform a transformation network analysis of the samples',
-                        action='store_true',
-                        default=False)
+    parser.add_argument('-v',
+                        '--version',
+                        action='version',
+                        version='%(prog)s {version}'.format(version=metabodirect.__version__))
 
     parser.add_argument('-k',
                         '--kegg_annotation',
@@ -112,6 +112,23 @@ def get_args():
                       default=False
                       )
 
+    transf = parser.add_argument_group('Transformation network options',
+                                       'Options to control wheter transformations will be calculated and if '
+                                       'networks will be constructed')
+
+    transf.add_argument('-t',
+                        '--calculate_transformations',
+                        help='Set this option to calculate transformations based on biochemical key',
+                        action='store_true',
+                        default=False)
+
+    transf.add_argument('-c',
+                        '--create_networks',
+                        help='Set this option to build transformation networks based on transfomations calculated'
+                             'with the biochemical key (this options turns -t automatically)',
+                        action='store_true',
+                        default=False)
+
     args = parser.parse_args()
 
     # Check that command line arguments are specified properly
@@ -134,5 +151,8 @@ def get_args():
             parser.error(f'Incorrect subset parameter. Subset parameter must be between 0 and 1 (proportion).')
         if not args.subset_parameter:
             args.subset_parameter = 0.3 if args.norm_subset == 'LOS' else 0.5
+
+    if args.create_networks:
+        args.calculate_transformations = True
 
     return args

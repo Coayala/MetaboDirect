@@ -15,7 +15,7 @@ REQUIRED = ['pandas', 'numpy', 'py4cytoscape',
 # This call to setup() does all the work
 setup(
     name="metabodirect",
-    version="0.1.3",
+    version="0.1.6",
     description="Analyze FT-ICR-MS data",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -30,12 +30,12 @@ setup(
     ],
     packages=["metabodirect"],
     include_package_data=True,
-    scripts=['bin/metabodirect.py', 'bin/test_normalization.py'],
     install_requires=REQUIRED,
     entry_points={
         "console_scripts": [
             "metabodirect=metabodirect.__main__:main",
-            "test_normalization=metabodirect.test_normalization:main"
+            "test_normalization=metabodirect.test_normalization:main",
+            "create_networks=metabodirect.create_networks:main"
         ]
     },
 )

@@ -43,6 +43,12 @@ classification <- read_csv(classification.file, col_types = cols())
 
 #### Reformat data files ####
 
+### Change all metadata columns to factors to avoid problems at plotting
+
+for(i in 2:ncol(metadata)){
+  metadata[,i] <- factor(as_vector(metadata[,i])) 
+}
+
 # Intensity data file
 df_longer <- df %>%
   pivot_longer(metadata$SampleID, names_to = 'SampleID', values_to = 'NormIntensity') %>% 
@@ -455,12 +461,14 @@ for(i in 1:ncol(comb_g1)){
 ## Grouping variable 2
 
 group2 <- '%group2%'
+
+if(group2 != 'NULL'){
 group2_s <- syms(group2)
 
 comparison_dir <- file.path(my_outdir, paste0('Comparisons-', group2))
 dir.create(comparison_dir)
 
-if(group2 != 'NULL'){
+
   df_w <- df_longer %>% 
     pivot_wider(names_from = all_of(group2), values_from = all_of(group2), names_prefix = 'GRP_') %>% 
     select(Mass, HC, OC, contains('GRP_')) %>% 
@@ -504,7 +512,7 @@ if(group2 != 'NULL'){
   
   filename <- file.path(comparison_dir, paste0('upset_plot_', group2, '_all_data.png'))
   png(filename, width = 2400, height = 2400, res = 300)
-  upset(fromList(group_list), order.by = "freq")
+  print(upset(fromList(group_list), order.by = "freq"))
   dev.off()
   
   
@@ -514,7 +522,7 @@ if(group2 != 'NULL'){
   
   comb_g2 <- combn(unique(df_longer$'%group2%'), 2)
   
-  my_colors <- get_palette('jco', length(unique(df_longer$'%group2%')) + ncol(comb_g1))
+  my_colors <- get_palette('jco', length(unique(df_longer$'%group2%')) + ncol(comb_g2))
   color_names <- unique(df_longer$'%group2%')
   for(i in 1:ncol(comb_g2)){
     color_names <- append(color_names, paste0(comb_g2[1,i], ', ', comb_g2[2,i]))

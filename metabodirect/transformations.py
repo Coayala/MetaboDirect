@@ -2,6 +2,7 @@
 import os
 import glob
 import time
+import datetime
 import seaborn as sns
 import pandas as pd
 import py4cytoscape as p4c
@@ -36,9 +37,10 @@ def calculate_transformations(df, keys, path):
     df_transf = df_transf.drop('Mass', axis=1)
     df_transf = df_transf.replace('X', 0)
     print('Calculating m/z differences per sample column can take a little while...\n')
+    i = 1
 
     for sample in sorted(df_transf.columns):
-        print(sample)
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]\t{i}\\{len(df_transf.columns)}\t{sample}')
 
         mz_list = set(float(x) for x in df_transf[sample] if float(x) > 0)
         print('   Total m/z values', len(mz_list))
@@ -69,7 +71,7 @@ def calculate_transformations(df, keys, path):
 
         # Compile counts
         result_counts = pd.DataFrame(
-            result_df.groupby(['SampleID', 'Group', 'Transformation']).size().reset_index(name='Counts'))
+            result_df.groupby(['SampleID', 'Group', 'Transformation', 'Formula']).size().reset_index(name='Counts'))
 
         total_transformations = sum(result_counts['Counts'])
 
@@ -79,6 +81,7 @@ def calculate_transformations(df, keys, path):
         # Save final_counts
         filename = os.path.join(path, 'counts_' + sample + '.csv')
         result_counts.to_csv(filename, index=False)
+        i = i + 1
 
     print("\u2713 Done!")
     return
@@ -98,6 +101,17 @@ def summarize_transformations(path):
 
     filename = os.path.join(path, 'Transformations_summary_counts.csv')
     summary_counts.to_csv(filename, index=False)
+
+    files_path = os.path.join(path, 'transf_by_sample', 'transformations_*.csv')
+    files = glob.glob(files_path)
+    summary_transf = pd.DataFrame()
+
+    for file in files:
+        df = pd.read_csv(file)
+        summary_transf = pd.concat([summary_transf, df], axis=0)
+
+    filename = os.path.join(path, 'Transformations_summary_all.csv')
+    summary_transf.to_csv(filename, index=False)
     return
 
 
@@ -131,6 +145,7 @@ def create_cytoscape_network(node_table, path):
     # Create a list of the transformation files to be used as the edge tables for the networks
     files_path = os.path.join(path, 'transf_by_sample', 'transformations_*.csv')
     edge_files = glob.glob(files_path)
+    i = 1
 
     for file in edge_files:
         edge_table = pd.read_csv(file)
@@ -140,7 +155,8 @@ def create_cytoscape_network(node_table, path):
         edge_table['Feature_Y'] = edge_table['Feature_Y'].astype(str)
         # Renaming columns for clarity
         edge_table = edge_table.rename(columns={'Feature_X': 'source', 'Feature_Y': 'target'})
-        print(f'Creating transformations network for sample: {edge_table.SampleID.unique()[0]}')
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]\t{i}\\{len(edge_files)}'
+              f'\tCreating network for sample: {edge_table.SampleID.unique()[0]}')
         with pd.option_context('mode.chained_assignment', None):
             p4c.create_network_from_data_frames(None, edge_table,
                                                 source_id_list='source',
@@ -177,7 +193,8 @@ def create_cytoscape_network(node_table, path):
              'netRadius': network_analyzer['radius']}
         )
 
-        time.sleep(10)
+        time.sleep(5)
+        i = i + 1
 
     network_stats = pd.DataFrame(network_stats)
     filename = os.path.join(path, 'network_summary_statistics.csv')

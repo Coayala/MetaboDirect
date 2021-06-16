@@ -44,6 +44,12 @@ df <- read_csv(my_report.file)
 
 #### Reformat data files ####
 
+### Change all metadata columns to factors to avoid problems at plotting
+
+for(i in 2:ncol(metadata)){
+  metadata[,i] <- factor(as_vector(metadata[,i])) 
+}
+
 # Intensity data file
 
 matrix <- matrix[metadata$SampleID,]
@@ -108,7 +114,6 @@ ggsave(filename, nmds_plot, dpi = 300)
 
 set.seed(456)
 
-dm.method = "bray"
 dist.matrix <- vegdist(matrix , method = dm.method) # dist matrix
 
 permanova <- adonis(dist.matrix ~ %group1% + %group2%, 

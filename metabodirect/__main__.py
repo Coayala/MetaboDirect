@@ -111,9 +111,9 @@ def main():
 
     print('------------------------\nStarting transformation network analysis\n------------------------\n')
 
-    if not args.transformation_analysis:
-        print('Transformation analysis not selected. '
-              'If you wish to do a transformation analysis please set the option "-t"')
+    if not args.calculate_transformations:
+        print('Calculate transformations not selected. '
+              'If you wish to do calculate transformations based on biochemical key please set the option "-t"')
         sys.exit()
 
     keys = transformations.get_keys(os.path.join(os.path.split(os.path.realpath(__file__))[0],
@@ -123,6 +123,17 @@ def main():
     transformations.calculate_transformations(df, keys, path=list_dir[5])
     transformations.summarize_transformations(path=list_dir[4])
     node_table = transformations.get_node_table(df, path=list_dir[4])
+
+    print(f'Finished to calculate transformatios, please find transformation files in the directory:'
+          f'{os.path.abspath(list_dir[5])}')
+
+    if not args.create_networks:
+        print(f'Create networks not selected.'
+              f'If you wish to create networks automatically please set the option -c.'
+              f'Otherwise to create networks from previously calculated transformations use the following command '
+              f'from a terminal window:\n'
+              f'> create_networks {args.outdir}')
+        sys.exit()
 
     check = ''
     while check != 'You are connected to Cytoscape!':
