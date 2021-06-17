@@ -1,4 +1,5 @@
-# User Guide for MetaboDirect
+# User Guide for MetaboDirect 
+##### (*v0.1.8*)  Updated 6/17/2021
 
 ## Introduction
 
@@ -21,12 +22,12 @@ metabodirect -h
 ```
 
 ```
-usage: metabodirect [-h] [-o OUTDIR] [-m INT INT] -g STR [STR ...] [-f STR STR] [-b STR] [-t] [-k] [-n STR] [--norm_subset STR] [--subset_parameter FLOAT] [--log_transform] DATA METADATA
+usage: metabodirect [-h] [-o OUTDIR] [-m INT INT] -g STR [STR ...] [-f STR STR] [-b STR] [-v] [-k] [-n STR] [--norm_subset STR] [--subset_parameter FLOAT] [--log_transform] [-t] [-c] DATA METADATA
 
 Program for running all the MetaboDirect analysis pipeline
 
 positional arguments:
-  DATA                  Name of the file with the DI-MS data in .csv format
+  DATA                  Name of the file with the Direct Injection MS data in .csv format
   METADATA              Name of the file with the sample information (metadata) in .csv format
 
 optional arguments:
@@ -42,8 +43,7 @@ optional arguments:
                         (default: None)
   -b STR, --biochem_key STR
                         File with the biochemical key to use for the transformation network (default: Default key)
-  -t, --transformation_analysis
-                        Set this option to perform a transformation network analysis of the samples (default: False)
+  -v, --version         show program's version number and exit
   -k, --kegg_annotation
                         Set this option to perform annotation of the molecular formulas usingthe KEGG database (default: False)
 
@@ -59,12 +59,32 @@ Normalization methods:
                         0.5 for PPP (default: None)
   --log_transform       Set this option to log transform the data. (Program will fail if there are peaks with intensities of 0. Consider tranforming this values into 1 if log transformation is desired
                         (default: False)
+
+Transformation network options:
+  Options to control wheter transformations will be calculated and if networks will be constructed
+
+  -t, --calculate_transformations
+                        Set this option to calculate transformations based on biochemical key (default: False)
+  -c, --create_networks
+                        Set this option to build transformation networks based on transfomations calculatedwith the biochemical key (this options turns -t automatically) (default: False)
 ```
 
 #### Example using test data
 
+[Example data](https://github.com/Coayala/MetaboDirect/tree/main/example) can be downloaded from metabodirect `example` directory, or from the command line with:
+
 ```
-metabodirect /path/to/MetaboDirect/metabodirect/data/Report.csv /path/to/MetaboDirect/metabodirect/data/metadata.csv -o test -m 200 400 -g Habitat Depth -f Testing Yes -t -k  
+# Report file
+wget https://raw.githubusercontent.com/Coayala/MetaboDirect/main/example/Report.csv --no-check-certificate
+
+# Metadata file
+wget https://raw.githubusercontent.com/Coayala/MetaboDirect/main/example/metadata.csv --no-check-certificate
+```
+
+Try analizing example data using:
+
+```
+metabodirect Report.csv metadata.csv -o test -m 200 400 -g Habitat Depth -t -k  
 ```
 
 ## MetaboDirect arguments
