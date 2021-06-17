@@ -361,7 +361,7 @@ dev.off()
 comb_g1 <- combn(unique(df_longer$'%group1%'), 2)
 
 my_colors <- get_palette('Dark2', length(unique(df_longer$'%group1%')) + ncol(comb_g1))
-color_names <- unique(df_longer$'%group1%')
+color_names <- unique(as.character(df_longer$'%group1%'))
 for(i in 1:ncol(comb_g1)){
   color_names <- append(color_names, paste0(comb_g1[1,i], ', ', comb_g1[2,i]))
 }
@@ -523,7 +523,7 @@ dir.create(comparison_dir)
   comb_g2 <- combn(unique(df_longer$'%group2%'), 2)
   
   my_colors <- get_palette('jco', length(unique(df_longer$'%group2%')) + ncol(comb_g2))
-  color_names <- unique(df_longer$'%group2%')
+  color_names <- unique(as.character(df_longer$'%group2%'))
   for(i in 1:ncol(comb_g2)){
     color_names <- append(color_names, paste0(comb_g2[1,i], ', ', comb_g2[2,i]))
   }
