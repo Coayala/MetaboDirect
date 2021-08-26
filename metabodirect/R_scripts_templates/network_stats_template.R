@@ -24,10 +24,10 @@ suppressPackageStartupMessages({
 
 setwd('%currentdir%')
 
-my_data.file <- file.path('%outdir%', '5_transformations', 'network_summary_statistics.csv')
-my_transf_counts.file <- file.path('%outdir%', '5_transformations', 'Transformations_summary_counts.csv')
+my_data.file <- file.path('%outdir%', '6_transformations', 'network_summary_statistics.csv')
+my_transf_counts.file <- file.path('%outdir%', '6_transformations', 'Transformations_summary_counts.csv')
 my_metadata.file <- file.path('%metadata%')
-my_outdir <- file.path('%outdir%', '5_transformations')
+my_outdir <- file.path('%outdir%', '6_transformations')
 
 #### Import data ####
 
@@ -53,6 +53,7 @@ transf_counts_wide <- transf_counts %>%
   column_to_rownames(var = 'SampleID') %>% 
   t()
 
+transf_counts_wide[is.na(transf_counts_wide)] <- 0
 
 #### Heatmap of percentage of transformations ####
 
