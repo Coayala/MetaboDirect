@@ -112,7 +112,7 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
 
 #### Plot - Density Diagram ####
 
-for(var in c('GFE', 'AI', 'DBE')){
+for(var in c('GFE', 'AI_mod', 'DBE')){
   var_s = syms(var)
   density_plot <- ggplot(df_longer,
                          aes(x = (!!! var_s),
@@ -130,7 +130,7 @@ for(var in c('GFE', 'AI', 'DBE')){
 }
 #### Plot - Violin ####
 
-for(var in c('GFE', 'AI', 'DBE')){
+for(var in c('GFE', 'AI_mod', 'DBE')){
   
   var_s = syms(var)
   formula <- formula(paste0(var, ' ~ %group1%'))
@@ -163,7 +163,7 @@ for(var in c('GFE', 'AI', 'DBE')){
 
 # Magnitude-weighted values
 
-for(var in c('GFE', 'AI', 'DBE')){
+for(var in c('GFE', 'AI_mod', 'DBE')){
   
   var_s = syms(var)
   newnames <- paste0(var, c('_weighted', '_magniture_average'))
@@ -210,16 +210,21 @@ for(var in c('GFE', 'AI', 'DBE')){
 
 #### Plot - Class comp bar####
 
+class_colors <- brewer.pal(length(classification$Class) + 1, name = 'Set3')
+names(class_colors) <- c(classification$Class, 'Other')
+
 class_bar <- class_comp %>% 
   group_by(%group1%, %group2%, Class)  %>% 
-  summarise(Count = mean(Count), .groups = 'drop') %>% 
+  summarise(Count = mean(Count, na.rm = TRUE)) %>%
+  mutate(Perc_count = Count/sum(Count, na.rm = TRUE)*100) %>%
   ggplot(aes(x = %group1%,
-             y = Count,
+             y = Perc_count,
              fill = Class)) +
   geom_col() +
   theme_bw() +
-  scale_fill_brewer(palette = 'Set3') +
-  labs(title = 'Class Composition') +
+  scale_fill_manual(values = class_colors) +
+  labs(title = 'Class Composition',
+       y = 'Percentage') +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   facet_grid(cols = vars(%group2%))
 
@@ -230,71 +235,21 @@ ggsave(filename, class_bar, dpi = 300, width = 8, height = 8)
 
 el_bar <- el_comp %>% 
   group_by(%group1%, %group2%, Element)  %>% 
-  summarise(Count = mean(Count), .groups = 'drop') %>% 
+  summarise(Count = mean(Count, na.rm = TRUE)) %>% 
+  mutate(Perc_count = Count/sum(Count, na.rm = TRUE)*100) %>%
   ggplot(aes(x = %group1%,
-             y = Count,
+             y = Perc_count,
              fill = Element)) +
   geom_col() +
   theme_bw() +
   scale_fill_brewer(palette = 'Accent') +
-  labs(title = 'Elemental Composition') +
+  labs(title = 'Elemental Composition',
+       y = 'Percentage') +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
   facet_grid(cols = vars(%group2%))
 
 filename <- file.path(my_outdir, 'Composition_by_element.png')
 ggsave(filename, el_bar, dpi = 300, width = 8, height = 8)
-
-#### Chemodiversity index ####
-
-intensity_matrix <- df %>% 
-  column_to_rownames(var = 'Mass') %>% 
-  select(all_of(metadata$SampleID)) %>% 
-  t()
-
-richness <- specaccum(intensity_matrix, method = 'random', permutations = 100)
-
-richness.long <- as_tibble(t(richness$perm))
-colnames(richness.long) <- 1:ncol(richness.long)
-
-richness.long <- richness.long %>% 
-  pivot_longer(everything(), names_to = 'Sites', values_to = 'Richness')
-
-richness.long$Sites <- as.numeric(richness.long$Sites)
-
-richness.plot <- ggplot(richness.long,
-                        aes(x = Sites,
-                            y = Richness,
-                            group = Sites)) +
-  geom_boxplot(fill = 'yellow') +
-  theme_bw()
-
-filename <- file.path(my_outdir, 'Diversity_plot_richness.png')
-ggsave(filename, richness.plot, dpi = 300, width = 8, height = 8)
-
-sample_pool <- metadata$'%group1%'
-names(sample_pool) <- metadata$SampleID
-
-chemodiversity_estimators <- specpool(intensity_matrix, sample_pool, smallsample = FALSE) %>% 
-  rownames_to_column(var = '%group1%')
-
-chemodiversity_plot <- ggplot(chemodiversity_estimators,
-                              aes(x = %group1%,
-                                  y = chao,
-                                  color = %group1%)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymax = chao + chao.se,
-                    ymin = chao - chao.se),
-                width = .1) +
-  theme_bw() +
-  scale_fill_brewer(palette = 'Accent') +
-  labs(title = 'Chemodiversity index',
-       subtitle = 'Chao richness estimator') +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5),
-        plot.subtitle = element_text(face = 'italic', hjust = 0.5))
-chemodiversity_plot
-
-filename <- file.path(my_outdir, 'Chemodiversity_plot.png')
-ggsave(filename, chemodiversity_plot, dpi = 300, width = 8, height = 8)
 
 #### Comparisons ####
 
@@ -360,11 +315,8 @@ dev.off()
 
 comb_g1 <- combn(unique(df_longer$'%group1%'), 2)
 
-my_colors <- get_palette('Dark2', length(unique(df_longer$'%group1%')) + ncol(comb_g1))
-color_names <- unique(as.character(df_longer$'%group1%'))
-for(i in 1:ncol(comb_g1)){
-  color_names <- append(color_names, paste0(comb_g1[1,i], ', ', comb_g1[2,i]))
-}
+my_colors <- c(get_palette('d3', length(unique(df_longer$'%group1%'))), 'gray80')
+color_names <- c(unique(as.character(df_longer$'%group1%')), 'Shared')
 names(my_colors) <- color_names
 
 for(i in 1:ncol(comb_g1)){
@@ -378,7 +330,8 @@ for(i in 1:ncol(comb_g1)){
     group_by(Mass) %>% 
     fill(contains('GRP_'), .direction = 'downup')  %>% 
     distinct() %>% 
-    unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+    unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE) %>% 
+    mutate(Presence = ifelse(str_detect(Presence, ', '), 'Shared', Presence))
   
   vk_plot <- ggplot(df_comb,
                     aes(x = OC,
@@ -427,7 +380,7 @@ for(i in 1:ncol(comb_g1)){
                fill = Class)) +
     geom_col() +
     theme_bw() +
-    scale_fill_brewer(palette = 'Set3') +
+    scale_fill_manual(values = class_colors) +
     labs(title = 'Class Composition') +
     theme(plot.title = element_text(face = 'bold', hjust = 0.5),
           axis.title = element_blank(),
@@ -522,11 +475,8 @@ dir.create(comparison_dir)
   
   comb_g2 <- combn(unique(df_longer$'%group2%'), 2)
   
-  my_colors <- get_palette('jco', length(unique(df_longer$'%group2%')) + ncol(comb_g2))
-  color_names <- unique(as.character(df_longer$'%group2%'))
-  for(i in 1:ncol(comb_g2)){
-    color_names <- append(color_names, paste0(comb_g2[1,i], ', ', comb_g2[2,i]))
-  }
+  my_colors <- c(get_palette('d3', length(unique(df_longer$'%group2%'))), 'gray80')
+  color_names <- c(unique(as.character(df_longer$'%group2%')), 'Shared')
   names(my_colors) <- color_names
   
   
@@ -541,7 +491,8 @@ dir.create(comparison_dir)
       group_by(Mass) %>% 
       fill(contains('GRP_'), .direction = 'downup')  %>% 
       distinct() %>% 
-      unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
+      unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE) %>% 
+      mutate(Presence = ifelse(str_detect(Presence, ', '), 'Shared', Presence))
     
     vk_plot <- ggplot(df_comb,
                       aes(x = OC,
@@ -590,7 +541,7 @@ dir.create(comparison_dir)
                  fill = Class)) +
       geom_col() +
       theme_bw() +
-      scale_fill_brewer(palette = 'Set3') +
+      scale_fill_manual(values = class_colors) +
       labs(title = 'Class Composition') +
       theme(plot.title = element_text(face = 'bold', hjust = 0.5),
             axis.title = element_blank(),

@@ -55,32 +55,36 @@ def calculate_transformations(df, keys, path):
         ) for r in result_tuples for k in keys
             if r[2] - 0.001 <= float(k[3]) <= r[2] + 0.001]
 
-        # make np.array from list of lists
-        result_tuples = np.vstack(result_tuples)
+        if  len(result_tuples) == 0 :
+            print('No transformations were found for this sample, moving to the next one')
+        
+        else :
+            # make np.array from list of lists
+            result_tuples = np.vstack(result_tuples)
 
-        # make pd df
-        result_df = pd.DataFrame(result_tuples, columns=[
-            'Feature_X', 'Feature_Y', 'Difference',
-            'Group', 'Transformation', 'Formula', 'mf'])
+            # make pd df
+            result_df = pd.DataFrame(result_tuples, columns=[
+                'Feature_X', 'Feature_Y', 'Difference',
+                'Group', 'Transformation', 'Formula', 'mf'])
 
-        result_df['SampleID'] = sample
+            result_df['SampleID'] = sample
 
-        print('   Saving results')
-        filename = os.path.join(path, 'transformations_' + sample + '.csv')
-        result_df.to_csv(filename, index=False)
+            print('   Saving results')
+            filename = os.path.join(path, 'transformations_' + sample + '.csv')
+            result_df.to_csv(filename, index=False)
 
-        # Compile counts
-        result_counts = pd.DataFrame(
-            result_df.groupby(['SampleID', 'Group', 'Transformation', 'Formula']).size().reset_index(name='Counts'))
+            # Compile counts
+            result_counts = pd.DataFrame(
+                result_df.groupby(['SampleID', 'Group', 'Transformation', 'Formula']).size().reset_index(name='Counts'))
 
-        total_transformations = sum(result_counts['Counts'])
+            total_transformations = sum(result_counts['Counts'])
 
-        result_counts['Perc_Counts'] = result_counts['Counts'] / total_transformations
-        result_counts = result_counts.sort_values(by="Counts")
+            result_counts['Perc_Counts'] = result_counts['Counts'] / total_transformations
+            result_counts = result_counts.sort_values(by="Counts")
 
-        # Save final_counts
-        filename = os.path.join(path, 'counts_' + sample + '.csv')
-        result_counts.to_csv(filename, index=False)
+            # Save final_counts
+            filename = os.path.join(path, 'counts_' + sample + '.csv')
+            result_counts.to_csv(filename, index=False)
         i = i + 1
 
     print("\u2713 Done!")

@@ -49,8 +49,8 @@ network_data_longer <- network_data %>%
 
 transf_counts_wide <- transf_counts %>% 
   select(SampleID, Transformation, Perc_Counts) %>% 
+  pivot_wider(names_from = 'Transformation', values_from = 'Perc_Counts') %>%
   column_to_rownames(var = 'SampleID') %>% 
-  pivot_wider(names_from = 'Transformation', values_from = 'Perc_Counts') %>% 
   t()
 
 

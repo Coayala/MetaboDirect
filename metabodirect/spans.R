@@ -56,18 +56,10 @@ modified_spans_procedure <- function(omicsData, norm_fn = c('max', 'mean', 'medi
   }
 
   # assign group variable or internally call group_designation() if user specified a grouping column in f_data
-  if(is.null(group)){
-    if(!inherits(attr(omicsData, "group_DF"), "data.frame")) stop("the omicsData object must have a grouping structure, usually set by calling group_designation() on the object")
-    group_df = attr(omicsData, "group_DF")
-    reorder = match(colnames(omicsData$e_data)[-which(colnames(omicsData$e_data) == edata_cname)], as.character(group_df[,fdata_cname]))
-    group = group_df[reorder,]$Group
-  } else{
-    if(!is.character(group) | !(group %in% colnames(omicsData$f_data[,-which(colnames(omicsData$f_data) == fdata_cname)]))) stop("group must be a string specifying a column in f_data by which to group by")
-    omicsData <- group_designation(omicsData, main_effects = group)
-    group_df = attr(omicsData, "group_DF")
-    reorder = match(colnames(omicsData$e_data)[-which(colnames(omicsData$e_data) == edata_cname)], as.character(group_df[,fdata_cname]))
-    group = group_df[reorder,]$Group
-  }
+  omicsData <- group_designation(omicsData, main_effects = group)
+  group_df = attr(omicsData, "group_DF")
+  reorder = match(colnames(omicsData$e_data)[-which(colnames(omicsData$e_data) == edata_cname)], as.character(group_df[,fdata_cname]))
+  group = group_df[reorder,]$Group
   
   # misc input checks
   if(!inherits(attr(omicsData, "group_DF"), "data.frame")) stop("the omicsData object must have a grouping structure, usually set by calling group_designation() on the object")

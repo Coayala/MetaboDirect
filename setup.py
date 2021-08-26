@@ -15,7 +15,7 @@ REQUIRED = ['pandas', 'numpy', 'py4cytoscape',
 # This call to setup() does all the work
 setup(
     name="metabodirect",
-    version="0.1.8",
+    version="0.2.1",
     description="Analyze FT-ICR-MS data",
     long_description=README,
     long_description_content_type="text/markdown",

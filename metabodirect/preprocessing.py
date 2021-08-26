@@ -202,7 +202,7 @@ def get_summary(df, on='Class'):
 
     t = t.melt(id_vars=[on], var_name='SampleID', value_name='NormIntensity')
 
-    t = t[t['NormIntensity'] > 0].reset_index(drop=True)
+    t = t[t['NormIntensity'] != 0].reset_index(drop=True)
 
     comp = t.groupby(['SampleID', on
                       ]).size().reset_index().rename(columns={0: 'Count'})
@@ -281,12 +281,13 @@ def make_directories(outdir):
     preprocess_dir = '1_preprocessing_output'
     diagnostics_dir = '2_diagnostics'
     exploratory_dir = '3_exploratory'
-    stats_dir = '4_statistics'
-    transf_dir = '5_transformations'
+    diversity_dir = '4_chemodiversity'
+    stats_dir = '5_statistics'
+    transf_dir = '6_transformations'
     transf_sub_dir = os.path.join(transf_dir, 'transf_by_sample')
 
     list_dir = [
-        preprocess_dir, diagnostics_dir, exploratory_dir, stats_dir, transf_dir, transf_sub_dir
+        preprocess_dir, diagnostics_dir, exploratory_dir, diversity_dir, stats_dir, transf_dir, transf_sub_dir
     ]
 
     list_dir = [os.path.join(project_name, x) for x in list_dir]
@@ -429,7 +430,14 @@ def data_normalization(df, norm_method, norm_subset, subset_parameter=1, log=Fal
     temp = df[df.columns[~df.columns.isin(samples)]]
     norm_data = temp.merge(norm_data, on='Mass')
 
-    return norm_data
+    # Non-normalized data for chemodiversity analysis
+    input_data['Mass'] = input_data.index
+    nonorm_data = input_data.reset_index(drop=True)
+    nonorm_data = nonorm_data.replace(np.nan, 0)
+    nonorm_data = temp.merge(nonorm_data, on='Mass')
+
+
+    return norm_data, nonorm_data
 
 
 # --------------------------------------------------

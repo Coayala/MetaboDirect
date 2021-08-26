@@ -12,6 +12,7 @@ import datetime
 import sys
 import pandas as pd
 import py4cytoscape as p4c
+import numpy as np
 from metabodirect import get_args, preprocessing, diagnostics, r_control, transformations
 
 
@@ -43,13 +44,18 @@ def main():
 
     df = preprocessing.data_filtering(df, args.mass_filter)
     df = preprocessing.thermo_idx_and_classes(df)
-    df = preprocessing.data_normalization(df, args.norm_method, args.norm_subset, args.subset_parameter,
+    df, df_nonorm = preprocessing.data_normalization(df, args.norm_method, args.norm_subset, args.subset_parameter,
                                           args.log_transform)
 
-    df_formulas = df[df['C'] > 0]
-
+    df_nonorm = df_nonorm[df_nonorm['C'] > 0]
+    filename = os.path.join(list_dir[0], 'Report_processed_noNorm.csv')
+    df_nonorm.to_csv(filename, index=False)
+    
+    
     filename = os.path.join(list_dir[0], 'Report_processed.csv')
     df.to_csv(filename, index=False)
+
+    df_formulas = df[df['C'] > 0]
     filename = os.path.join(list_dir[0], 'Report_processed_MolecFormulas.csv')
     df_formulas.to_csv(filename, index=False)
     print(f'Report saved as: {filename}')
@@ -59,17 +65,27 @@ def main():
     matrix_features.to_csv(os.path.join(list_dir[0], 'matrix_features.csv'))
 
     colnames = [col for col in list(df_formulas.columns) if col not in list(metadata['SampleID'])]
+
+    # Pivot and merge dataframe with all peaks
+    df_all = df.melt(id_vars=colnames, 
+                     var_name='SampleID', value_name='NormIntensity')
+    df_all = df_all[df_all['NormIntensity'] != 0].reset_index(drop=True)
+    df_all = df_all.merge(metadata, on='SampleID')
+    
+    # Pivot and merge dataframe of peaks with molecular formula assignment
     df = df_formulas.melt(id_vars=colnames,
                           var_name='SampleID', value_name='NormIntensity')
-    df = df[df['NormIntensity'] > 0].reset_index(drop=True)
+    df = df[df['NormIntensity'] != 0].reset_index(drop=True)
     df = df.merge(metadata, on='SampleID')
 
     print('\n------------------------\nData pre-processing finished\n------------------------\n')
 
     print('------------------------\nStarting data diagnostics\n------------------------\n')
 
+    print('Calculating number of peaks detected per sample')
+    diagnostics.peaks_per_sample(df_all, metadata, args.group, path=list_dir[1])
     print('Calculating number of assigned molecular formulas per sample')
-    diagnostics.formula_per_sample(df, metadata, path=list_dir[1])
+    diagnostics.formula_per_sample(df, metadata, args.group, path=list_dir[1])
     print("Calculating error distribution per group/s: {}".format(args.group))
     diagnostics.error_per_group(df, args.group, path=list_dir[1])
 
@@ -99,15 +115,27 @@ def main():
 
     print('\n------------------------\nData Exploration finished\n------------------------\n')
 
+    print('------------------------\nStarting chemodiversity analysis\n------------------------\n')
+
+    data_chemodiversity_script = r_control.write_r_script('data_chemodiversity_template.R', outdir=list_dir[3],
+                                                       metadata_file=args.metadata_file if not args.filter_by
+                                                       else os.path.join(list_dir[0], 'filtered_metadata.csv'),
+                                                       groups=args.group)
+    print(f'Running R script: {data_chemodiversity_script}')
+    r_control.run_r(data_chemodiversity_script)
+    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[3])}')
+
+    print('\n------------------------\nChemodiversity analysis finished\n------------------------\n')
+
     print('------------------------\nStarting statistical analysis\n------------------------\n')
 
-    data_statistics_script = r_control.write_r_script('data_statistics_template.R', outdir=list_dir[3],
+    data_statistics_script = r_control.write_r_script('data_statistics_template.R', outdir=list_dir[4],
                                                       metadata_file=args.metadata_file if not args.filter_by
                                                       else os.path.join(list_dir[0], 'filtered_metadata.csv'),
                                                       groups=args.group, norm_method=args.norm_method)
     print(f'Running R script: {os.path.abspath(data_statistics_script)}')
     r_control.run_r(data_statistics_script)
-    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[3])}')
+    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[4])}')
 
     print('------------------------\nStarting transformation network analysis\n------------------------\n')
 
@@ -120,19 +148,19 @@ def main():
                                                  'data',
                                                  'transf_key.csv')) if args.biochem_key == 'Default key' else \
         transformations.get_keys(args.biochem_key)
-    transformations.calculate_transformations(df, keys, path=list_dir[5])
-    transformations.summarize_transformations(path=list_dir[4])
-    node_table = transformations.get_node_table(df, path=list_dir[4])
+    transformations.calculate_transformations(df, keys, path=list_dir[6])
+    transformations.summarize_transformations(path=list_dir[5])
+    node_table = transformations.get_node_table(df, path=list_dir[5])
 
     print(f'Finished to calculate transformatios, please find transformation files in the directory:'
-          f'{os.path.abspath(list_dir[5])}')
+          f'{os.path.abspath(list_dir[6])}')
 
     if not args.create_networks:
-        print(f'Create networks not selected.'
-              f'If you wish to create networks automatically please set the option -c.'
+        print(f'Create networks not selected.\n'
+              f'If you wish to create networks automatically please set the option -c.\n'
               f'Otherwise to create networks from previously calculated transformations use the following command '
               f'from a terminal window:\n'
-              f'> create_networks {args.outdir}')
+              f'> create_networks {args.outdir} {args.metadata_file} {args.group[0]} {args.group[1] if args.group[1] else ""} ')
         sys.exit()
 
     check = ''
@@ -152,14 +180,14 @@ def main():
 
     transformations.create_cytoscape_network(node_table, path=list_dir[4])
 
-    network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[4],
+    network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[5],
                                                     metadata_file=args.metadata_file if not args.filter_by
                                                     else os.path.join(list_dir[0], 'filtered_metadata.csv'),
                                                     groups=args.group, norm_method=args.norm_method)
 
     print(f'Running R script: {network_stats_script}')
     r_control.run_r(network_stats_script)
-    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[4])}')
+    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[5])}')
 
     print('------------------------\nTransformation network analysis finished\n------------------------\n')
     print('========================\nThanks for using MetaboDirect\n========================\n')

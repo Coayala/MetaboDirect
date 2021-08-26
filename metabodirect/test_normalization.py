@@ -126,11 +126,11 @@ def run_r(rscript):
             r_cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         out, err = p.communicate()
-        if out:
-            print(out)
-
-        if err:
-            print(err)
+        # if out:
+        #     print(out)
+        #
+        # if err:
+        #     print(err)
     else:
         print('Rscript not accesible')
 

@@ -19,7 +19,7 @@ def get_args():
     """Get command-line arguments"""
 
     parser = argparse.ArgumentParser(
-        description='Program for running all the MetaboDirect analysis pipeline',
+        description='Program for creating molecular transformation networks, based on previously calculated transformations',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('outdir',
@@ -27,7 +27,7 @@ def get_args():
                         metavar='OUTDIR',
                         type=str)
 
-    parser.add_argument('metadata',
+    parser.add_argument('metadata_file',
                         help='Metadata file used in the analysis, if a filtered metadata was generated please enter '
                              'that one',
                         metavar='METADATA',
@@ -53,7 +53,7 @@ def main():
 
     args = get_args()
     list_dir = preprocessing.make_directories(args.outdir)
-    node_table = pd.read_csv(os.path.join(list_dir[4], 'node_table.csv'))
+    node_table = pd.read_csv(os.path.join(list_dir[5], 'node_table.csv'))
 
     check = ''
     while check != 'You are connected to Cytoscape!':
@@ -70,15 +70,15 @@ def main():
 
     print('Starting network construction on Cytoscape')
 
-    transformations.create_cytoscape_network(node_table, path=list_dir[4])
+    transformations.create_cytoscape_network(node_table, path=list_dir[5])
 
-    network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[4],
+    network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[5],
                                                     metadata_file=args.metadata_file,
                                                     groups=args.group, norm_method='max')
 
     print(f'Running R script: {network_stats_script}')
     r_control.run_r(network_stats_script)
-    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[4])}')
+    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[5])}')
 
     print('------------------------\nNetwork creation and analysis finished\n------------------------\n')
 

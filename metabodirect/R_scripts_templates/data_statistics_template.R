@@ -27,7 +27,7 @@ my_matrix.file <- file.path('%outdir%', '1_preprocessing_output', 'matrix_featur
 my_report.file <- file.path('%outdir%', '1_preprocessing_output', 'Report_processed_MolecFormulas.csv')
 my_classcomp.file <- file.path('%outdir%', '1_preprocessing_output', 'class_composition.csv')
 my_metadata.file <- file.path('%metadata%')
-my_outdir <- file.path('%outdir%', '4_statistics')
+my_outdir <- file.path('%outdir%', '5_statistics')
 
 norm_method <- '%norm_method%'
 
@@ -152,7 +152,7 @@ pca_plot <- ggplot(pca_coordinates,
                        y = PC2,
                        color = %group1%,
                        shape = %group2%)) +
-  geom_point(size = 2.5) +
+  geom_point(size = 2.5, position = position_jitter()) +
   scale_color_manual(values = my_colors) +
   new_scale_color() +
   geom_segment(data = var_loadings,
@@ -189,12 +189,12 @@ ggsave(filename, pca_plot, dpi = 300)
 df_longer <- df %>%
   pivot_longer(metadata$SampleID, names_to = 'SampleID', values_to = 'NormIntensity') %>% 
   filter(NormIntensity != 0) %>% 
-  select(NormIntensity, OC, HC, NOSC, GFE, DBE, AI, SampleID) %>% 
+  select(NormIntensity, OC, HC, NOSC, GFE, DBE, AI_mod, SampleID) %>% 
   left_join(metadata, by = 'SampleID')
 
 mol_char <- tibble(SampleID = metadata$SampleID)
 
-for(char in c('OC', 'HC', 'NOSC', 'GFE', 'DBE', 'AI')){
+for(char in c('OC', 'HC', 'NOSC', 'GFE', 'DBE', 'AI_mod')){
   col_name <- paste0(char, '_w')
   char <- syms(char)
   w_df <- df_longer %>% 
@@ -240,7 +240,7 @@ pca_plot <- ggplot(pca_coordinates,
                        y = PC2,
                        color = %group1%,
                        shape = %group2%)) +
-  geom_point(size = 2.5) +
+  geom_point(size = 2.5, position = position_jitter()) +
   scale_color_manual(values = my_colors) +
   new_scale_color() +
   geom_segment(data = var_loadings,
