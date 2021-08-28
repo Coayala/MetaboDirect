@@ -35,7 +35,7 @@ def get_args():
 
     parser.add_argument('group',
                         help='Grouping variables for coloring and faceting figures (Max 2)',
-                        metavar='STR',
+                        metavar='GROUP',
                         type=str,
                         nargs='+')
 

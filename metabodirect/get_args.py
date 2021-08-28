@@ -48,7 +48,7 @@ def get_args():
 
     parser.add_argument('-f',
                         '--filter_by',
-                        help='Filter samples based on metadata. First enter the name of the feature,'
+                        help='Filter samples based on metadata. First enter the name of the feature, '
                              'followed by the values associated with the samples you want to keep in the analysis.'
                              '(Example -f Habitat Bog,Palsa)',
                         metavar='STR',
@@ -88,7 +88,7 @@ def get_args():
 
     norm.add_argument('--norm_subset',
                       help='Subset of the data to use for normalization purpouses. '
-                           'Available subset methods: ALL, LOS, PPP'
+                           'Available subset methods: ALL, LOS, PPP. '
                            'LOS uses peaks in the top L '
                            'order statistics, PPP uses peaks having a minimum percentage of observed values.',
                       metavar='STR',
@@ -99,7 +99,7 @@ def get_args():
 
     norm.add_argument('--subset_parameter',
                       help='If using a sample subset for nomalization, this parameter defines the subsample of peaks '
-                           'that will be used for normalization.'
+                           'that will be used for normalization. '
                            'If not defined, the default values will be 0.3 for LOS and 0.5 for PPP',
                       metavar='FLOAT',
                       type=float
