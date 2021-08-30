@@ -2,11 +2,6 @@
 MetaboDirect pipeline
 =====================
 
-|pypi_badge|
-
-.. |pypi_badge| image:: https://img.shields.io/pypi/v/metabodirect?style=plastic
-    :target: https://pypi.org/project/metabodirect/
-
 The **MetaboDirect** pipeline includes 5 major steps: data pre-processing, data diagnostics, data exploration, statistical analysis, and transformation network analysis, which can be run with the ``metabodirect`` command. For more information check :ref:`metabod` in the User's Guide.
 
 Additionally, the ``test_normalization`` command can be run before the main **MetaboDirect** pipeline, to help deciding which normalization method to use for the analysis.
@@ -29,15 +24,21 @@ These is the beginning of the main **MetaboDirect** pipeline. During this step t
 .. csv-table::
 	:header: "Index", "Formula"
 
-	"Nominal Oxidation State of Carbon (NOSC)", ":math:`NOSC = \frac{4C + H -3N -2O +5P -2S}{C}%2B4`"
-	"Gibbs Free Energy (GFE)", ":math:`GFE=60.3-28.5 * NOSC`"
-	"Double Bond Equivalent (DBE)", ":math:`DBE = 1 %2B 0.5(2C-H %2B N %2B P)`"
-	"Aromatic Index (modified) (AI_mod)", ":math:`AI = 1 %2B C - 0.5O - S - \frac{0.5(H %2B P %2B N)}{C - 0.5O - S - N - P}`"
+	"Nominal Oxidation State of Carbon (NOSC)", |NOSC_eq|
+	"Gibbs Free Energy (GFE)", |GFE_eq|
+	"Double Bond Equivalent (DBE)", |DBE_eq|
+	"Aromatic Index (modified) (AI_mod)", |AI_mod_eq|
+
+
+.. |NOSC_eq| image:: https://render.githubusercontent.com/render/math?math=NOSC = \frac{4C + H -3N -2O +5P -2S}{C}%2B4
+.. |GFE_eq| image:: https://render.githubusercontent.com/render/math?math=GFE=60.3-28.5 * NOSC
+.. |DBE_eq| image:: https://render.githubusercontent.com/render/math?math=DBE = 1 %2B 0.5(2C-H %2B N %2B P)
+.. |AI_mod_eq| image:: https://render.githubusercontent.com/render/math?math=AI = 1 %2B C - 0.5O - S - \frac{0.5(H %2B P %2B N)}{C - 0.5O - S - N - P}
 
 Data will be normalized during this step to be used in all of the subsequent analysis.
 
 -------------------
-1. Data diagnostics
+2. Data diagnostics
 -------------------
 
 .. image:: _images/2_diagnostics.png
