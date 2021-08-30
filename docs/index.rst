@@ -26,7 +26,7 @@ The MetaboDirect pipeline takes a *report file*, generated using Formularity (To
    installation
    quickstart
    pipeline
-   guide
+   use_guide
 
 
 ------------------
