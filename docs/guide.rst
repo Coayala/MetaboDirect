@@ -93,7 +93,7 @@ Sample information file (``METADATA``)
 ++++++++++++++++++++++++++++++++++++++
 
 The sample information file (or metadata file) is a .csv file that has one column called *SampleID* with the names of all of the samples that are present in the report file. Please make sure that the sample names in the *input data* and the *sample information file* are **exactly the same**. At least one other column must be present in the sample information file and must contain information used to group the data for plotting and for the statistical analysis. Multiple grouping variables can be present in this file but only two can be used simultaneously in **MetaboDirect**. When running the pipelines the grouping variables can be defined with the `-g` option using the **exact name** that it is on this file.  Additionally, please use only letters (Aa-Zz), numbers (0-9) and underscores ( \_ ) for both the **sample names** and the **grouping variables**.
-An example file is included in the ``example`` `directory <https://github.com/Coayala/MetaboDirect/tree/main/example>`_ with the name `metadata.csv`.
+An example file is included in the ``example`` `folder <https://github.com/Coayala/MetaboDirect/tree/main/example>`_ with the name `metadata.csv`.
 
 .. csv-table::
 	:header: "SampleID", "Grouping_var1", "Grouping_var2", "Grouping_var3"
@@ -167,15 +167,15 @@ Subset parameter (``--norm_subset``)
 
 This option is only needed when ``LOS`` of ``PPP`` are selected as normalization methods. It defines either the minimum percentage of samples a peaks need to bre present to be considered (``PPP``) or the percentage of top peaks that will be used (``LOS``).
 
-++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++
 KEGG annotation (``-k`` | ``--kegg_annotation``)
-++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++
 
 This is an optional step as it may take a long time (~ couple of hours) depending on the number of peaks present in the data. If this option is present, peaks will be annotated with the KEGG database (Pathway, Module, Brite, etc.) based on their molecular formula.
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Calculate transformations (``-t`` | ``--calculate_transformations``)
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 This option define whether or not a molecular transformations between the peaks will be calculated based on their mass differences. If this option is selected, **MetaboDirect** will end after generating the transformation files. Transformation files will be located in ``./$outdir/6_transformations/transf_by_sample``.
 
