@@ -52,6 +52,6 @@ Information about the arguments can be obtaining using the option -h/--help
 ```
 metabodirect -h
 ```
-For more information please check the [User Manual](https://coayala.github.io/MetaboDirect/).
+For more information please check the [User Manual](https://metabodirect.readthedocs.io/en/latest/index.html#).
 
 
