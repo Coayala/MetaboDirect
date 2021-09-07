@@ -1,3 +1,4 @@
 # Required packages
 
 sphinx_rtd_theme
+searchtools

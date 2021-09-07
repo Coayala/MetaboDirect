@@ -2,6 +2,11 @@
 Quick start
 ===========
 
+|pypi_badge|
+
+.. |pypi_badge| image:: https://img.shields.io/pypi/v/metabodirect?style=plastic
+    :target: https://pypi.org/project/metabodirect/
+
 To quickly run the MetaboDirect pipeline use the following command. 
 
 .. code-block:: none

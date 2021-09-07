@@ -51,14 +51,17 @@ for(i in 1:nrow(df_formula)){
                        KEGG_brite = ifelse(!is.null(cpd_info[[j]]$BRITE), paste(cpd_info[[j]]$BRITE, collapse = ';'), NA),
                        KEGG_enzyme = ifelse(!is.null(cpd_info[[j]]$ENZYME), paste(cpd_info[[j]]$ENZYME, collapse = ';'), NA),
                        KEGG_reaction = ifelse(!is.null(cpd_info[[j]]$REACTION), paste(cpd_info[[j]]$REACTION, collapse = ';'), NA))
+        
+        compound_df <- rbind(compound_df, temp)
       }
     }
   } else {
     temp <- tibble(Mass = df_formula$Mass[i], MolecularFormula = df_formula$MolecularFormula[i], KEGG_id = NA, 
                    KEGG_name = NA, KEGG_formula = NA, KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, 
                    KEGG_enzyme = NA, KEGG_reaction = NA)
+    
+    compound_df <- rbind(compound_df, temp)
   }
-  compound_df <- rbind(compound_df, temp)
 }
 
 matching_compounds <- df_formula %>% 
