@@ -178,7 +178,7 @@ def main():
 
     print('Starting network construction on Cytoscape')
 
-    transformations.create_cytoscape_network(node_table, path=list_dir[4])
+    transformations.create_cytoscape_network(node_table, path=list_dir[5])
 
     network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[5],
                                                     metadata_file=args.metadata_file if not args.filter_by
