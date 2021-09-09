@@ -22,3 +22,5 @@ v0.2.1, 8/30/2021 --
     - Fixed an issue regarding elemental and molecular composition going over or lower than 100%
 v.0.2.2, 9/7/2021 --
     - Fixed KEGG annotation not providing all compounds with the same exact molecular formula
+v.0.2.3, 9/9/2021 --
+    - Fixed colors in elemental composition figure

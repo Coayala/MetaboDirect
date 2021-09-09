@@ -233,6 +233,9 @@ ggsave(filename, class_bar, dpi = 300, width = 8, height = 8)
 
 #### Plot - Elemental comp bar####
 
+element_colors <- get_palette(palette = 'Accent', length(unique(el_comp$Element)))
+names(element_colors) <- unique(el_comp$Element)
+
 el_bar <- el_comp %>% 
   group_by(%group1%, %group2%, Element)  %>% 
   summarise(Count = mean(Count, na.rm = TRUE)) %>% 
@@ -242,7 +245,7 @@ el_bar <- el_comp %>%
              fill = Element)) +
   geom_col() +
   theme_bw() +
-  scale_fill_brewer(palette = 'Accent') +
+  scale_fill_manual(values = element_colors) +
   labs(title = 'Elemental Composition',
        y = 'Percentage') +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
