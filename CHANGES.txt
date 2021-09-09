@@ -24,3 +24,5 @@ v.0.2.2, 9/7/2021 --
     - Fixed KEGG annotation not providing all compounds with the same exact molecular formula
 v.0.2.3, 9/9/2021 --
     - Fixed colors in elemental composition figure
+v.0.2.4, 9/9/2021 --
+    - Fixed a bug where Cytoscape networks were not build directly with the -c option
