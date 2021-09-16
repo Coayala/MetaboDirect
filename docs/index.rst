@@ -27,12 +27,3 @@ The MetaboDirect pipeline takes a *report file*, generated using Formularity (To
    quickstart
    pipeline
    use_guide
-
-
-------------------
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
