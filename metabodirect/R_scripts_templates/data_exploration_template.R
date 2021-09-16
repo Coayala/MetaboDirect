@@ -323,8 +323,8 @@ color_names <- c(unique(as.character(df_longer$'%group1%')), 'Shared')
 names(my_colors) <- color_names
 
 for(i in 1:ncol(comb_g1)){
-  val1 <- comb_g1[1, i]
-  val2 <- comb_g1[2, i]
+  val1 <- as.character(comb_g1[1, i])
+  val2 <- as.character(comb_g1[2, i])
   
   df_comb <- df_longer %>% 
     filter((!!! group1_s) == val1 | (!!! group1_s) == val2) %>% 
@@ -484,8 +484,8 @@ dir.create(comparison_dir)
   
   
   for(i in 1:ncol(comb_g2)){
-    val1 <- comb_g2[1, i]
-    val2 <- comb_g2[2, i]
+    val1 <- as.character(comb_g2[1, i])
+    val2 <- as.character(comb_g2[2, i])
     
     df_comb <- df_longer %>% 
       filter((!!! group2_s) == val1 | (!!! group2_s) == val2) %>% 
