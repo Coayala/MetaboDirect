@@ -28,3 +28,5 @@ v.0.2.4, 9/9/2021 --
     - Fixed a bug where Cytoscape networks were not build directly with the -c option
 v.0.2.5, 9/16/2021
     - Fixed variable names not appearing in the upsetplot
+v.0.2.6, 9/28/2021
+    - Fixed default transformation key
