@@ -30,3 +30,5 @@ v.0.2.5, 9/16/2021
     - Fixed variable names not appearing in the upsetplot
 v.0.2.6, 9/28/2021
     - Fixed default transformation key
+v.0.2.7, 10/13/2021
+    - Coordinates for the NMDS and PCA plots are now saved in csv files

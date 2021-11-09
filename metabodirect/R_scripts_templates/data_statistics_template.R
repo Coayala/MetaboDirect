@@ -76,7 +76,7 @@ nmds.log <- capture.output(nmds <- metaMDS(dist.matrix,
                                            trymax = 500,
                                            wascores = TRUE))
 filename <- file.path(my_outdir, 'nmds.log')
-write_tsv(as.data.frame(nmds.log), filename)
+write_csv(as.data.frame(nmds.log), filename)
 
 
 filename <- file.path(my_outdir, 'NMDS_stressplot.pdf')
@@ -88,6 +88,11 @@ dev.off()
 nmds.scores <- as.data.frame(scores(nmds)) %>% 
   rownames_to_column(var = 'SampleID') %>% 
   left_join(metadata, by = 'SampleID')
+
+## Saving data table with NMDS scores
+
+filename <- file.path(my_outdir, 'nmds_scores.csv')
+write_csv(nmds.scores, filename)
 
 ## Set samples color names
 
@@ -129,6 +134,11 @@ write.csv(permanova$aov.tab, filename, row.names = TRUE)
 pca <- prcomp(class_comp, center = TRUE)
 eigen <- get_eigenvalue(pca)
 
+## Saving data table with PCA eigenvalues
+
+filename <- file.path(my_outdir, 'eigen_values_by_compound_class.csv')
+write_csv(eigen, filename)
+
 scree_plot <- fviz_eig(pca, addlabels = TRUE) +
   theme_bw() +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
@@ -140,6 +150,11 @@ ggsave(filename, scree_plot, dpi = 300)
 pca_coordinates <- as_tibble(pca$x)
 pca_coordinates$SampleID <- rownames(pca$x)
 pca_coordinates <- left_join(pca_coordinates, metadata, by ='SampleID')
+
+## Saving data table with PCA coordinates
+
+filename <- file.path(my_outdir, 'pca_coordinates_by_compound_class.csv')
+write_csv(pca_coordinates, filename)
 
 pc1 <- paste0('PC1 (', round(eigen$variance.percent[1], digits = 1), '%)')
 pc2 <- paste0('PC2 (', round(eigen$variance.percent[2], digits = 1), '%)')
@@ -172,7 +187,7 @@ pca_plot <- ggplot(pca_coordinates,
                 color = name),
             inherit.aes = FALSE,
             hjust = 'inward') +
-  guides(color = FALSE) +
+  guides(color = 'none') +
   theme_bw() +
   labs(title = 'PCA plot by compound classes',
        x = pc1,
@@ -217,6 +232,11 @@ mol_char <- mol_char %>%
 pca <- prcomp(mol_char, center = TRUE)
 eigen <- get_eigenvalue(pca)
 
+## Saving data table with PCA eigenvalues
+
+filename <- file.path(my_outdir, 'eigen_values_by_molecular_characteristics.csv')
+write_csv(eigen, filename)
+
 scree_plot <- fviz_eig(pca, addlabels = TRUE) +
   theme_bw() +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
@@ -228,6 +248,11 @@ ggsave(filename, scree_plot, dpi = 300)
 pca_coordinates <- as_tibble(pca$x)
 pca_coordinates$SampleID <- rownames(pca$x)
 pca_coordinates <- left_join(pca_coordinates, metadata, by ='SampleID')
+
+## Saving data table with PCA coordinates
+
+filename <- file.path(my_outdir, 'pca_coordinates_by_molecular_characteristics.csv')
+write_csv(pca_coordinates, filename)
 
 pc1 <- paste0('PC1 (', round(eigen$variance.percent[1], digits = 1), '%)')
 pc2 <- paste0('PC2 (', round(eigen$variance.percent[2], digits = 1), '%)')
