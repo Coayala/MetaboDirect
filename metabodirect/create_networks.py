@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Author : Christian Ayala <cayalaortiz@email.arizona.edu>
-Date   : 2021-04-10
+Date   : 2023-01-18
 Purpose: Program to run MetaboDirect scripts
 """
 
@@ -19,7 +19,8 @@ def get_args():
     """Get command-line arguments"""
 
     parser = argparse.ArgumentParser(
-        description='Program for creating molecular transformation networks, based on previously calculated transformations',
+        description='Program for creating molecular transformation networks, '
+                    'based on previously calculated transformations',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('outdir',

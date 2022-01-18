@@ -55,10 +55,10 @@ def calculate_transformations(df, keys, path):
         ) for r in result_tuples for k in keys
             if r[2] - 0.001 <= float(k[3]) <= r[2] + 0.001]
 
-        if  len(result_tuples) == 0 :
+        if len(result_tuples) == 0:
             print('No transformations were found for this sample, moving to the next one')
         
-        else :
+        else:
             # make np.array from list of lists
             result_tuples = np.vstack(result_tuples)
 

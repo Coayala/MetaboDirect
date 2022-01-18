@@ -1,13 +1,14 @@
 # __main__.py
 """
 Author : Christian Ayala <cayalaortiz@email.arizona.edu>
-Date   : 2021-04-10
+Date   : 2023-01-18
 Purpose: Program to run MetaboDirect scripts
 
 To get help, use metabodirect -h or visit the website https://github.com/Coayala/MetaboDirect
 """
 
 import os
+import time
 import datetime
 import sys
 import pandas as pd
@@ -20,6 +21,7 @@ from metabodirect import get_args, preprocessing, diagnostics, r_control, transf
 def main():
     """Main body to run all MetaboDirect scripts"""
 
+    start_time = time.perf_counter()
     args = get_args.get_args()
 
     print('========================\nWelcome to MetaboDirect\n========================\n')
@@ -45,13 +47,12 @@ def main():
     df = preprocessing.data_filtering(df, args.mass_filter)
     df = preprocessing.thermo_idx_and_classes(df)
     df, df_nonorm = preprocessing.data_normalization(df, args.norm_method, args.norm_subset, args.subset_parameter,
-                                          args.log_transform)
+                                                     args.log_transform)
 
     df_nonorm = df_nonorm[df_nonorm['C'] > 0]
     filename = os.path.join(list_dir[0], 'Report_processed_noNorm.csv')
     df_nonorm.to_csv(filename, index=False)
-    
-    
+
     filename = os.path.join(list_dir[0], 'Report_processed.csv')
     df.to_csv(filename, index=False)
 
@@ -118,9 +119,9 @@ def main():
     print('------------------------\nStarting chemodiversity analysis\n------------------------\n')
 
     data_chemodiversity_script = r_control.write_r_script('data_chemodiversity_template.R', outdir=list_dir[3],
-                                                       metadata_file=args.metadata_file if not args.filter_by
-                                                       else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                                       groups=args.group)
+                                                          metadata_file=args.metadata_file if not args.filter_by
+                                                          else os.path.join(list_dir[0], 'filtered_metadata.csv'),
+                                                          groups=args.group)
     print(f'Running R script: {data_chemodiversity_script}')
     r_control.run_r(data_chemodiversity_script)
     print(f'Find results and R script in the directory: {os.path.abspath(list_dir[3])}')
@@ -142,6 +143,8 @@ def main():
     if not args.calculate_transformations:
         print('Calculate transformations not selected. '
               'If you wish to do calculate transformations based on biochemical key please set the option "-t"')
+        end_time = time.perf_counter()
+        print(f'MetaboDirect finished running in {(end_time - start_time) / 60:0.4f} minutes')
         sys.exit()
 
     keys = transformations.get_keys(os.path.join(os.path.split(os.path.realpath(__file__))[0],
@@ -158,9 +161,10 @@ def main():
     if not args.create_networks:
         print(f'Create networks not selected.\n'
               f'If you wish to create networks automatically please set the option -c.\n'
-              f'Otherwise to create networks from previously calculated transformations use the following command '
-              f'from a terminal window:\n'
-              f'> create_networks {args.outdir} {args.metadata_file} {args.group[0]} {args.group[1] if args.group[1] else ""} ')
+              f'Otherwise to create networks from previously calculated transformations using the "create_networks"'
+              f'companion script')
+        end_time = time.perf_counter()
+        print(f'MetaboDirect finished running in {(end_time - start_time) / 60:0.4f} minutes')
         sys.exit()
 
     check = ''
@@ -172,6 +176,8 @@ def main():
             except (ValueError, Exception):
                 print('Cytoscape is not open.')
         elif cytoscape == 'q':
+            end_time = time.perf_counter()
+            print(f'MetaboDirect finished running in {(end_time - start_time) / 60:0.4f} minutes')
             sys.exit()
         else:
             check = 'Cytoscape not open'
@@ -191,6 +197,9 @@ def main():
 
     print('------------------------\nTransformation network analysis finished\n------------------------\n')
     print('========================\nThanks for using MetaboDirect\n========================\n')
+
+    end_time = time.perf_counter()
+    print(f'MetaboDirect finished running in {(end_time - start_time)/60:0.4f} minutes')
 
 
 # --------------------------------------------------

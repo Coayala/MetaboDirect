@@ -436,7 +436,6 @@ def data_normalization(df, norm_method, norm_subset, subset_parameter=1, log=Fal
     nonorm_data = nonorm_data.replace(np.nan, 0)
     nonorm_data = temp.merge(nonorm_data, on='Mass')
 
-
     return norm_data, nonorm_data
 
 

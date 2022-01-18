@@ -6,6 +6,7 @@ import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # --------------------------------------------------
 def peaks_per_sample(df, metadata, group, path):
     """Calculate and plot the number of samples that have molecular formula."""
