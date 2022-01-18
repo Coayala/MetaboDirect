@@ -1,5 +1,7 @@
-[![DOI](https://zenodo.org/badge/356707576.svg)](https://zenodo.org/badge/latestdoi/356707576)
 # MetaboDirect
+
+[![DOI](https://zenodo.org/badge/356707576.svg)](https://zenodo.org/badge/latestdoi/356707576)
+
 A comprehensive command-line based pipeline for the analysis of direct injection FT-ICR mass spectrometry data.
 
 ## Installation
