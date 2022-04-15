@@ -25,10 +25,30 @@ def filter_c13(df):
 
 # --------------------------------------------------------------
 def filter_mz(df, min_mz=None, max_mz=None):
-    """ Optional filtering. Filter between a range of m/z """
+    """ Optional filtering. Filter out  peaks outside selected m/z range """
 
     df = df[df['Mass'].between(min_mz, max_mz)]
     df = df.reset_index(drop=True)
+
+    return df
+
+
+# --------------------------------------------------------------
+def filter_peak_presence(df, min_peak=2):
+    """ Optional filtering. Filter out peaks not appearing in the selected min_number of samples """
+
+    # Selecting only columns with peak masses and abundances per sample
+    selected_cols = get_list_samples(df)
+    selected_cols.append('Mass')
+    peak_df = df[selected_cols]
+
+    # Selecting only rows of masses that appear in more than the selected min_peaks
+    peak_df = peak_df.set_index('Mass')
+    peak_df[peak_df > 0] = 1
+    peak_df = peak_df[peak_df.sum(axis=1) >= min_peak]
+
+    # Filtering df
+    df = df[df['Mass'].isin(peak_df.index)]
 
     return df
 
@@ -330,7 +350,7 @@ def sample_filtering(df, metadata, filter_by, path):
 
 
 # --------------------------------------------------
-def data_filtering(df, filter_values):
+def data_filtering(df, mass_filter, peak_filter, error_filter):
     """Filter data based on a specified m/z range, presence of isotopes and quality."""
 
     print(f'Number of m/z in provided file: {df.shape[0]}')
@@ -340,11 +360,15 @@ def data_filtering(df, filter_values):
     print(f'Number of m/z remaining after isotope-filtering: {filt_df.shape[0]}')
 
     # Filter peaks based in m/z range
-    filt_df = filter_mz(filt_df, filter_values[0], filter_values[1]) if filter_values else filt_df
+    filt_df = filter_mz(filt_df, min_mz=mass_filter[0], max_mz=mass_filter[1]) if mass_filter else filt_df
     print(f'Number of m/z remaining after m/z-filtering: {filt_df.shape[0]}')
 
+    # Filter peaks based on the number of samples they appear
+    filt_df = filter_peak_presence(filt_df, min_peak=peak_filter)
+    print(f'Number of m/z in at least {peak_filter} samples: {filt_df.shape[0]}')
+
     # Filter samples with error higher than 0.5 ppm
-    filt_df = filter_error_ppm(filt_df, err_range=0.5)
+    filt_df = filter_error_ppm(filt_df, err_range=error_filter)
     print(f'Number of m/z after error filtering (0.5 ppm): {filt_df.shape[0]}')
 
     return filt_df

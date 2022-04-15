@@ -44,7 +44,9 @@ def main():
     else:
         print('Option -f not detected, all samples will be used')
 
-    df = preprocessing.data_filtering(df, args.mass_filter)
+    df = preprocessing.data_filtering(df, mass_filter=args.mass_filter,
+                                      peak_filter=args.peak_filter,
+                                      error_filter=args.error_filter)
     df = preprocessing.thermo_idx_and_classes(df)
     df, df_nonorm = preprocessing.data_normalization(df, args.norm_method, args.norm_subset, args.subset_parameter,
                                                      args.log_transform)

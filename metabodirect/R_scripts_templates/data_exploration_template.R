@@ -10,7 +10,7 @@
 # #############################################################
 
 suppressPackageStartupMessages({
-  library(tidyverse)
+  library(ggvenn)
   library(RColorBrewer)
   library(ggnewscale)
   library(ggpubr)
@@ -18,6 +18,7 @@ suppressPackageStartupMessages({
   library(KEGGREST)
   library(vegan)
   library(UpSetR)
+  library(tidyverse)
 }) 
 
 # Values between two '%' are to be replaced by the correct values during the python script
@@ -52,23 +53,26 @@ for(i in 2:ncol(metadata)){
 # Intensity data file
 df_longer <- df %>%
   pivot_longer(metadata$SampleID, names_to = 'SampleID', values_to = 'NormIntensity') %>% 
-  filter(NormIntensity != 0)
-df_longer <- left_join(df_longer, metadata, by = 'SampleID')
+  filter(NormIntensity != 0) %>% 
+  left_join(metadata, by = 'SampleID')
 
 # Class composition
 class_comp <- class_comp %>%
-  pivot_longer(!SampleID, names_to = 'Class', values_to = 'Count')
-class_comp <- left_join(class_comp, metadata, by = 'SampleID')
+  pivot_longer(!SampleID, names_to = 'Class', values_to = 'Count') %>% 
+  left_join(metadata, by = 'SampleID')
 
 # Elemental composition
 el_comp <- el_comp %>%
-  pivot_longer(!SampleID, names_to = 'Element', values_to = 'Count')
-el_comp <- left_join(el_comp, metadata, by = 'SampleID')
+  pivot_longer(!SampleID, names_to = 'Element', values_to = 'Count') %>% 
+  left_join(metadata, by = 'SampleID')
 
 
 #### Plot - Van Krevelen Diagram ####
 
 ## Compound class rectangles (for plotting)
+
+class_colors <- get_palette(palette = 'Set3', k = length(classification$Class) + 1)
+names(class_colors) <- c(classification$Class, 'Other')
 
 class_rect <-  geom_rect(data = classification,
                          aes(xmin = OC_low,
@@ -101,7 +105,7 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
          color = var) +
     new_scale_color() +
     class_rect  +
-    scale_color_manual(values = get_palette('d3', 8)) +
+    scale_color_manual(values = class_colors) +
     theme(plot.title = element_text(face = 'bold', hjust = 0.5)) +
     facet_wrap(%group1% ~ %group2%)
   
@@ -210,9 +214,6 @@ for(var in c('GFE', 'AI_mod', 'DBE')){
 
 #### Plot - Class comp bar####
 
-class_colors <- brewer.pal(length(classification$Class) + 1, name = 'Set3')
-names(class_colors) <- c(classification$Class, 'Other')
-
 class_bar <- class_comp %>% 
   group_by(%group1%, %group2%, Class)  %>% 
   summarise(Count = mean(Count, na.rm = TRUE)) %>%
@@ -274,16 +275,20 @@ df_w <- df_longer %>%
   distinct() %>% 
   unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
 
+my_colors <- c(get_palette('jco', length(unique(df_w$Presence))))
+color_names <- c(unique(as.character(df_w$Presence)))
+names(my_colors) <- color_names
+
 vk_plot <- ggplot(df_w,
                   aes(x = OC,
                       y = HC,
                       color = Presence)) +
   geom_point() +
   theme_bw() +
-  scale_color_brewer(palette = 'Paired', guide = guide_legend(order = 2)) +
+  scale_color_manual(values = my_colors) +
   new_scale_color() +
   class_rect  +
-  scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+  scale_color_manual(values = class_colors) +
   labs(x = 'O:C',
        y = 'H:C',
        title = paste0('Van Krevelen Diagram by ', group1)) +
@@ -318,13 +323,15 @@ dev.off()
 
 comb_g1 <- combn(unique(df_longer$'%group1%'), 2)
 
-my_colors <- c(get_palette('d3', length(unique(df_longer$'%group1%'))), 'gray80')
+my_colors <- c(get_palette('Dark2', length(unique(df_longer$'%group1%'))), 'gray80')
 color_names <- c(unique(as.character(df_longer$'%group1%')), 'Shared')
 names(my_colors) <- color_names
 
 for(i in 1:ncol(comb_g1)){
   val1 <- as.character(comb_g1[1, i])
   val2 <- as.character(comb_g1[2, i])
+  
+  filt_colors <- my_colors[c(val1, val2, 'Shared')]
   
   df_comb <- df_longer %>% 
     filter((!!! group1_s) == val1 | (!!! group1_s) == val2) %>% 
@@ -342,10 +349,10 @@ for(i in 1:ncol(comb_g1)){
                         color = Presence)) +
     geom_point() +
     theme_bw() +
-    scale_color_manual(values = my_colors, guide = guide_legend(order = 1)) +
+    scale_color_manual(values = filt_colors, guide = guide_legend(order = 1)) +
     new_scale_color() +
     class_rect  +
-    scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+    scale_color_manual(values = class_colors) +
     labs(x = 'O:C',
          y = 'H:C',
          title = 'Van Krevelen Diagram') +
@@ -364,7 +371,7 @@ for(i in 1:ncol(comb_g1)){
                             fill = Presence)) +
     geom_violin(alpha = 0.5) +
     geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
-    scale_fill_manual(values = my_colors) +
+    scale_fill_manual(values = filt_colors) +
     theme_bw() +
     labs(title = 'GFE') +
     stat_pvalue_manual(stat.test,
@@ -412,6 +419,13 @@ for(i in 1:ncol(comb_g1)){
   png(filename, width = 2400, height = 2400, res = 300)
   print(upset(fromList(group_list), order.by = "freq"))
   dev.off()
+  
+  venn_plot <- ggvenn(group_list, fill_color = as.character(filt_colors[1:2])) +
+    labs(title = 'Number of metabolites (assigned molecular formula)') +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  
+  filename <- file.path(comparison_dir, paste0('venn_diagram_', val1, '_vs_', val2, '.png'))
+  ggsave(filename, venn_plot, dpi = 300, width = 7, height = 5)
 }
 
 ## Grouping variable 2
@@ -433,16 +447,20 @@ dir.create(comparison_dir)
     distinct() %>% 
     unite(Presence, contains('GRP_'), sep = ', ', na.rm = TRUE)
   
+  my_colors <- c(get_palette('jama', length(unique(df_w$Presence))))
+  color_names <- c(unique(as.character(df_w$Presence)))
+  names(my_colors) <- color_names
+  
   vk_plot <- ggplot(df_w,
                     aes(x = OC,
                         y = HC,
                         color = Presence)) +
     geom_point() +
     theme_bw() +
-    scale_color_brewer(palette = 'Paired') +
+    scale_color_manual(values = my_colors) +
     new_scale_color() +
     class_rect  +
-    scale_color_brewer(palette = 'Dark2') +
+    scale_color_manual(values = class_colors) +
     labs(x = 'O:C',
          y = 'H:C',
          title = paste0('Van Krevelen Diagram by ', group2)) +
@@ -487,6 +505,8 @@ dir.create(comparison_dir)
     val1 <- as.character(comb_g2[1, i])
     val2 <- as.character(comb_g2[2, i])
     
+    filt_colors <- my_colors[c(val1, val2, 'Shared')]
+    
     df_comb <- df_longer %>% 
       filter((!!! group2_s) == val1 | (!!! group2_s) == val2) %>% 
       pivot_wider(names_from = all_of(group2), values_from = all_of(group2), names_prefix = 'GRP_') %>% 
@@ -503,10 +523,10 @@ dir.create(comparison_dir)
                           color = Presence)) +
       geom_point() +
       theme_bw() +
-      scale_color_manual(values = my_colors, guide = guide_legend(order = 2)) +
+      scale_color_manual(values = filt_colors, guide = guide_legend(order = 2)) +
       new_scale_color() +
       class_rect  +
-      scale_color_brewer(palette = 'Dark2', guide = guide_legend(order = 1)) +
+      scale_color_manual(values = class_colors) +
       labs(x = 'O:C',
            y = 'H:C',
            title = 'Van Krevelen Diagram') +
@@ -525,7 +545,7 @@ dir.create(comparison_dir)
                               fill = Presence)) +
       geom_violin(alpha = 0.5) +
       geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
-      scale_fill_manual(values = my_colors) +
+      scale_fill_manual(values = filt_colors) +
       theme_bw() +
       labs(title = 'GFE') +
       stat_pvalue_manual(stat.test,
@@ -573,6 +593,13 @@ dir.create(comparison_dir)
     png(filename, width = 2400, height = 2400, res = 300)
     print(upset(fromList(group_list), order.by = "freq"))
     dev.off()
+    
+    venn_plot <- ggvenn(group_list, fill_color = as.character(filt_colors[1:2])) +
+      labs(title = 'Number of metabolites (assigned molecular formula)') +
+      theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+    
+    filename <- file.path(comparison_dir, paste0('venn_diagram_', val1, '_vs_', val2, '.png'))
+    ggsave(filename, venn_plot, dpi = 300, width = 7, height = 5)
   }
   
 }

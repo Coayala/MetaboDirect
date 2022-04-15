@@ -171,14 +171,9 @@ def create_cytoscape_network(node_table, path):
             # Load node table with data information
             p4c.load_table_data(node_table, data_key_column='id')
 
-        # Create a vector of colors for the transformation groups
-        transformation_group = list(np.unique(edge_table['Group']))
-        edge_colors = sns.color_palette('dark', len(transformation_group)).as_hex()
-
         # Coloring the table based on compound classes and transformation groups
         p4c.set_node_shape_default('ELLIPSE')
         p4c.set_node_color_mapping('Class', mol_classes, node_colors, mapping_type='d')
-        p4c.set_edge_color_mapping('Group', transformation_group, edge_colors, mapping_type='d')
 
         # Run the Network Analyzer command for cytoscape and capture its output in a list of lists
         network_analyzer = p4c.commands_post('analyzer analyze')
@@ -197,11 +192,19 @@ def create_cytoscape_network(node_table, path):
              'netRadius': network_analyzer['radius']}
         )
 
+        # Saving a partial file with network stats in case the job did not finish
+        temp_network_stats = pd.DataFrame(network_stats)
+        filename = os.path.join(path, 'temp_network_summary_statistics.csv')
+        temp_network_stats.to_csv(filename, index=False)
+
         time.sleep(5)
         i = i + 1
 
     network_stats = pd.DataFrame(network_stats)
     filename = os.path.join(path, 'network_summary_statistics.csv')
     network_stats.to_csv(filename, index=False)
+
+    # Removing partial network summary statistics
+    os.remove(os.path.join(path, 'temp_network_summary_statistics.csv'))
 
     return

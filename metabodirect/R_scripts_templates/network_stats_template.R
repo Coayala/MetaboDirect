@@ -95,11 +95,7 @@ net_stats_plot <- network_data_longer %>%
   ggplot(aes(x = (!!! group1_s),
              y = Mean,
              fill = (!!! group1_s))) +
-  geom_col(position = position_dodge(.9), color = 'black') +
-  geom_errorbar(aes(ymin = Mean - sd,
-                    ymax = Mean + sd),
-                position = position_dodge(.9),
-                width = .2) +
+  geom_boxplot(color = 'black') +
   scale_fill_manual(values = my_colors) +
   theme_bw() +
   labs(title = 'Network statistics summary',

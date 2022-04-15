@@ -23,6 +23,14 @@ def get_args():
                         metavar='METADATA',
                         type=str)
 
+    parser.add_argument('-g',
+                        '--group',
+                        help='Grouping variables for coloring and faceting figures (Max 2)',
+                        metavar='STR',
+                        type=str,
+                        nargs='+',
+                        required=True)
+
     parser.add_argument('-o',
                         '--outdir',
                         help='Output directory',
@@ -34,17 +42,24 @@ def get_args():
                         '--mass_filter',
                         help='Range to filter m/z data (min_mz, max_mz). The pipeline will not filter '
                              'm/z values by default',
-                        metavar='INT',
+                        metavar='FLOAT',
                         type=float,
                         nargs=2)
 
-    parser.add_argument('-g',
-                        '--group',
-                        help='Grouping variables for coloring and faceting figures (Max 2)',
-                        metavar='STR',
-                        type=str,
-                        nargs='+',
-                        required=True)
+    parser.add_argument('-p',
+                        '--peak_filter',
+                        help='Minimum number of samples a peak must be present to be conserved for the analysis',
+                        metavar='INT',
+                        type=int,
+                        default=2)
+
+    parser.add_argument('-e',
+                        '--error_filter',
+                        help='Max error (e) allowed in formula assignment. Peaks with |error| > e will be '
+                             'removed from the analysis',
+                        metavar='FLOAT',
+                        type=float,
+                        default=0.5)
 
     parser.add_argument('-f',
                         '--filter_by',
@@ -62,17 +77,17 @@ def get_args():
                         type=str,
                         default='Default key')
 
-    parser.add_argument('-v',
-                        '--version',
-                        action='version',
-                        version='%(prog)s {version}'.format(version=metabodirect.__version__))
-
     parser.add_argument('-k',
                         '--kegg_annotation',
                         help='Set this option to perform annotation of the molecular formulas using'
                              'the KEGG database',
                         action='store_true',
                         default=False)
+
+    parser.add_argument('-v',
+                        '--version',
+                        action='version',
+                        version='%(prog)s {version}'.format(version=metabodirect.__version__))
 
     norm = parser.add_argument_group('Normalization methods',
                                      'Options to define how data normalization will be carried out')

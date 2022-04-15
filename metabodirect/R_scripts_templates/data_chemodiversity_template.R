@@ -68,6 +68,7 @@ richness_plot <- ggplot(richness_long,
                             y = Richness,
                             group = Sites)) +
   geom_boxplot(fill = 'yellow') +
+  geom_hline(yintercept = max(richness_long$Richness) * 0.85, color = 'red') +
   theme_bw() +
   labs(title = 'Richness plot') +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
@@ -121,6 +122,7 @@ diversity_plot <- diversity_table %>%
   scale_fill_manual(values = my_colors) +
   facet_wrap(~index, scales = 'free_y') +
   labs(title = 'Abundance-based Diversity') +
+  theme_bw() +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5))
 
 filename <- file.path(my_outdir, 'abundance_diversity_plot.png')
@@ -162,6 +164,7 @@ functional_plot <- functional_diversity %>%
   facet_wrap(~index, scales = 'free_y') +
   labs(title = 'Functional-based Diversity',
        subtitle = "Rao's quadratic entropy") +
+  theme_bw() +
   theme(plot.title = element_text(face = 'bold', hjust = 0.5),
         plot.subtitle = element_text(face = 'italic', hjust = 0.5))
 

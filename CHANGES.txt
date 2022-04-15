@@ -32,11 +32,16 @@ v.0.2.6, 9/28/2021
     - Fixed default transformation key
 v.0.2.7, 10/13/2021
     - Coordinates for the NMDS and PCA plots are now saved in csv files
-v.0.2.8, 1/18/2023
+v.0.2.8, 1/18/2022
     - Added timer to MetaboDirect script
-v.0.2.9, 1/18/2023
+v.0.2.9, 1/18/2022
     - Fixed timer to work in all cases
-v.0.2.10, v.0.2.11 1/18/2023
+v.0.2.10, v.0.2.11 1/18/2022
     - Fixed timer giving negative values
-v.0.2.12, 1/18/2023
+v.0.2.12, 1/18/2022
     - Fixed timer not appearing when using -t option
+v.0.3.1, 4/11/2022
+    - Added option to filter peaks that do not appear in multiple samples (option -p)
+    - Added option to change the error threshold that is accepted (option -e)
+    - Transformation network edges are not longer colored in order to improve speed and performance of this step
+    - Added Venn diagrams for the pairwise comparisons
