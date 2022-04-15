@@ -44,6 +44,7 @@ MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8
 - UpSetR
 - pmartR (for normalization tests)
 - SYNCSA
+- ggvenn
 
 ### Cytoscape
 
