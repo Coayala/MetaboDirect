@@ -85,7 +85,7 @@ pdf(filename)
 capture.output(stressplot(nmds))
 dev.off()
 
-nmds.scores <- as.data.frame(scores(nmds)) %>% 
+nmds.scores <- as.data.frame(scores(nmds, display = 'sites')) %>% 
   rownames_to_column(var = 'SampleID') %>% 
   left_join(metadata, by = 'SampleID')
 
@@ -121,7 +121,7 @@ set.seed(456)
 
 dist.matrix <- vegdist(matrix , method = dm.method) # dist matrix
 
-permanova <- adonis(dist.matrix ~ %group1% + %group2%, 
+permanova <- adonis2(dist.matrix ~ %group1% + %group2%, 
                     data=metadata, 
                     permutations=999, 
                     method=dm.method)

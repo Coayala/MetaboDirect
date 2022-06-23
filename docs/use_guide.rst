@@ -23,51 +23,66 @@ Information about the arguments can be obtained using the ``-h/--help`` function
 
 .. code-block:: none
 
-	usage: metabodirect [-h] [-o OUTDIR] [-m INT INT] -g STR [STR ...] [-f STR STR] [-b STR] [-v] [-k] [-n STR] [--norm_subset STR] [--subset_parameter FLOAT] [--log_transform] [-t] [-c] DATA METADATA
+usage: metabodirect [-h] -g STR [STR ...] [-o OUTDIR] [-m FLOAT FLOAT] [-p INT] [-e FLOAT] [-f STR STR] [-b STR] [-k]
+                    [-v] [-n STR] [--norm_subset STR] [--subset_parameter FLOAT] [--log_transform] [-t] [-c]
+                    DATA METADATA
 
-	Program for running all the MetaboDirect analysis pipeline
+Program for running all the MetaboDirect analysis pipeline
 
-	positional arguments:
-	DATA                  Name of the file with the Direct Injection MS data in .csv format
-	METADATA              Name of the file with the sample information (metadata) in .csv format
+positional arguments:
+  DATA                  Name of the file with the Direct Injection MS data in .csv format
+  METADATA              Name of the file with the sample information (metadata) in .csv format
 
-	optional arguments:
-	-h, --help            show this help message and exit
-	-o OUTDIR, --outdir OUTDIR
-							Output directory (default: MetaboDirect_output)
-	-m INT INT, --mass_filter INT INT
-							Range to filter m/z data (min_mz, max_mz). The pipeline will not filter m/z values by default (default: None)
-	-g STR [STR ...], --group STR [STR ...]
-							Grouping variables for coloring and faceting figures (Max 2) (default: None)
-	-f STR STR, --filter_by STR STR
-							Filter samples based on metadata. First enter the name of the feature, followed by the values associated with the samples you want to keep in the analysis.(Example -f Habitat Bog,Palsa)
-							(default: None)
-	-b STR, --biochem_key STR
-							File with the biochemical key to use for the transformation network (default: Default key)
-	-v, --version         show program's version number and exit
-	-k, --kegg_annotation
-							Set this option to perform annotation of the molecular formulas usingthe KEGG database (default: False)
+optional arguments:
+  -h, --help            show this help message and exit
+  -g STR [STR ...], --group STR [STR ...]
+                        Grouping variables for coloring and faceting figures (Max 2) (default: None)
+  -o OUTDIR, --outdir OUTDIR
+                        Output directory (default: MetaboDirect_output)
+  -m FLOAT FLOAT, --mass_filter FLOAT FLOAT
+                        Range to filter m/z data (min_mz, max_mz). The pipeline will not filter m/z values by default
+                        (default: None)
+  -p INT, --peak_filter INT
+                        Minimum number of samples a peak must be present to be conserved for the analysis (default: 2)
+  -e FLOAT, --error_filter FLOAT
+                        Max error (e) allowed in formula assignment. Peaks with |error| > e will be removed from the
+                        analysis (default: 0.5)
+  -f STR STR, --filter_by STR STR
+                        Filter samples based on metadata. First enter the name of the feature, followed by the values
+                        associated with the samples you want to keep in the analysis.(Example -f Habitat Bog,Palsa)
+                        (default: None)
+  -b STR, --biochem_key STR
+                        File with the biochemical key to use for the transformation network (default: Default key)
+  -k, --kegg_annotation
+                        Set this option to perform annotation of the molecular formulas usingthe KEGG database
+                        (default: False)
+  -v, --version         show program's version number and exit
 
-	Normalization methods:
-	Options to define how data normalization will be carried out
+Normalization methods:
+  Options to define how data normalization will be carried out
 
-	-n STR, --norm_method STR
-							Available methods to normalize data are: 'mean', 'median', 'zscore', 'sum', 'max', 'minmax', 'binary', 'none' (default: max)
-	--norm_subset STR     Subset of the data to use for normalization purpouses. Available subset methods: ALL, LOS, PPP. LOS uses peaks in the top L order statistics, PPP uses peaks having a minimum percentage of
-							observed values. (default: ALL)
-	--subset_parameter FLOAT
-							If using a sample subset for nomalization, this parameter defines the subsample of peaks that will be used for normalization.If not defined, the default values will be 0.3 for LOS and
-							0.5 for PPP (default: None)
-	--log_transform       Set this option to log transform the data. (Program will fail if there are peaks with intensities of 0. Consider tranforming this values into 1 if log transformation is desired
-							(default: False)
+  -n STR, --norm_method STR
+                        Available methods to normalize data are: 'mean', 'median', 'zscore', 'sum', 'max', 'minmax',
+                        'binary', 'none' (default: max)
+  --norm_subset STR     Subset of the data to use for normalization purpouses. Available subset methods: ALL, LOS,
+                        PPP. LOS uses peaks in the top L order statistics, PPP uses peaks having a minimum percentage
+                        of observed values. (default: ALL)
+  --subset_parameter FLOAT
+                        If using a sample subset for nomalization, this parameter defines the subsample of peaks that
+                        will be used for normalization. If not defined, the default values will be 0.3 for LOS and 0.5
+                        for PPP (default: None)
+  --log_transform       Set this option to log transform the data. (Program will fail if there are peaks with
+                        intensities of 0. Consider tranforming this values into 1 if log transformation is desired
+                        (default: False)
 
-	Transformation network options:
-	Options to control wheter transformations will be calculated and if networks will be constructed
+Transformation network options:
+  Options to control wheter transformations will be calculated and if networks will be constructed
 
-	-t, --calculate_transformations
-							Set this option to calculate transformations based on biochemical key (default: False)
-	-c, --create_networks
-							Set this option to build transformation networks based on transfomations calculatedwith the biochemical key (this options turns -t automatically) (default: False)
+  -t, --calculate_transformations
+                        Set this option to calculate transformations based on biochemical key (default: False)
+  -c, --create_networks
+                        Set this option to build transformation networks based on transfomations calculatedwith the
+                        biochemical key (this options turns -t automatically) (default: False)
 
 ++++++++++++++++++++++++++
 Input data file (``DATA``)
@@ -127,6 +142,18 @@ Mass filter (``-m`` | ``--mass_filter``)
 ++++++++++++++++++++++++++++++++++++++++
 
 This option takes two arguments: lower and an upper m/z limits. Peaks with m/z (masses) outside of its limits will be filtered out and not considered in the analysis.
+
+++++++++++++++++++++++++++++++++++++++++
+Peak filter (``-e`` | ``--error_filter``)
+++++++++++++++++++++++++++++++++++++++++
+
+This option is to determine the maximum error that is allowed from formula assignment.
+
+++++++++++++++++++++++++++++++++++++++++
+Error filter (``-p`` | ``--peak_filter``)
+++++++++++++++++++++++++++++++++++++++++
+
+This option is for specified the minimum number of samples a peak must be present to be conserved for the analysis.
 
 +++++++++++++++++++++++++++++++++++++++++++++++++
 Normalization method (``-n`` | ``--norm_method``)

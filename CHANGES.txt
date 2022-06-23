@@ -14,17 +14,17 @@ v0.1.12, 6/22/2021 -- Bug fixes
 v0.1.13, 6/23/2021 -- Bug fixes
 v0.1.14, 6/23/2021 -- Fix using metadata of only one column in metabodirect
 v0.1.15, 6/23/2021 -- Fix using metadata of only one column in test_normalization
-v0.2.1, 8/30/2021 --
+v0.2.1, 8/30/2021
     - Added new diversity metrics: Shannon, Gini-Simpson and Rao's quadratic entropy
     - Changed the normalization method used to calculate diversity metrics
     - Fixed various bugs related with calculation of transformations
     - Change color of points (to gray) of shared metabolties in pairwise comparison graphs
     - Fixed an issue regarding elemental and molecular composition going over or lower than 100%
-v.0.2.2, 9/7/2021 --
+v.0.2.2, 9/7/2021
     - Fixed KEGG annotation not providing all compounds with the same exact molecular formula
-v.0.2.3, 9/9/2021 --
+v.0.2.3, 9/9/2021
     - Fixed colors in elemental composition figure
-v.0.2.4, 9/9/2021 --
+v.0.2.4, 9/9/2021
     - Fixed a bug where Cytoscape networks were not build directly with the -c option
 v.0.2.5, 9/16/2021
     - Fixed variable names not appearing in the upsetplot
@@ -45,3 +45,5 @@ v.0.3.1, 4/11/2022
     - Added option to change the error threshold that is accepted (option -e)
     - Transformation network edges are not longer colored in order to improve speed and performance of this step
     - Added Venn diagrams for the pairwise comparisons
+v.0.3.2, 6/23/2022
+    - Fixed compatibility issues with new version of vegan
