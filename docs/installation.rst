@@ -9,24 +9,24 @@ Installation
 
 MetaboDirect can be installed directly from `PyPi <https://pypi.org/project/metabodirect/0.1.1/>`_ using:
 
-.. code-block:: none
+.. code-block:: bash
 
-	pip install metabodirect
-
+    pip install metabodirect
 
 Additionally it can be installed from source by cloning its `GitHub repository <https://github.com/Coayala/MetaboDirect>`_:
 
 .. code-block:: bash
-	
-	git clone https://github.com/Coayala/MetaboDirect.git
-	cd MetaboDirect
-	python setup.py install
 
+    git clone https://github.com/Coayala/MetaboDirect.git
+    cd MetaboDirect
+    python setup.py install
 
 Required modules
 ----------------
 
-MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8 and above) with the following libraries/modules:
+MetaboDirect requires Python (3.5 and above), R (4 and above) and
+ Cytoscape (3.8 and above)
+ with the following libraries/modules:
 
 Python
 ++++++
@@ -46,7 +46,7 @@ R
 - vegan
 - ggnewscale
 - ggpubr
-- vegan
+- ggvenn
 - KEGGREST
 - factoextra
 - UpSetR
