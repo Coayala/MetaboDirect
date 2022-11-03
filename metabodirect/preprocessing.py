@@ -93,17 +93,15 @@ def calculate_ratios(df):
 
     # Modified aromaticity index
 
-    num = (1 + df['C'] - (df['O'] * 0.5) - df['S'] - (
+    df2 = df.copy()
+
+    df2['num'] = (1 + df['C'] - (df['O'] * 0.5) - df['S'] - (
             (df['H'] + df['P'] + df['N']) * 0.5))
 
-    den = (df['C'] - (df['O'] * 0.5) - df['S'] - df['N'] - df['P'])
+    df2['den'] = (df['C'] - (df['O'] * 0.5) - df['S'] - df['N'] - df['P'])
 
-    if num < 0:
-        df['AI_mod'] = 0
-    elif den == 0:
-        df['AI_mod'] = 0
-    else:
-        df['AI_mod'] = num / den
+    df['AI_mod'] = df2['num'] / df2['den']
+    df['AI_mod'] = df['AI_mod'].apply(lambda x: 0 if x < 0 else x)
 
     df['DBE_AI'] = 1 + df['C'] - df['O'] - df['S'] - (
             0.5 * (df['H'] + df['N'] + df['P']))
