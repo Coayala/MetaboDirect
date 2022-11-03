@@ -49,3 +49,5 @@ v.0.3.2, 6/23/2022
     - Fixed compatibility issues with new version of vegan
 v.0.3.3, 11/2/2022
     - Fixed Aromaticity index formula
+v.0.3.4, 11/3/2022
+    - Fixed bug Aromaticity index formula
