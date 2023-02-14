@@ -81,7 +81,7 @@ class_rect <-  geom_rect(data = classification,
                              ymax = HC_high,
                              color = Class),
                          fill = NA,
-                         size = 1.5,
+                         linewidth = 1.5,
                          inherit.aes = FALSE, 
                          linetype = 'dashed') 
 

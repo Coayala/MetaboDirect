@@ -178,7 +178,7 @@ pca_plot <- ggplot(pca_coordinates,
                    color = name), 
                inherit.aes = FALSE,
                arrow = arrow(length = unit(0.03, 'npc')),
-               size = 0.8) +
+               linewidth = 0.8) +
   scale_color_manual(values = class_color) +
   geom_text(data = var_loadings,
             aes(x = ifelse(Dim.1 * 2 > 0, Dim.1 * 2 + 1, Dim.1 * 2 - 1),
@@ -276,7 +276,7 @@ pca_plot <- ggplot(pca_coordinates,
                    color = name), 
                inherit.aes = FALSE,
                arrow = arrow(length = unit(0.03, 'npc')),
-               size = 0.8) +
+               linewidth = 0.8) +
   scale_color_manual(values = class_color) +
   geom_text(data = var_loadings,
             aes(x = ifelse(Dim.1 * 1 > 0, Dim.1 * 1 + 1, Dim.1 * 1 - 1),

@@ -76,7 +76,7 @@ modified_spans_procedure <- function(omicsData, norm_fn = c('max', 'mean', 'medi
   ### end main error checking ###
   
   # get indices of significant and nonsignificant p-values
-  kw_pvals <- kw_rcpp(omicsData$e_data %>% dplyr::select(-edata_cname) %>% as.matrix(), as.character(group))
+  kw_pvals <- kw_rcpp(omicsData$e_data %>% dplyr::select(-all_of(edata_cname)) %>% as.matrix(), as.character(group))
   
   # initial storage of both vectors
   sig_inds <- (kw_pvals <= sig_thresh & !is.na(kw_pvals))
@@ -118,7 +118,7 @@ modified_spans_procedure <- function(omicsData, norm_fn = c('max', 'mean', 'medi
   }
   
   # get a vector of n_iter sample sizes for randomly selecting peptides to determine normalization factors
-  scaling_factor <- sum(!is.na(omicsData$e_data %>% dplyr::select(-edata_cname)))/100
+  scaling_factor <- sum(!is.na(omicsData$e_data %>% dplyr::select(-all_of(edata_cname))))/100
   select_n <- ceiling(runif(n_iter, nsamps/scaling_factor, 100)*scaling_factor) - nsamps
   
   ### produce a list with all combinations of subset functions, normalization functions, and parameters ###
@@ -285,7 +285,7 @@ spans_make_distribution <- function(omicsData, norm_fn, sig_inds, nonsig_inds, s
   nsamps = attributes(omicsData)$data_info$num_samps
   
   # need a matrix to pass to kw_rcpp
-  abundance_matrix <- omicsData$e_data %>% dplyr::select(-edata_cname) %>% as.matrix()
+  abundance_matrix <- omicsData$e_data %>% dplyr::select(-all_of(edata_cname)) %>% as.matrix()
   
   # indices vector that will be used for subsetting
   inds <- NULL
@@ -305,7 +305,7 @@ spans_make_distribution <- function(omicsData, norm_fn, sig_inds, nonsig_inds, s
   
   # Normalize random distributions using own normalization methods
   
-  abundance_matrix <- data_normalization(cbind(omicsData$e_data %>% dplyr::select(edata_cname), replace(abundance_matrix, -inds, NA)), rand_norm)
+  abundance_matrix <- data_normalization(cbind(omicsData$e_data %>% dplyr::select(all_of(edata_cname)), replace(abundance_matrix, -inds, NA)), rand_norm)
   # # get normalization parameters from ubsetted matrix.  
   # # normalize_global_matrix is not intended to be used outside this function, it returns the location and (if applicable) scale parameters for normalization.
   # norm_params <- normalize_global_matrix(cbind(omicsData$e_data %>% dplyr::select(edata_cname), replace(abundance_matrix, -inds, NA)),
