@@ -33,10 +33,11 @@ Python
 
 - argparse
 - numpy
-- pandas
+- pandas (**any version previous to 2.0**)
 - seaborn
 - more-itertools
 - py4cytoscape
+- statsmodels
 
 R
 ++
