@@ -24,7 +24,7 @@ library(tidyverse)
 current_dir <- '%currentdir%'
 output_dir <- '%outdir%'
 group1 <- '%group1%'
-
+group2 <- '%group2%'
 
 setwd(current_dir)
 
@@ -95,7 +95,8 @@ walk2(vk_plots, plot_filenames, ~ggsave(.y, .x, dpi = 300, width = 12, height = 
 density_plots <- map(thermo_idx, ~ plot_density(df_longer,
                                                 index = .x,
                                                 color_by = group1,
-                                                facet_col = group1) +
+                                                facet_col = group1,
+                                                facet_row = group2) +
                        scale_fill_manual(values = my_colors))
 
 
@@ -107,6 +108,7 @@ walk2(density_plots, plot_filenames, ~ggsave(.y, .x, dpi = 300, width = 12, heig
 violin_plots <- map(thermo_idx, ~ plot_violin(df_longer,
                                               index = .x,
                                               color_by = group1,
+                                              facet_by = group2,
                                               title = .x) +
                       scale_fill_manual(values = my_colors))
 
@@ -131,7 +133,7 @@ walk2(wt_violins, plot_filenames, ~ggsave(.y, .x, dpi = 300, width = 12, height 
 ## Plot - Class comp bar ----
 
 class_bar <- plot_comp_bar(class_comp, composition = 'Class',
-                           group = group1, title = 'Molecular Class')
+                           group = c(group1, group2), title = 'Molecular Class')
 
 filename <- file.path(my_outdir, '5_Composition_by_class.png')
 ggsave(filename, class_bar, dpi = 300, width = 8, height = 8)
@@ -139,14 +141,14 @@ ggsave(filename, class_bar, dpi = 300, width = 8, height = 8)
 ## Plot - Elemental comp bar ----
 
 el_bar <- plot_comp_bar(el_comp, composition = 'Element',
-                        group = group1, title = 'Elemental Composition')
+                        group = c(group1, group2), title = 'Elemental Composition')
 
 filename <- file.path(my_outdir, '6_Composition_by_element.png')
 ggsave(filename, el_bar, dpi = 300, width = 8, height = 8)
 
 # Comparisons ----
 
-groups <- group1
+groups <- c(group1, group2)
 
 walk(groups, function(g){
   

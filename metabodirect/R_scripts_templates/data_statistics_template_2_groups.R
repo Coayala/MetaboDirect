@@ -24,6 +24,7 @@ library(ggnewscale)
 current_dir <- '%currentdir%'
 output_dir <- '%outdir%'
 group1 <- '%group1%'
+group2 <- '%group2%'
 
 setwd(current_dir)
 
@@ -85,7 +86,7 @@ ggsave(filename, nmds_plot, dpi = 300, width = 6, height = 4)
 # PERMANOVA ----
 
 permanova <- calculate_permanova(matrix, normalized_with = norm_method,
-                                 variables = group1)
+                                 variables = c(group1, group2))
 
 permanova_table <- data.frame(permanova) %>% 
   rownames_to_column(var = 'Variable')

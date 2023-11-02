@@ -4,6 +4,7 @@ import os
 import subprocess
 from shutil import which
 from platform import system
+# from loguru import logger
 
 
 # --------------------------------------------------
@@ -18,7 +19,8 @@ def write_r_script(rscript, outdir, metadata_file, groups, norm_method='max'):
     # Modify the specified R script template with the desired values
     r_in = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'R_scripts_templates', rscript)
     r_in = open(r_in)
-    r_file = os.path.join(outdir, rscript.replace('_template', ''))
+    new_name = rscript.replace('_template_2_groups', '').replace('_template', '')
+    r_file = os.path.join(outdir, new_name)
     r_fh = open(r_file, 'w')
     for line in r_in:
         r_fh.write(line.replace('%currentdir%', current_dir)
@@ -52,6 +54,8 @@ def run_r(rscript):
         #     print(out)
 
         # if err:
-        #     print(err)
+        #     logger.warning('An error has occurred while running R, '
+        #                    'please see the error below')
+        #     logger.error(err)
     else:
         print('Rscript not accesible')

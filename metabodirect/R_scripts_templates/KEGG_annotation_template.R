@@ -1,4 +1,4 @@
-# #############################################################
+# ***************************************************************
 # 
 # MetaboDirect
 # Data Exploration step
@@ -6,66 +6,72 @@
 # by Christian Ayala
 # Licensed under the MIT license. See LICENSE.md file.
 # 
-# #############################################################
+# ***************************************************************
 
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(KEGGREST)
-}) 
+# Loading libraries ----
+
+library(tidyverse)
+library(KEGGREST)
+
 
 # Values between two '%' are to be replaced by the correct values during the python script
 
-#### Defining paths and variables ####
+# Defining variables ----
+
+current_dir <- '%currentdir%'
+output_dir <- '%outdir%'
 
 setwd('%currentdir%')
 
-my_data.file <- file.path('%outdir%', '1_preprocessing_output', 'Report_processed_MolecFormulas.csv')
-my_outdir <- file.path('%outdir%', '3_exploratory')
+my_data.file <- file.path(output_dir, '1_preprocessing_output', 'Report_processed_MolecFormulas.csv')
+my_outdir <- file.path(output_dir, '3_exploratory')
 
-#### Import data ####
+# Loading custom functions ----
+source(file.path(output_dir, 'custom_functions.R'))
+
+# Import data ----
 
 df <-  read_csv(my_data.file, col_types = cols())
 
-#### Molecular formula annotation with KEGG database ####
+# Molecular formula annotation with KEGG database ----
 
-df_formula <- df %>% 
-  select(Mass, MolecularFormula)
-
-compound_df <- tibble(Mass = NA, MolecularFormula = NA, KEGG_id = NA, KEGG_name = NA, KEGG_formula = NA,
-                      KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, KEGG_enzyme = NA, KEGG_reaction = NA, .rows = 0)
-
-for(i in 1:nrow(df_formula)){
-  formula <- df_formula$MolecularFormula[i]
-  cpd_id <- names(keggFind('compound', formula, 'formula'))
-  if(!is.null(cpd_id)){
-    for(id in cpd_id){
-      cpd_info <- keggGet(id)
-      for(j in length(cpd_info)){
-        temp <- tibble(Mass = df_formula$Mass[i],
-                       MolecularFormula = df_formula$MolecularFormula[i],
-                       KEGG_id = id,
-                       KEGG_name = paste(cpd_info[[j]]$NAME, collapse = ''),
-                       KEGG_formula = cpd_info[[j]]$FORMULA,
-                       KEGG_pathway = ifelse(!is.null(cpd_info[[j]]$PATHWAY), paste(cpd_info[[j]]$PATHWAY, collapse = ';'), NA),
-                       KEGG_module = ifelse(!is.null(cpd_info[[j]]$MODULE), paste(cpd_info[[j]]$MODULE, collapse = ';'), NA),
-                       KEGG_brite = ifelse(!is.null(cpd_info[[j]]$BRITE), paste(cpd_info[[j]]$BRITE, collapse = ';'), NA),
-                       KEGG_enzyme = ifelse(!is.null(cpd_info[[j]]$ENZYME), paste(cpd_info[[j]]$ENZYME, collapse = ';'), NA),
-                       KEGG_reaction = ifelse(!is.null(cpd_info[[j]]$REACTION), paste(cpd_info[[j]]$REACTION, collapse = ';'), NA))
-        
-        compound_df <- rbind(compound_df, temp)
-      }
-    }
-  } else {
-    temp <- tibble(Mass = df_formula$Mass[i], MolecularFormula = df_formula$MolecularFormula[i], KEGG_id = NA, 
-                   KEGG_name = NA, KEGG_formula = NA, KEGG_pathway = NA, KEGG_module = NA, KEGG_brite = NA, 
-                   KEGG_enzyme = NA, KEGG_reaction = NA)
+kegg_searches <- map2(df$Mass[1:50], df$MolecularFormula[1:50], function(mass, formula){
+  
+  print(paste0('Searching formula: ', formula))
+  
+  cpd <- keggFind('compound', formula, 'formula')
+  cpd <- cpd[which(cpd == formula)]
+  cpd_id <- names(cpd)
+  
+  if(length(cpd_id) > 0 && length(cpd_id) <= 10){
+    cpd_df <- get_kegg_compound_info(cpd_id, mass, formula)
     
-    compound_df <- rbind(compound_df, temp)
+  } else if(length(cpd_id) > 10){
+    # Kegg get only gives back 10 compounds at the time
+    id_chunks <- split(cpd_id, ceiling(seq_along(cpd_id)/10))
+    
+    cpd_chunks <- map(id_chunks, ~get_kegg_compound_info(.x, mass, formula))
+    
+    cpd_df <- reduce(cpd_chunks, rbind)
+    
+  } else {
+    cpd_df <- tibble(Mass = mass,
+                     MolecularFormula = formula,
+                     KEGG_id = NA,
+                     KEGG_name = NA,
+                     KEGG_formula = NA,
+                     KEGG_pathway = NA,
+                     KEGG_module = NA,
+                     KEGG_brite = NA,
+                     KEGG_enzyme = NA,
+                     KEGG_reaction = NA)
   }
-}
+  
+  return(cpd_df)
+  
+})
 
-matching_compounds <- df_formula %>% 
-  left_join(compound_df[compound_df$KEGG_formula %in% df_formula$MolecularFormula,], by = c('Mass', 'MolecularFormula'))
+compound_df <- reduce(kegg_searches, rbind)
 
-filename <- file.path(my_outdir, 'KEGG_annotation_results.csv')
+filename <- file.path(my_outdir, '7_KEGG_annotation_results.csv')
 write_csv(matching_compounds, filename)

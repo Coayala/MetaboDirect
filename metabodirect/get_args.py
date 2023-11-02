@@ -89,6 +89,18 @@ def get_args():
                         action='version',
                         version='%(prog)s {version}'.format(version=metabodirect.__version__))
 
+    parser.add_argument('--log',
+                        help='Log file',
+                        default='log')
+
+    parser.add_argument('--additional_elements',
+                        help='Elements other than "C", "H", "O", "N", "S", "P" '
+                             'to be included in the analysis',
+                        metavar='STR',
+                        type=str,
+                        nargs='+',
+                        default=[])
+
     norm = parser.add_argument_group('Normalization methods',
                                      'Options to define how data normalization will be carried out')
 
@@ -121,8 +133,9 @@ def get_args():
                       )
 
     norm.add_argument('--log_transform',
-                      help='Set this option to log transform the data. (Program will fail if there are peaks with '
-                           'intensities of 0. Consider tranforming this values into 1 if log transformation is desired',
+                      help='Set this option to do a generalized log transformation (glog) of the data. '
+                           'Generalized log transformation is defined as log(x + sqrt(x^2 + lambda)), '
+                           'where lambda is the 1/10 of the smallest value different than 0',
                       action='store_true',
                       default=False
                       )
@@ -163,7 +176,7 @@ def get_args():
 
     if args.norm_subset != 'ALL':
         if args.subset_parameter > 1:
-            parser.error(f'Incorrect subset parameter. Subset parameter must be between 0 and 1 (proportion).')
+            parser.error('Incorrect subset parameter. Subset parameter must be between 0 and 1 (proportion).')
         if not args.subset_parameter:
             args.subset_parameter = 0.3 if args.norm_subset == 'LOS' else 0.5
 

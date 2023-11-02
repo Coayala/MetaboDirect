@@ -51,5 +51,11 @@ v.0.3.3, 11/2/2022
     - Fixed Aromaticity index formula
 v.0.3.4, 11/3/2022
     - Fixed bug Aromaticity index formula
-v.0.3.5, 2-14/2023
+v.0.3.5, 2/14/2023
     - Minor code updates
+v.1.0.0, 11/2/2023
+    - Large changes to R scripts. Custom functions added to aid in readability
+    - Added a logger
+    - Added possibility to have additional elements
+    - MetaboDirect now supports other table formats
+    - Improved the compute time for KEGG annotation

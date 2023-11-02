@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+from loguru import logger
 
 
 # --------------------------------------------------
@@ -29,15 +30,15 @@ def peaks_per_sample(df, metadata, group, path):
                     order=stats_per_sample.sort_values(by=[group[0], 'Counts'])['SampleID'],
                     saturation=0.7,
                     errcolor='.2',
-                    ci="sd",
+                    errorbar="sd",
                     capsize=0.2,
                     errwidth=1.25,
                     dodge=False)
 
     plt.setp(p.get_xticklabels(), rotation=45, size=8, ha='right')
     plt.savefig(os.path.join(path, 'stats_peaks_per_sample.png'), dpi=300, bbox_inches="tight")
-    print('The average number of peaks detected per sample is: {:.0f}'.format(
-        np.mean(stats_per_sample['Counts']), ))
+    logger.info('The average number of peaks detected per sample is: {}',
+                round(np.mean(stats_per_sample['Counts'])))
     plt.clf()
 
     return
@@ -65,15 +66,15 @@ def formula_per_sample(df, metadata, group, path):
                     order=stats_per_sample.sort_values(by=[group[0], 'Counts'])['SampleID'],
                     saturation=0.7,
                     errcolor='.2',
-                    ci="sd",
+                    errorbar="sd",
                     capsize=0.2,
                     errwidth=1.25,
                     dodge=False)
 
     plt.setp(f.get_xticklabels(), rotation=45, size=8, ha='right')
     plt.savefig(os.path.join(path, 'stats_formula_per_sample.png'), dpi=300, bbox_inches="tight")
-    print('The average number of masses assigned a molecular formula per sample is: {:.0f}'.format(
-        np.mean(stats_per_sample['Counts']), ))
+    logger.info('The average number of masses assigned a molecular formula per sample is: {}',
+                round(np.mean(stats_per_sample['Counts'])))
     plt.clf()
 
     return

@@ -1,4 +1,4 @@
-# #############################################################
+# ***************************************************************
 # 
 # MetaboDirect
 # Data Exploration step
@@ -7,61 +7,65 @@
 #     based on scripts and functions by Nathalia Graf Grachet
 # Licensed under the MIT license. See LICENSE.md file.
 # 
-# #############################################################
+# ***************************************************************
 
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(RColorBrewer)
-  library(ggpubr)
-  library(vegan)
-  library(SYNCSA)
-}) 
+library(tidyverse)
+library(RColorBrewer)
+library(ggpubr)
+library(vegan)
+library(SYNCSA)
 
 # Values between two '%' are to be replaced by the correct values during the python script
 
-#### Defining paths and variables ####
+# Defining variables ----
 
-setwd('%currentdir%')
+current_dir <- '%currentdir%'
+output_dir <- '%outdir%'
+group1 <- '%group1%'
+group2 <- '%group2%'
 
-my_data.file <- file.path('%outdir%', '1_preprocessing_output', 'Report_processed_noNorm.csv')
+setwd(current_dir)
+
+# Loading custom functions ----
+source(file.path(output_dir, 'custom_functions.R'))
+
+my_data.file <- file.path(output_dir, '1_preprocessing_output', 'Report_processed_noNorm.csv')
 my_metadata.file <- file.path('%metadata%')
-my_outdir <- file.path('%outdir%', '4_chemodiversity')
+my_outdir <- file.path(output_dir, '4_chemodiversity')
 
-#### Import data ####
+#### Import data ----
 
-df <-  read_csv(my_data.file, col_types = cols())
-metadata <- read_csv(my_metadata.file, col_types = cols())
+df <-  read_csv(my_data.file)
+metadata <- read_csv(my_metadata.file)
 
-#### Get intensity matrix for diversity analysis ####
+# Reformat data files ----
+
+## Change all metadata columns to factors to avoid problems at plotting
+
+metadata <- metadata %>% 
+  mutate(across(!SampleID, as.factor))
+
+## Intensity matrix
 
 intensity_matrix <- df %>%
   select(Mass, all_of(metadata$SampleID)) %>%
-  pivot_longer(!Mass, names_to = 'SampleID', values_to = 'intensity') %>%
-  pivot_wider(names_from = 'Mass', values_from = 'intensity') %>%
-  column_to_rownames(var = 'SampleID')
+  column_to_rownames(var = 'Mass') %>% 
+  t()
 
-# Sum normalize intensities
+## Sum normalize intensities
 
-sample_sum = rowSums(intensity_matrix)
-norm_intensity_matrix <- intensity_matrix / sample_sum
+norm_intensity_matrix <- decostand(intensity_matrix, method = 'total')
 
+# Set samples color names ----
 
-# Get color palettes
+my_colors <- set_names(get_palette('Dark2', length(unique(metadata[[group1]]))),
+                       nm = unique(metadata[[group1]]))
 
-my_colors <- get_palette('Dark2', length(unique(metadata$'%group1%')))
-names(my_colors) <- unique(metadata$'%group1%') 
+# Abundance-based diversity ----
 
-#### Abundance-based diversity ####
+## Richness
 
-# Richness
-
-richness <- specaccum(norm_intensity_matrix, method = 'random', permutations = 100)
-
-richness_long <- as_tibble(richness$perm, rownames = 'Sites') %>%
-  pivot_longer(!Sites, names_to = 'permutation', values_to = 'Richness') %>%
-  select(-permutation)
-
-richness_long$Sites <- as.numeric(richness_long$Sites)
+richness <- calculate_richness(norm_intensity_matrix)
 
 richness_plot <- ggplot(richness_long,
                         aes(x = Sites,
@@ -71,19 +75,14 @@ richness_plot <- ggplot(richness_long,
   geom_hline(yintercept = max(richness_long$Richness) * 0.85, color = 'red') +
   theme_bw() +
   labs(title = 'Richness plot') +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  custom_theme()
 
-filename <- file.path(my_outdir, 'Diversity_plot_richness.png')
+filename <- file.path(my_outdir, '1.1_Diversity_plot_richness.png')
 ggsave(filename, richness_plot, dpi = 300, width = 8, height = 8)
 
-# Rank abundance
+## Rank abundance ----
 
-rank_sums <- tibble(peak = colnames(intensity_matrix),
-                    intensity_sums = colSums(intensity_matrix),
-                    presence = colSums(intensity_matrix != 0)) %>%
-  arrange(intensity_sums) %>%
-  mutate(position = n():1,
-         presence_perc = presence/nrow(intensity_matrix)*100)
+rank_sums <- calculate_rank_abundance(norm_intensity_matrix)
 
 rank_plot <- ggplot(rank_sums,
                     aes(x = position,
@@ -96,77 +95,30 @@ rank_plot <- ggplot(rank_sums,
        y = 'Total relative abundance',
        x = 'Molecular rank',
        color = 'Presence') +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  custom_theme()
 
-filename <- file.path(my_outdir, 'Diversity_plot_rank_abundance.png')
+rank_plot
+
+filename <- file.path(my_outdir, '1.2_Diversity_plot_rank_abundance.png')
 ggsave(filename, rank_plot, dpi = 300, width = 8, height = 8)
 
-# Diversity Index
+## Diversity Index ----
 
-diversity_table <- tibble(SampleID = rownames(norm_intensity_matrix),
-                          Shannon = diversity(norm_intensity_matrix, index = 'shannon'),
-                          Gini_Simpson = diversity(norm_intensity_matrix, index = 'simpson'),
-                          Chao1 = estimateR(round(intensity_matrix))['S.chao1',])
+diversity_table <- calculate_diversity_index(intensity_matrix, norm_intensity_matrix)
 
-filename <- file.path(my_outdir, 'abundance_diversity.csv')
-write_csv(diversity_table, filename)
+diversity_plot <- plot_diversity_index(diversity_table, group_by = group1,
+                                       title = 'Abundance-based Diversity')
 
-
-diversity_plot <- diversity_table %>% 
-  pivot_longer(!SampleID, names_to = 'index', values_to = 'values') %>% 
-  left_join(metadata, by = 'SampleID') %>% 
-  ggplot() +
-  geom_boxplot(aes(x = %group1%,
-                   y = values,
-                   fill = %group1%)) +
-  scale_fill_manual(values = my_colors) +
-  facet_wrap(~index, scales = 'free_y') +
-  labs(title = 'Abundance-based Diversity') +
-  theme_bw() +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5))
-
-filename <- file.path(my_outdir, 'abundance_diversity_plot.png')
+filename <- file.path(my_outdir, '2.2_abundance_diversity_plot.png')
 ggsave(filename, diversity_plot, dpi = 300, width = 8, height = 8)
 
-#### Functional diversity ####
+# Functional diversity ----
 
-# Elemental composition
-el_traits <- df %>% 
-  select(Mass, C, H, O, N, S, P) %>% 
-  column_to_rownames(var = 'Mass')
+functional_diversity <- calculate_functional_div_index(df, norm_intensity_matrix)
 
-# Reactivity
-rx_traits <- df %>% 
-  select(Mass, NOSC)%>% 
-  column_to_rownames(var = 'Mass')
+functional_div_plot <- plot_diversity_index(functional_diversity, group_by = group1,
+                                            title = 'Functional-based Diversity') +
+  labs(subtitle = "Rao's quadratic entropy")
 
-# Insaturation/aromaticity
-ia_traits <- df %>% 
-  select(Mass, DBE, AI_mod)%>% 
-  column_to_rownames(var = 'Mass')
-
-functional_diversity <- tibble(SampleID = rownames(norm_intensity_matrix),
-                               Elemental_composition = rao.diversity(norm_intensity_matrix, el_traits)$FunRao,
-                               Reactivity = rao.diversity(norm_intensity_matrix, rx_traits)$FunRao,
-                               Insaturation_and_aromaticity = rao.diversity(norm_intensity_matrix, ia_traits)$FunRao)
-
-filename <- file.path(my_outdir, 'functional_diversity.csv')
-write_csv(functional_diversity, filename)
-
-functional_plot <- functional_diversity %>% 
-  pivot_longer(!SampleID, names_to = 'index', values_to = 'values') %>% 
-  left_join(metadata, by = 'SampleID') %>% 
-  ggplot() +
-  geom_boxplot(aes(x = %group1%,
-                   y = values,
-                   fill = %group1%)) +
-  scale_fill_manual(values = my_colors) +
-  facet_wrap(~index, scales = 'free_y') +
-  labs(title = 'Functional-based Diversity',
-       subtitle = "Rao's quadratic entropy") +
-  theme_bw() +
-  theme(plot.title = element_text(face = 'bold', hjust = 0.5),
-        plot.subtitle = element_text(face = 'italic', hjust = 0.5))
-
-filename <- file.path(my_outdir, 'functional_diversity_plot.png')
-ggsave(filename, functional_plot, dpi = 300, width = 8, height = 8)
+filename <- file.path(my_outdir, '3.2_functional_diversity_plot.png')
+ggsave(filename, functional_div_plot, dpi = 300, width = 8, height = 8)

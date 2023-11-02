@@ -10,12 +10,13 @@ README = (HERE / "README.md").read_text()
 # Required package
 
 REQUIRED = ['pandas', 'numpy', 'py4cytoscape',
-            'seaborn', 'more-itertools', 'argparse']
+            'seaborn', 'more-itertools', 'argparse',
+            'statsmodels']
 
 # This call to setup() does all the work
 setup(
     name="metabodirect",
-    version="0.3.5",
+    version="1.0.0",
     description="Analyze FT-ICR-MS data",
     long_description=README,
     long_description_content_type="text/markdown",
