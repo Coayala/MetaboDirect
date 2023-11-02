@@ -48,6 +48,7 @@ R
 - ggnewscale
 - ggpubr
 - ggvenn
+- ggrepel
 - KEGGREST
 - factoextra
 - UpSetR
