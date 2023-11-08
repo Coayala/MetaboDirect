@@ -39,7 +39,6 @@ MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8
 - vegan
 - ggnewscale
 - ggpubr
-- ggrepel
 - KEGGREST
 - factoextra
 - UpSetR
