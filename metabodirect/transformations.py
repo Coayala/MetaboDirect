@@ -57,7 +57,7 @@ def calculate_transformations(df, keys, path):
 
         if len(result_tuples) == 0:
             print('No transformations were found for this sample, moving to the next one')
-        
+
         else:
             # make np.array from list of lists
             result_tuples = np.vstack(result_tuples)
@@ -87,7 +87,7 @@ def calculate_transformations(df, keys, path):
             result_counts.to_csv(filename, index=False)
         i = i + 1
 
-    print("\u2713 Done!")
+    print("Done!")
     return
 
 

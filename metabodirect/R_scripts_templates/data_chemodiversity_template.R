@@ -67,12 +67,12 @@ my_colors <- set_names(get_palette('Dark2', length(unique(metadata[[group1]]))),
 
 richness <- calculate_richness(norm_intensity_matrix)
 
-richness_plot <- ggplot(richness_long,
+richness_plot <- ggplot(richness,
                         aes(x = Sites,
                             y = Richness,
                             group = Sites)) +
   geom_boxplot(fill = 'yellow') +
-  geom_hline(yintercept = max(richness_long$Richness) * 0.85, color = 'red') +
+  geom_hline(yintercept = max(richness$Richness) * 0.85, color = 'red') +
   theme_bw() +
   labs(title = 'Richness plot') +
   custom_theme()

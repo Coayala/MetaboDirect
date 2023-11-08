@@ -58,7 +58,7 @@ def main():
 
     check = ''
     while check != 'You are connected to Cytoscape!':
-        cytoscape = input(f'Please open Cytoscape and press the ENTER key [q for quit].')
+        cytoscape = input('Please open Cytoscape and press the ENTER key [q for quit].')
         if cytoscape == '':
             try:
                 check = p4c.cytoscape_ping()

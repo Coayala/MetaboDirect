@@ -400,7 +400,7 @@ calculate_diversity_index <- function(mat, norm_mat){
                       Chao1 = estimateR(round(mat))['S.chao1',])  
   
   filename <- file.path(my_outdir, '2.1_abundance_diversity_index.csv')
-  write_csv(diversity_table, filename)
+  write_csv(diversity, filename)
   
   final_df <- diversity %>% 
     pivot_longer(!SampleID, names_to = 'index', values_to = 'values') %>% 

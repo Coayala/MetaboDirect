@@ -26,7 +26,7 @@ MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8
 
 - argparse
 - numpy
-- pandas (**any version previous to 2.0**)
+- pandas
 - seaborn
 - more-itertools
 - py4cytoscape
@@ -39,7 +39,7 @@ MetaboDirect requires Python (3.5 and above), R (4 and above) and Cytoscape (3.8
 - vegan
 - ggnewscale
 - ggpubr
-- ggvenn
+- ggrepel
 - KEGGREST
 - factoextra
 - UpSetR

@@ -59,3 +59,7 @@ v.1.0.0, 11/2/2023
     - Added possibility to have additional elements
     - MetaboDirect now supports other table formats
     - Improved the compute time for KEGG annotation
+v.1.0.1, 11/2/2023
+    - Fix error chemodiversity script
+v.1.0.2, 11/8/2023
+    - Fix error chemodiversity script

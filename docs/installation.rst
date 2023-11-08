@@ -7,7 +7,7 @@ Installation
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/metabodirect?style=plastic
     :target: https://pypi.org/project/metabodirect/
 
-MetaboDirect can be installed directly from `PyPi <https://pypi.org/project/metabodirect/0.1.1/>`_ using:
+MetaboDirect can be installed directly from `PyPi <https://pypi.org/project/metabodirect/>`_ using:
 
 .. code-block:: bash
 
@@ -33,7 +33,7 @@ Python
 
 - argparse
 - numpy
-- pandas (**any version previous to 2.0**)
+- pandas
 - seaborn
 - more-itertools
 - py4cytoscape
@@ -48,6 +48,7 @@ R
 - ggnewscale
 - ggpubr
 - ggvenn
+- ggrepel
 - KEGGREST
 - factoextra
 - UpSetR
