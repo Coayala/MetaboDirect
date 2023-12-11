@@ -63,3 +63,5 @@ v.1.0.1, 11/2/2023
     - Fix error chemodiversity script
 v.1.0.2, 11/8/2023
     - Fix error chemodiversity script
+v.1.0.3, 12/11/2023
+    - Add shape to ordination plots when 3 group variables are used

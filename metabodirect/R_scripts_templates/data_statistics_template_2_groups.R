@@ -77,7 +77,8 @@ write_csv(nmds_scores, filename)
 ## NMDS plot ----
 
 nmds_plot <- plot_ordination(nmds_scores, x = NMDS1, y = NMDS2,
-                             color_by = group1, col_vec = my_colors,
+                             color_by = group1, shape_by = group2,
+                             col_vec = my_colors,
                              title = 'NMDS Ordination') 
 
 filename <- file.path(my_outdir, '1.4_NMDS_plot.png')
@@ -123,7 +124,8 @@ pc2 <- paste0('PC2 (',
               round(pca_class$eigenvalues$variance.percent[2], digits = 1), '%)')
 
 pca_plot <- plot_ordination(pca_class$coordinates, x = PC1, y = PC2,
-                            color_by = group1, col_vec = my_colors,
+                            color_by = group1, shape_by = group2, 
+                            col_vec = my_colors,
                             title = 'PCA Compound Classes') +
   labs(x = pc1,
        y = pc2) +
@@ -192,7 +194,8 @@ pc2 <- paste0('PC2 (',
               round(pca_molchar$eigenvalues$variance.percent[2], digits = 1), '%)')
 
 pca_plot <- plot_ordination(pca_molchar$coordinates, x = PC1, y = PC2,
-                            color_by = group1, col_vec = my_colors,
+                            color_by = group1, shape_by = group2,
+                            col_vec = my_colors,
                             title = 'PCA Molecular Characteristics') +
   labs(x = pc1,
        y = pc2) +

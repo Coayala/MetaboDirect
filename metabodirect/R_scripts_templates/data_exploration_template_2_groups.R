@@ -84,7 +84,7 @@ my_colors <- set_names(get_palette('Dark2', length(unique(metadata[[group1]]))),
 thermo_idx <- set_names(c('GFE', 'AI_mod', 'DBE', 'NOSC'),
                         nm = c('GFE', 'AI_mod', 'DBE', 'NOSC'))
 
-## Van Krevenlen plot ----
+## Van Krevelen plot ----
 vk_plots <- map(thermo_idx, ~ plot_van_krevelen(df_longer, color_by = .x, facet_by = group1) + 
                   scale_color_viridis_c(direction = -1))
 
