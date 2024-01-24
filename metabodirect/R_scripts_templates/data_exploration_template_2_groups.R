@@ -192,7 +192,7 @@ walk(groups, function(g){
       filter(Presence %in% c(val1, val2)) %>% 
       group_by(Mass, HC, OC, GFE, Class) %>% 
       arrange(Presence) %>% 
-      summarise(Presence = paste0(Presence, collapse = ',')) %>% 
+      summarise(Presence = paste0(unique(Presence), collapse = ',')) %>% 
       mutate(Presence = ifelse(str_detect(Presence, ','), 'Shared', Presence),
              Presence = factor(Presence, levels = c(val1, val2, 'Shared'))) %>% 
       ungroup()

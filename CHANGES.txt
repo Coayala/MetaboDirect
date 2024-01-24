@@ -65,3 +65,11 @@ v.1.0.2, 11/8/2023
     - Fix error chemodiversity script
 v.1.0.3, 12/11/2023
     - Add shape to ordination plots when 3 group variables are used
+v.1.0.4, 01/08/2024
+    - Fix small bugs in custom functions
+v.1.0.5, 01/23/2024
+    - Fix an error in the script of the KEGG Annotation Step
+v.1.0.6, 01/23/2024
+    - Fix an error in the script of the KEGG Annotation Step
+v.1.0.7, 01/24/2024
+    - Fix an error in the script of the KEGG Annotation Step

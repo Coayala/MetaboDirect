@@ -143,7 +143,7 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title){
     geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
     theme_bw() +
     labs(title = title,
-         x = index) +
+         x = color_by) +
     custom_theme(angle_x = 45)
   
   if(!is.na(facet_by)){
@@ -202,7 +202,7 @@ plot_comp_bar <- function(df, composition, group, title){
   if(length(group) == 2){
     facet_formula <- as.formula(paste0('~ ', group_b))
     plot <- plot + 
-      facet_wrap(facet_formula)
+      facet_wrap(facet_formula, scales = 'free_x')
   }
   return(plot)
 }

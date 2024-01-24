@@ -35,7 +35,7 @@ df <-  read_csv(my_data.file, col_types = cols())
 
 # Molecular formula annotation with KEGG database ----
 
-kegg_searches <- map2(df$Mass[1:50], df$MolecularFormula[1:50], function(mass, formula){
+kegg_searches <- map2(df$Mass, df$MolecularFormula, function(mass, formula){
   
   print(paste0('Searching formula: ', formula))
   
@@ -50,7 +50,11 @@ kegg_searches <- map2(df$Mass[1:50], df$MolecularFormula[1:50], function(mass, f
     # Kegg get only gives back 10 compounds at the time
     id_chunks <- split(cpd_id, ceiling(seq_along(cpd_id)/10))
     
-    cpd_chunks <- map(id_chunks, ~get_kegg_compound_info(.x, mass, formula))
+    cpd_chunks <- map(id_chunks, function(x){
+      res <- get_kegg_compound_info(x, mass, formula)
+
+      Sys.sleep(3)
+    })
     
     cpd_df <- reduce(cpd_chunks, rbind)
     
