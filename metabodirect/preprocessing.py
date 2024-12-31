@@ -38,7 +38,7 @@ def make_directories(outdir):
 
 
 # --------------------------------------------------
-def sample_filtering(df, metadata, filter_by, path):
+def sample_filtering(df, metadata, filter_by, path, args):
     """Filter samples based on selected features and values."""
 
     # Get the variable a values specified for sample filtering
@@ -48,7 +48,8 @@ def sample_filtering(df, metadata, filter_by, path):
     # Saving a new metadata file containing only the samples remaining after filtering
     filt_metadata = pd.DataFrame()
     for i in filter_values:
-        filt_metadata = filt_metadata.append(metadata[metadata[filter_col] == i])
+        filt_metadata = pd.concat([filt_metadata,
+                                   metadata[metadata[filter_col] == i]])
     filt_metadata.to_csv(os.path.join(path, 'filtered_metadata.csv'), index=False)
 
     # Saving a new input file containing only the samples remaining after filtering
@@ -343,7 +344,7 @@ def data_normalization(df, args, norm_method, norm_subset, subset_parameter=1,
     npeaks, nsamples = np.shape(input_data)
 
     if log:
-        lambda_val = np.min[input_data[input_data > 0]] / 10
+        lambda_val = np.min(input_data[input_data > 0]) / 10
         input_data = np.log(input_data + np.sqrt(input_data ** 2 + lambda_val))
 
     # Perform sample subset to calculate normalization factors

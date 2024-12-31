@@ -15,7 +15,7 @@ def get_keys(keyfile):
     """Get Biochemical Transformation Keys"""
 
     key = pd.read_csv(keyfile)
-    key['mf'] = key['mf'].astype(float).apply(lambda x: '%.6f' % x)
+    key['mf'] = key['mf'].astype(float)
     key = key.sort_values(by=['mf'])
     key_tuples = list(zip(key.Group, key.Transformation, key.Formula, key.mf))
 
@@ -23,38 +23,91 @@ def get_keys(keyfile):
 
 
 # --------------------------------------------------
-def calculate_transformations(df, keys, path):
+def calculate_transformations(df, keys, path, err_thresh=0.001):
+    import bisect
+    import operator
     """Function to calculate transformations for transformation networks"""
 
-    # Create a dataframe that has the masses of the peaks that are present in each sample, and 0 in the peaks that are
-    # not in that sample
+    # Create a dataframe with m/z and per-sample intensity columns.
+
     df_transf = pd.pivot_table(df, values='NormIntensity', index=['Mass'],
                                columns=['SampleID']).reset_index()
-    df_transf['Mass'] = df_transf['Mass'].astype(float).apply(lambda x: '%.6f' % x)
-    df_transf.replace([0, np.nan], ['X', 'X'], inplace=True)
-    for col in df_transf.columns:
-        df_transf[col] = np.where((df_transf[col] != 'X'), df_transf['Mass'], df_transf[col])
-    df_transf = df_transf.drop('Mass', axis=1)
-    df_transf = df_transf.replace('X', 0)
-    print('Calculating m/z differences per sample column can take a little while...\n')
     i = 1
 
-    for sample in sorted(df_transf.columns):
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}] {i}\\{len(df_transf.columns)}\t{sample}')
+    for sample in df_transf.columns[1:]:  # Skip mass column
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]'
+              f'{i}\\{len(df_transf.columns)}\t{sample}')
 
-        mz_list = set(float(x) for x in df_transf[sample] if float(x) > 0)
+        # For each sample, extract masses for all compounds present
+        # (i.e. where intensity > 0)
+        mz_list = df_transf.Mass[df_transf[sample] > 0]        
         print('\t\tTotal m/z values', len(mz_list))
 
-        # make m/z substractions in all versus all fashion
-        # doing all vs all the subtractions and filter
-        result_tuples = [(x, y, round(abs(x - y), 6)) for x, y in combinations(mz_list, 2) if 1 < abs(x - y) < 766]
+        # Create a distance matrix for the m/z values, where:
+        #   diff[i,j] = mz_list[j] - mz_list[i]
+        # It will be antisymmetric, with the upper triangle positive.
 
-        result_tuples = [(
-            r[0], r[1], r[2],
-            k[0], k[1], k[2], k[3]
-        ) for r in result_tuples for k in keys
-            if r[2] - 0.001 <= float(k[3]) <= r[2] + 0.001]
+        diffs = (mz_list.values - mz_list.values[:, None])
 
+        # Create a set of X,Y coordinates for diffs. We can use these
+        # to find the original masses.
+        X, Y = np.indices((len(mz_list), len(mz_list)))
+
+        # Now, for all mass differences (in the range of 1-766 Da),
+        # create a list of (delta, src_idx, target_idx) and sort by mass delta.
+        valid_locs = np.where((diffs > 1) & (diffs < 766), True, False)
+        candidates = zip(diffs[valid_locs], X[valid_locs], Y[valid_locs])
+
+        # Sort by mass delta (first element in tuple).
+        # Using operator.itemgetter is a skosh faster than
+        # using key=lambda x: x[0], but only if we create it beforehand.
+        getter = operator.itemgetter(0)
+        candidates = sorted(candidates, key=getter)
+
+        c_min = 0
+        c_max = len(candidates)
+
+        # Now, since we have two sorted lists (candidates and keys), we can
+        # compare them. Timing tests show that the fastest method is to
+        # use binary search ('bisect')
+
+        results = []
+        for grp, xform, formula, mf in keys:
+            # For each transformation, find all of our candidates within the
+            # range of delta +/- err_thresh.
+            # We need to convert the 'mf +/- err) to a tuple, as bisect can
+            # only compare like types:            
+            lo = bisect.bisect_left(candidates, (mf - err_thresh,), lo=c_min)
+            hi = bisect.bisect_left(candidates, (mf + err_thresh,), lo=c_min)
+            if lo == hi:
+                # No candidates fall in range for this transform
+                continue
+            if lo == c_max:
+                # We've exhausted all our candidates
+                break
+            # Every candiate between lo and hi has a mass that matches our
+            # transform.
+            results.append([(mz_list.iloc[cand[1]],  # Source m/z
+                             mz_list.iloc[cand[2]],  # Target m/z
+                             cand[0],  # Actual delta m/z
+                             grp, xform, formula, mf)
+                            for cand in candidates[lo:hi]])
+            # Now we can start our searches starting from the highest mass.
+            c_min = hi
+
+        # Note: in this algorithm, if two formulas have the same mass delta
+        # (such as leucine and isoleucine), or if two mass deltas are within
+        # err_thresh of each other, only a single transformation will be
+        # discovered (whichever comes first).
+        # In the previous version, *all* matching transforms are returned;
+        # in particular, all leucine transforms are double counted as
+        # isoleucine.
+        # We could easily revert to the previous behavior without loss of speed
+        # if that is desired (just set 'c_min=lo' at the end of above loop).
+        
+        # Convert our list of lists to a flat list
+        result_tuples = sum(results, start=[])
+        
         if len(result_tuples) == 0:
             print('No transformations were found for this sample, moving to the next one')
 
@@ -71,20 +124,23 @@ def calculate_transformations(df, keys, path):
 
             print('   Saving results')
             filename = os.path.join(path, 'transformations_' + sample + '.csv')
-            result_df.to_csv(filename, index=False)
+            result_df.to_csv(filename, index=False, float_format='%.6f')
 
             # Compile counts
             result_counts = pd.DataFrame(
-                result_df.groupby(['SampleID', 'Group', 'Transformation', 'Formula']).size().reset_index(name='Counts'))
+                result_df.groupby(
+                    ['SampleID', 'Group', 'Transformation', 'Formula']
+                ).size().reset_index(name='Counts'))
 
             total_transformations = sum(result_counts['Counts'])
 
-            result_counts['Perc_Counts'] = result_counts['Counts'] / total_transformations
+            result_counts['Perc_Counts'] = (result_counts['Counts']
+                                            / total_transformations)
             result_counts = result_counts.sort_values(by="Counts")
 
             # Save final_counts
             filename = os.path.join(path, 'counts_' + sample + '.csv')
-            result_counts.to_csv(filename, index=False)
+            result_counts.to_csv(filename, index=False, float_format='%.6f')
         i = i + 1
 
     print("Done!")
@@ -115,7 +171,7 @@ def summarize_transformations(path):
         summary_transf = pd.concat([summary_transf, df], axis=0)
 
     filename = os.path.join(path, 'Transformations_summary_all.csv')
-    summary_transf.to_csv(filename, index=False)
+    summary_transf.to_csv(filename, index=False, float_format='%.6f')
     return
 
 

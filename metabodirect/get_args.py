@@ -140,6 +140,14 @@ def get_args():
                       default=False
                       )
 
+    norm.add_argument('-s',
+                      '--skip_analyses',
+                      help='When this option is set, only the preprocessing step (and the calculate'
+                           'transformation step, if requested) will be run.',
+                      action='store_true',
+                      default=False
+                      )
+
     transf = parser.add_argument_group('Transformation network options',
                                        'Options to control wheter transformations will be calculated and if '
                                        'networks will be constructed')
@@ -150,6 +158,7 @@ def get_args():
                         action='store_true',
                         default=False)
 
+    
     transf.add_argument('-c',
                         '--create_networks',
                         help='Set this option to build transformation networks based on transfomations calculated'
