@@ -158,6 +158,12 @@ def get_args():
                         action='store_true',
                         default=False)
 
+    transf.add_argument('--transformation_threshold',
+                        help='Set the maximum difference in mass delta (in Daltons) used to match compound pairs'
+                             'to transformations.',
+                        type=float,
+                        default=0.001)
+
     
     transf.add_argument('-c',
                         '--create_networks',

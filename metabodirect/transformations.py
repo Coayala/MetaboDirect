@@ -92,8 +92,12 @@ def calculate_transformations(df, keys, path, err_thresh=0.001):
                              cand[0],  # Actual delta m/z
                              grp, xform, formula, mf)
                             for cand in candidates[lo:hi]])
-            # Now we can start our searches starting from the highest mass.
-            c_min = hi
+            # We can speed things up a bit by only searching masses greater than
+            # or equal to what we've searched so far by setting c_min.
+            # If we set this to 'hi', it will exclude all previous matches, so compound
+            # pairs will only match a single transformation. By setting it to 'lo',
+            # all possible transformations are found.
+            c_min = lo
 
         # Note: in this algorithm, if two formulas have the same mass delta
         # (such as leucine and isoleucine), or if two mass deltas are within
@@ -112,11 +116,8 @@ def calculate_transformations(df, keys, path, err_thresh=0.001):
             print('No transformations were found for this sample, moving to the next one')
 
         else:
-            # make np.array from list of lists
-            result_tuples = np.vstack(result_tuples)
-
             # make pd df
-            result_df = pd.DataFrame(result_tuples, columns=[
+            result_df = pd.DataFrame.from_records(result_tuples, columns=[
                 'Feature_X', 'Feature_Y', 'Difference',
                 'Group', 'Transformation', 'Formula', 'mf'])
 
@@ -124,7 +125,7 @@ def calculate_transformations(df, keys, path, err_thresh=0.001):
 
             print('   Saving results')
             filename = os.path.join(path, 'transformations_' + sample + '.csv')
-            result_df.to_csv(filename, index=False, float_format='%.6f')
+            result_df.to_csv(filename, index=False, float_format='%0.6f')
 
             # Compile counts
             result_counts = pd.DataFrame(
@@ -136,11 +137,12 @@ def calculate_transformations(df, keys, path, err_thresh=0.001):
 
             result_counts['Perc_Counts'] = (result_counts['Counts']
                                             / total_transformations)
+            
             result_counts = result_counts.sort_values(by="Counts")
 
             # Save final_counts
             filename = os.path.join(path, 'counts_' + sample + '.csv')
-            result_counts.to_csv(filename, index=False, float_format='%.6f')
+            result_counts.to_csv(filename, index=False, float_format='%0.6g')
         i = i + 1
 
     print("Done!")
@@ -180,7 +182,8 @@ def get_node_table(df, path):
     """Create a node table for the transformation networks"""
 
     node_table = df[['Mass', 'C', 'H', 'O', 'N', 'S', 'P', 'OC', 'HC', 'NOSC',
-                     'GFE', 'Class', 'MolecularFormula', 'El_comp']].drop_duplicates('Mass')
+                     'GFE', 'Class', 'MolecularFormula', 'El_comp']
+                    ].drop_duplicates('Mass')
 
     filename = os.path.join(path, 'node_table.csv')
     node_table.to_csv(filename, index=False)
@@ -205,9 +208,8 @@ def create_cytoscape_network(node_table, path):
     # Create a list of the transformation files to be used as the edge tables for the networks
     files_path = os.path.join(path, 'transf_by_sample', 'transformations_*.csv')
     edge_files = glob.glob(files_path)
-    i = 1
 
-    for file in edge_files:
+    for ii, file in enumerate(edge_files):
         edge_table = pd.read_csv(file)
         edge_table['Feature_X'] = round(edge_table['Feature_X'], 4)
         edge_table['Feature_X'] = edge_table['Feature_X'].astype(str)
@@ -215,21 +217,28 @@ def create_cytoscape_network(node_table, path):
         edge_table['Feature_Y'] = edge_table['Feature_Y'].astype(str)
         # Renaming columns for clarity
         edge_table = edge_table.rename(columns={'Feature_X': 'source', 'Feature_Y': 'target'})
-        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}] {i}\\{len(edge_files)}'
-              f'\tCreating network for sample: {edge_table.SampleID.unique()[0]}')
+        print(f'[{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S %p")}]'
+              f'{ii}\\{len(edge_files)}\tCreating network for sample: '
+              f'{edge_table.SampleID.unique()[0]}'
+              f'{edge_table.SampleID.iloc[0]}')
+
+        p4c.create_network_from_data_frames(None, edge_table,
+                                            source_id_list='source',
+                                            target_id_list='target',
+                                            interaction_type_list='Transformation',
+                                            title=edge_table.SampleID.unique()[0],
+                                            collection='Transformation networks')
         with pd.option_context('mode.chained_assignment', None):
-            p4c.create_network_from_data_frames(None, edge_table,
-                                                source_id_list='source',
-                                                target_id_list='target',
-                                                interaction_type_list='Transformation',
-                                                title=edge_table.SampleID.unique()[0],
-                                                collection='Transformation networks')
             # Load node table with data information
             p4c.load_table_data(node_table, data_key_column='id')
 
-        # Coloring the table based on compound classes and transformation groups
-        p4c.set_node_shape_default('ELLIPSE')
-        p4c.set_node_color_mapping('Class', mol_classes, node_colors, mapping_type='d')
+        if (ii == 0):
+            # These mappings only need to be set the first time; they slow things
+            # down quite a bit if we do them for every network.
+            # Coloring the table based on compound classes and transformation groups
+            p4c.set_node_shape_default('ELLIPSE')
+            p4c.set_node_color_mapping('Class', mol_classes, node_colors, mapping_type='d')
+
 
         # Run the Network Analyzer command for cytoscape and capture its output in a list of lists
         network_analyzer = p4c.commands_post('analyzer analyze')
@@ -253,8 +262,9 @@ def create_cytoscape_network(node_table, path):
         filename = os.path.join(path, 'temp_network_summary_statistics.csv')
         temp_network_stats.to_csv(filename, index=False)
 
-        time.sleep(5)
-        i = i + 1
+        time.sleep(5) # Ideally, this isn't necessary, but on slower machines we
+        # have reports of cytoscape crashing if not here.
+        
 
     network_stats = pd.DataFrame(network_stats)
     filename = os.path.join(path, 'network_summary_statistics.csv')

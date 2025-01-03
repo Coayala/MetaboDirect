@@ -226,7 +226,10 @@ def main():
                                                  'data',
                                                  'transf_key.csv')) if args.biochem_key == 'Default key' else \
         transformations.get_keys(args.biochem_key)
-    transformations.calculate_transformations(df, keys, path=list_dir[6])
+    transformations.calculate_transformations(df,
+                                              keys,
+                                              path=list_dir[6],
+                                              err_thresh=args.transformation_threshold)
     transformations.summarize_transformations(path=list_dir[5])
     node_table = transformations.get_node_table(df, path=list_dir[5])
 
