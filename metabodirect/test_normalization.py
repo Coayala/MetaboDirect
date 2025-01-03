@@ -73,7 +73,8 @@ def sample_filtering(df, metadata, filter_by):
     # Saving a new metadata file containing only the samples remaining after filtering
     filt_metadata = pd.DataFrame()
     for i in filter_values:
-        filt_metadata = filt_metadata.append(metadata[metadata[filter_col] == i])
+        filt_metadata = pd.concat(
+            [filt_metadata, metadata[metadata[filter_col] == i]])
     filt_metadata_file = 'filtered_metadata_norm_test.csv'
     filt_metadata.to_csv(filt_metadata_file, index=False)
 
