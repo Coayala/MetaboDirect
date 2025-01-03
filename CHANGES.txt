@@ -73,3 +73,11 @@ v.1.0.6, 01/23/2024
     - Fix an error in the script of the KEGG Annotation Step
 v.1.0.7, 01/24/2024
     - Fix an error in the script of the KEGG Annotation Step
+v.1.0.8, 07/24/2024
+    - Fix an errors
+	- Fix an error when running SPANS
+    - Fix an error making the sample filtering step to fail
+v.1.0.9, 08/30/2024
+    - Fix an error when transforming data to logarithm
+v.1.0.10, 09/26/2024
+    - Fix an error with -f option in the test_normalization script

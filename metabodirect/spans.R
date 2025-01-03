@@ -177,21 +177,28 @@ modified_spans_procedure <- function(omicsData, norm_fn = c('max', 'mean', 'medi
                                   .export = c('data_normalization', 'kw_rcpp')) %dopar% {
     
     el <- all_calls[[i]]
-    norm_object <- data_normalization(omicsData$e_data, norm_method = el$norm_fn, norm_subset = el$subset_fn, subset_parameter = el$params)
+    norm_object <- data_normalization(omicsData$e_data, 
+                                      norm_method = el$norm_fn, 
+                                      norm_subset = el$subset_fn, 
+                                      subset_parameter = el$params)
     
     p_scale <- kw_rcpp(t(as.matrix(norm_object$scale_param)), group = as.character(group))
     
-    if(!is.null(norm_object$location_param)){
-      p_location <- kw_rcpp(t(as.matrix(norm_object$location_param)), group = as.character(group))
-      if(any(c(p_location, p_scale) < c(location_thresh, scale_thresh))){
-        res <- list(passfail = FALSE, step1_pvals = c(p_location, p_scale))
-      } else {
-        res <- list(passfail = TRUE, step1_pvals = c(p_location, p_scale))
-      }
-    } else if(p_scale < scale_thresh) {
-      res <- list(passfail = FALSE, step1_pvals = c(NA, p_scale))
+    if(is.na(p_scale)){
+      res <- list(passfail = FALSE, step1_pvals = c(NA, NA))
     } else {
-      res <- list(passfail = TRUE, step1_pvals = c(NA, p_scale))
+      if(!is.null(norm_object$location_param)){
+        p_location <- kw_rcpp(t(as.matrix(norm_object$location_param)), group = as.character(group))
+        if(any(c(p_location, p_scale) < c(location_thresh, scale_thresh))){
+          res <- list(passfail = FALSE, step1_pvals = c(p_location, p_scale))
+        } else {
+          res <- list(passfail = TRUE, step1_pvals = c(p_location, p_scale))
+        }
+      } else if(p_scale < scale_thresh) {
+        res <- list(passfail = FALSE, step1_pvals = c(NA, p_scale))
+      } else {
+        res <- list(passfail = TRUE, step1_pvals = c(NA, p_scale))
+      }
     }
     
     res <- c(el, res)
@@ -222,14 +229,24 @@ modified_spans_procedure <- function(omicsData, norm_fn = c('max', 'mean', 'medi
   if(verbose) print("Finished scoring selected methods")
 
   # create dataframe with selected methods
-  spansres_obj <- data.frame("subset_method" = character(n_methods), "normalization_method" = character(n_methods), "SPANS_score" = numeric(n_methods),
-                             "parameters" = character(n_methods), "passed_selection" = logical(n_methods),
-                             stringsAsFactors = FALSE, check.names = FALSE)
+  spansres_obj <- data.frame("subset_method" = character(n_methods), 
+                             "normalization_method" = character(n_methods), 
+                             "SPANS_score" = numeric(n_methods),
+                             "parameters" = character(n_methods), 
+                             "passed_selection" = logical(n_methods),
+                             stringsAsFactors = FALSE, 
+                             check.names = FALSE)
 
-  extra_info <- data.frame("subset_method" = character(n_methods), "normalization_method" = character(n_methods), "parameters" = character(n_methods),
-                           "location_p_value" = numeric(n_methods), "scale_p_value" = numeric(n_methods),
-                           "F_log_HSmPV" = numeric(n_methods), "F_log_NSmPV" = numeric(n_methods),
-                           "SPANS_score" = numeric(n_methods), stringsAsFactors = FALSE, check.names = FALSE)
+  extra_info <- data.frame("subset_method" = character(n_methods), 
+                           "normalization_method" = character(n_methods), 
+                           "parameters" = character(n_methods),
+                           "location_p_value" = numeric(n_methods), 
+                           "scale_p_value" = numeric(n_methods),
+                           "F_log_HSmPV" = numeric(n_methods), 
+                           "F_log_NSmPV" = numeric(n_methods),
+                           "SPANS_score" = numeric(n_methods), 
+                           stringsAsFactors = FALSE, 
+                           check.names = FALSE)
 
   # populate the dataframe from which_spans
   for(i in 1:n_methods){

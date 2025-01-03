@@ -24,18 +24,21 @@ def get_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('outdir',
-                        help='Output directory used to create networks with metabodirect and the -t option',
+                        help='Output directory used to create networks with '
+                        'metabodirect and the -t option',
                         metavar='OUTDIR',
                         type=str)
 
     parser.add_argument('metadata_file',
-                        help='Metadata file used in the analysis, if a filtered metadata was generated please enter '
-                             'that one',
+                        help='Metadata file used in the analysis, if a '
+                        'filtered metadata was generated please enter '
+                        'that one',
                         metavar='METADATA',
                         type=str)
 
     parser.add_argument('group',
-                        help='Grouping variables for coloring and faceting figures (Max 2)',
+                        help='Grouping variables for coloring and faceting '
+                        'figures (Max 2)',
                         metavar='GROUP',
                         type=str,
                         nargs='+')
@@ -43,7 +46,9 @@ def get_args():
     args = parser.parse_args()
 
     if len(args.group) > 2:
-        parser.error('Incorrect number of variables for grouping. Please enter exactly two values')
+        parser.error(
+            'Incorrect number of variables for grouping. Please enter exactly'
+            'two values')
 
     return args
 
@@ -58,7 +63,8 @@ def main():
 
     check = ''
     while check != 'You are connected to Cytoscape!':
-        cytoscape = input('Please open Cytoscape and press the ENTER key [q for quit].')
+        cytoscape = input(
+            'Please open Cytoscape and press the ENTER key [q for quit].')
         if cytoscape == '':
             try:
                 check = p4c.cytoscape_ping()
@@ -73,15 +79,23 @@ def main():
 
     transformations.create_cytoscape_network(node_table, path=list_dir[5])
 
-    network_stats_script = r_control.write_r_script('network_stats_template.R', outdir=list_dir[5],
-                                                    metadata_file=args.metadata_file,
-                                                    groups=args.group, norm_method='max')
+    network_stats_script = r_control.write_r_script(
+        'network_stats_template.R',
+        outdir=list_dir[5],
+        metadata_file=args.metadata_file,
+        groups=args.group,
+        norm_method='max'
+    )
 
     print(f'Running R script: {network_stats_script}')
     r_control.run_r(network_stats_script)
-    print(f'Find results and R script in the directory: {os.path.abspath(list_dir[5])}')
+    print(
+        f'Find results and R script in'
+        f'the directory: {os.path.abspath(list_dir[5])}')
 
-    print('------------------------\nNetwork creation and analysis finished\n------------------------\n')
+    print('------------------------\n'
+          'Network creation and analysis finished'
+          '\n------------------------\n')
 
 
 # --------------------------------------------------
