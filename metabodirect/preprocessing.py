@@ -38,18 +38,21 @@ def make_directories(outdir):
 
 
 # --------------------------------------------------
-def sample_filtering(df, metadata, filter_by, path):
+def sample_filtering(df, metadata, filter_by, path, args):
     """Filter samples based on selected features and values."""
 
     # Get the variable a values specified for sample filtering
     filter_col = filter_by[0]
     filter_values = filter_by[1].split(sep=',')
 
+    logger.info('Number of samples in whole dataset: {}', metadata.shape[0])
     # Saving a new metadata file containing only the samples remaining after filtering
     filt_metadata = pd.DataFrame()
     for i in filter_values:
-        filt_metadata = filt_metadata.append(metadata[metadata[filter_col] == i])
-    filt_metadata.to_csv(os.path.join(path, 'filtered_metadata.csv'), index=False)
+        filt_metadata = pd.concat(
+            [filt_metadata, metadata[metadata[filter_col] == i]])
+    filt_metadata.to_csv(os.path.join(
+        path, 'filtered_metadata.csv'), index=False)
 
     # Saving a new input file containing only the samples remaining after filtering
     from_formularity = [
@@ -60,6 +63,9 @@ def sample_filtering(df, metadata, filter_by, path):
     from_formularity.extend(col_df)
     filt_df = df[from_formularity]
     filt_df.to_csv(os.path.join(path, 'filtered_input.csv'), index=False)
+
+    logger.info('Number of samples after filtering: {}',
+                filt_metadata.shape[0])
 
     return filt_df, filt_metadata
 
@@ -133,7 +139,8 @@ def data_filtering(df, mass_filter, peak_filter, error_filter, args):
                 filt_df.shape[0])
 
     # Filter peaks based in m/z range
-    filt_df = filter_mz(filt_df, min_mz=mass_filter[0], max_mz=mass_filter[1]) if mass_filter else filt_df
+    filt_df = filter_mz(
+        filt_df, min_mz=mass_filter[0], max_mz=mass_filter[1]) if mass_filter else filt_df
     logger.info('Number of m/z remaining after m/z-filtering: {}',
                 filt_df.shape[0])
 
@@ -175,7 +182,8 @@ def molecular_formula(df, args):
         df['MolecularFormula'] = df['MolecularFormula'] + elements[el]
 
     if 'El_comp' not in df.columns:
-        df['El_comp'] = [re.sub(r'\d', '', mf) for mf in df['MolecularFormula']]
+        df['El_comp'] = [re.sub(r'\d', '', mf)
+                         for mf in df['MolecularFormula']]
 
     return df
 
@@ -339,11 +347,12 @@ def data_normalization(df, args, norm_method, norm_subset, subset_parameter=1,
                          var_name='SampleID', value_name='Intensity')
     input_data['Intensity'] = input_data['Intensity'].astype('float')
     input_data = input_data[input_data['Intensity'] > 0]
-    input_data = input_data.pivot(index='Mass', columns='SampleID', values='Intensity')
+    input_data = input_data.pivot(
+        index='Mass', columns='SampleID', values='Intensity')
     npeaks, nsamples = np.shape(input_data)
 
     if log:
-        lambda_val = np.min[input_data[input_data > 0]] / 10
+        lambda_val = np.min(input_data[input_data > 0]) / 10
         input_data = np.log(input_data + np.sqrt(input_data ** 2 + lambda_val))
 
     # Perform sample subset to calculate normalization factors
@@ -368,7 +377,8 @@ def data_normalization(df, args, norm_method, norm_subset, subset_parameter=1,
     sample_mean = input_data.loc[selected_peaks, :].mean(axis=0, skipna=True)
     sample_min = input_data.loc[selected_peaks, :].min(axis=0, skipna=True)
     sample_max = input_data.loc[selected_peaks, :].max(axis=0, skipna=True)
-    sample_median = input_data.loc[selected_peaks, :].median(axis=0, skipna=True)
+    sample_median = input_data.loc[selected_peaks, :].median(
+        axis=0, skipna=True)
     sample_std = input_data.loc[selected_peaks, :].std(axis=0, skipna=True)
     sample_sum = input_data.loc[selected_peaks, :].sum(axis=0, skipna=True)
 
@@ -475,7 +485,8 @@ def calculate_summaries(df, args, path):
         idx_stats = idx_stats.merge(temp, on='SampleID')
 
     class_comp.to_csv(os.path.join(path, 'class_composition.csv'), index=False)
-    el_comp.to_csv(os.path.join(path, 'elemental_composition.csv'), index=False)
+    el_comp.to_csv(os.path.join(
+        path, 'elemental_composition.csv'), index=False)
     idx_stats.to_csv(os.path.join(path, 'indices_statistics.csv'), index=False)
 
     return
