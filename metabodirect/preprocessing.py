@@ -49,10 +49,10 @@ def sample_filtering(df, metadata, filter_by, path, args):
     # Saving a new metadata file containing only the samples remaining after filtering
     filt_metadata = pd.DataFrame()
     for i in filter_values:
-        filt_metadata = pd.concat(
-            [filt_metadata, metadata[metadata[filter_col] == i]])
-    filt_metadata.to_csv(os.path.join(
-        path, 'filtered_metadata.csv'), index=False)
+
+        filt_metadata = pd.concat([filt_metadata,
+                                   metadata[metadata[filter_col] == i]])
+    filt_metadata.to_csv(os.path.join(path, 'filtered_metadata.csv'), index=False)
 
     # Saving a new input file containing only the samples remaining after filtering
     from_formularity = [

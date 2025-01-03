@@ -23,7 +23,6 @@ from metabodirect import get_args, preprocessing, diagnostics, r_control, transf
 # --------------------------------------------------
 def main():
     """Main body to run all MetaboDirect scripts"""
-
     start_time = time.perf_counter()
     args = get_args.get_args()
 
@@ -124,6 +123,7 @@ def main():
 
     logger.log('PROCESS', 'Data pre-processing finished\n')
 
+    
     # Starting Data diagnostics ste[]
     logger.log('PROCESS', 'Starting data diagnostics\n')
 
@@ -136,76 +136,81 @@ def main():
 
     logger.log('PROCESS', 'Data diagnostics finished\n')
 
-    # Starting data exploration step
-    logger.log('PROCESS', 'Starting data exploration\n')
+    if not args.skip_analyses:
 
-    # Copying script with functions
-    functions_file = os.path.join(os.path.split(os.path.realpath(__file__))[0],
-                                  'R_scripts_templates/custom_functions.R')
-    shutil.copy(functions_file, args.outdir)
+        # Starting data exploration step
+        logger.log('PROCESS', 'Starting data exploration\n')
 
-    e_script_name = 'data_exploration_template.R' if len(args.group) == 1 else 'data_exploration_template_2_groups.R'
+        # Copying script with functions
+        functions_file = os.path.join(os.path.split(os.path.realpath(__file__))[0],
+                                      'R_scripts_templates/custom_functions.R')
+        shutil.copy(functions_file, args.outdir)
 
-    d_explor_script = r_control.write_r_script(e_script_name,
-                                               outdir=list_dir[2],
-                                               metadata_file=args.metadata_file if not args.filter_by
-                                               else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                               groups=args.group)
-    logger.info('Running R script: {}', d_explor_script)
+        e_script_name = 'data_exploration_template.R' if len(args.group) == 1 else 'data_exploration_template_2_groups.R'
 
-    r_control.run_r(d_explor_script)
-    logger.info('Find results and R script in the directory: {}',
-                os.path.abspath(list_dir[2]))
+        d_explor_script = r_control.write_r_script(e_script_name,
+                                                   outdir=list_dir[2],
+                                                   metadata_file=args.metadata_file if not args.filter_by
+                                                   else os.path.join(list_dir[0], 'filtered_metadata.csv'),
+                                                   groups=args.group)
+        logger.info('Running R script: {}', d_explor_script)
 
-    # Annotating with KEGG if option was selected
-    if args.kegg_annotation:
-        logger.info('Starting annotation of molecular formulas using the KEGG database')
-        kegg_annot_script = r_control.write_r_script('KEGG_annotation_template.R',
-                                                     outdir=list_dir[2],
-                                                     metadata_file=args.metadata_file if not args.filter_by
-                                                     else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                                     groups=args.group)
-        r_control.run_r(kegg_annot_script)
+        r_control.run_r(d_explor_script)
         logger.info('Find results and R script in the directory: {}',
                     os.path.abspath(list_dir[2]))
-    else:
-        logger.warning(
-            'KEGG annotation not selected. If you wish to perform a KEGG '
-            'annotation run the script again using the '
-            '"-k/--kegg_annotation" option')
 
-    logger.log('PROCESS', 'Data exploration finished\n')
+        # Annotating with KEGG if option was selected
+        if args.kegg_annotation:
+            logger.info('Starting annotation of molecular formulas using the KEGG database')
+            kegg_annot_script = r_control.write_r_script('KEGG_annotation_template.R',
+                                                         outdir=list_dir[2],
+                                                         metadata_file=args.metadata_file if not args.filter_by
+                                                         else os.path.join(list_dir[0], 'filtered_metadata.csv'),
+                                                         groups=args.group)
+            r_control.run_r(kegg_annot_script)
+            logger.info('Find results and R script in the directory: {}',
+                        os.path.abspath(list_dir[2]))
+        else:
+            logger.warning(
+                'KEGG annotation not selected. If you wish to perform a KEGG '
+                'annotation run the script again using the '
+                '"-k/--kegg_annotation" option')
 
-    # Starting chemodiversity analysis step
-    logger.log('PROCESS', 'Starting chemodiversity analysis\n')
+        logger.log('PROCESS', 'Data exploration finished\n')
 
-    data_chemodiversity_script = r_control.write_r_script('data_chemodiversity_template.R', outdir=list_dir[3],
+        # Starting chemodiversity analysis step
+        logger.log('PROCESS', 'Starting chemodiversity analysis\n')
+
+        data_chemodiversity_script = r_control.write_r_script('data_chemodiversity_template.R', outdir=list_dir[3],
+                                                              metadata_file=args.metadata_file if not args.filter_by
+                                                              else os.path.join(list_dir[0], 'filtered_metadata.csv'),
+                                                              groups=args.group)
+        logger.info('Running R script: {}', data_chemodiversity_script)
+        r_control.run_r(data_chemodiversity_script)
+        logger.info('Find results and R script in the directory: {}\n',
+                    os.path.abspath(list_dir[3]))
+
+        logger.log('PROCESS', 'Chemodiversity analysis finished\n')
+
+        # Starting Statistical analysis step
+        logger.log('PROCESS', 'Starting statistical analysis\n')
+
+        s_script_name = 'data_statistics_template.R' if len(args.group) == 1 else 'data_statistics_template_2_groups.R'
+        data_statistics_script = r_control.write_r_script(s_script_name,
+                                                          outdir=list_dir[4],
                                                           metadata_file=args.metadata_file if not args.filter_by
                                                           else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                                          groups=args.group)
-    logger.info('Running R script: {}', data_chemodiversity_script)
-    r_control.run_r(data_chemodiversity_script)
-    logger.info('Find results and R script in the directory: {}\n',
-                os.path.abspath(list_dir[3]))
+                                                          groups=args.group, norm_method=args.norm_method)
+        logger.info('Running R script: {}', os.path.abspath(data_statistics_script))
+        r_control.run_r(data_statistics_script)
+        logger.info('Find results and R script in the directory: {}\n',
+                    os.path.abspath(list_dir[4]))
 
-    logger.log('PROCESS', 'Chemodiversity analysis finished\n')
+        logger.log('PROCESS', 'Statistical analysis finished\n')
+    else:
+        logger.log('PROCESS', 'Skipping analysis steps.\n')
 
-    # Starting Statistical analysis step
-    logger.log('PROCESS', 'Starting statistical analysis\n')
-
-    s_script_name = 'data_statistics_template.R' if len(args.group) == 1 else 'data_statistics_template_2_groups.R'
-    data_statistics_script = r_control.write_r_script(s_script_name,
-                                                      outdir=list_dir[4],
-                                                      metadata_file=args.metadata_file if not args.filter_by
-                                                      else os.path.join(list_dir[0], 'filtered_metadata.csv'),
-                                                      groups=args.group, norm_method=args.norm_method)
-    logger.info('Running R script: {}', os.path.abspath(data_statistics_script))
-    r_control.run_r(data_statistics_script)
-    logger.info('Find results and R script in the directory: {}\n',
-                os.path.abspath(list_dir[4]))
-
-    logger.log('PROCESS', 'Statistical analysis finished\n')
-
+        
     # Starting data transformation networks step
     logger.log('PROCESS', 'Starting transformation networks analysis\n')
 
