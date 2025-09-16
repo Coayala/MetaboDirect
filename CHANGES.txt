@@ -79,5 +79,6 @@ v.1.0.8, 07/24/2024
     - Fix an error making the sample filtering step to fail
 v.1.0.9, 08/30/2024
     - Fix an error when transforming data to logarithm
-v.1.0.10, 09/26/2024
+v.1.0.11, 09/16/2025
     - Fix an error with -f option in the test_normalization script
+	- Improved how transformations are calculated (thanks to @theinfinitegirl https://github.com/theinfinitegirl)
