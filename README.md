@@ -1,21 +1,11 @@
-# MetaboDirect
+# MetaboDirect for agentic AI
 
-[![DOI](https://zenodo.org/badge/356707576.svg)](https://zenodo.org/badge/latestdoi/356707576)
+This branch is intended for a version of MetaboDirect that can be used with an AI agent
 
-A comprehensive command-line based pipeline for the analysis of direct injection FT-ICR mass spectrometry data.
-
-## Installation
-
-MetaboDirect can be installed directly from [PyPi](https://pypi.org/project/metabodirect/0.1.1/) using:
+It needs to be installed from source by cloning the `agent` branch from the [GitHub repository](https://github.com/Coayala/MetaboDirect/tree/agent)
 
 ```
-pip install metabodirect
-```
-
-Additionally it can be installed from source by cloning its [GitHub repository](https://github.com/Coayala/MetaboDirect)
-
-```
-git clone https://github.com/Coayala/MetaboDirect.git
+git clone -b agent https://github.com/Coayala/MetaboDirect.git
 cd MetaboDirect
 python setup.py install
 ```
