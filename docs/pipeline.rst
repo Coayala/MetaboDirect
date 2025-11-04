@@ -29,7 +29,7 @@ These is the beginning of the main **MetaboDirect** pipeline. During this step t
 .. csv-table::
 	:header: "Index", "Formula"
 
-	"Nominal Oxidation State of Carbon (NOSC)", ":math:`NOSC = \frac{4C + H -3N -2O +5P -2S}{C} + 4`"
+	"Nominal Oxidation State of Carbon (NOSC)", ":math:`NOSC = 4 - \frac{4C + H -3N -2O +5P -2S}{C}`"
 	"Gibbs Free Energy (GFE)", ":math:`GFE=60.3-28.5 * NOSC`"
 	"Double Bond Equivalent (DBE)", ":math:`DBE = 1 + 0.5(2C-H + N + P)`"
 	"Aromatic Index (modified) (AI_mod)", ":math:`AI = 1 + C - 0.5O - S - \frac{0.5(H + P + N)}{C - 0.5O - S - N - P}`"
