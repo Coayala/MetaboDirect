@@ -49,7 +49,7 @@ class_comp <- read_csv(my_classcomp.file) %>%
   column_to_rownames(var = 'SampleID')
 metadata <- read_csv(my_metadata.file)
 df <- read_csv(my_report.file)
-figure_metadata <- read_json(file.path(current_dir, 'index.json'))
+figure_metadata <- read_json(file.path(output_dir, 'index.json'))
 
 # Reformat data files ----
 
@@ -290,3 +290,5 @@ add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
                       figure_height = 4,
                       dpi = 300
                     ))
+
+write_json(figure_metadata, file.path(output_dir, 'index.json'))

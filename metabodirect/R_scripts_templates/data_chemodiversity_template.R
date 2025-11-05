@@ -37,7 +37,7 @@ my_outdir <- file.path(output_dir, '4_chemodiversity')
 
 df <-  read_csv(my_data.file)
 metadata <- read_csv(my_metadata.file)
-figure_metadata <- read_json(file.path(current_dir, 'index.json'))
+figure_metadata <- read_json(file.path(output_dir, 'index.json'))
 
 # Reformat data files ----
 
@@ -193,3 +193,5 @@ add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
                       figure_height = 8,
                       dpi = 300
                     ))
+
+write_json(figure_metadata, file.path(output_dir, 'index.json'))

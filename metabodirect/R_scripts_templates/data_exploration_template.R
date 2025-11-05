@@ -541,4 +541,4 @@ walk(groups, function(g){
   
 })
 
-write_json(figure_metadata, file.path(current_dir, 'index.json'))
+write_json(figure_metadata, file.path(output_dir, 'index.json'))
