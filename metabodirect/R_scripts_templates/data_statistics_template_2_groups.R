@@ -73,7 +73,7 @@ my_colors <- set_names(get_palette('Dark2', length(unique(metadata[[group1]]))),
 nmds_obj <- calculate_nmds(matrix, normalized_with = norm_method)
 
 filename <- file.path(my_outdir, '1.3_nmds_scores.csv')
-write_csv(nmds_scores$scores, filename)
+write_csv(nmds_obj$scores, filename)
 
 # PERMANOVA ----
 
@@ -176,7 +176,7 @@ pca_plot$plot <- pca_plot$plot +
                   show.legend = FALSE)
 
 filename <- file.path(my_outdir, '3.4_PCA_plot_by_compound_class.png')
-ggsave(filename, pca_plot, dpi = 300, width = 6, height = 4)
+ggsave(filename, pca_plot$plot, dpi = 300, width = 6, height = 4)
 
 add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
                     figure_title = pca_plot$plot$labels$title,
@@ -271,7 +271,7 @@ pca_plot$plot <- pca_plot$plot +
                   show.legend = FALSE)
 
 filename <- file.path(my_outdir, '4.4_PCA_plot_by_compound_class.png')
-ggsave(filename, pca_plot, dpi = 300, width = 6, height = 4)
+ggsave(filename, pca_plot$plot, dpi = 300, width = 6, height = 4)
 
 add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
                     figure_title = pca_plot$plot$labels$title,
