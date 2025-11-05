@@ -36,10 +36,10 @@ source(file.path(output_dir, 'custom_functions.R'))
 my_matrix.file <- file.path(output_dir, '1_preprocessing_output', 'matrix_features.csv')
 my_report.file <- file.path(output_dir, '1_preprocessing_output', 'Report_processed_MolecFormulas.csv')
 my_classcomp.file <- file.path(output_dir, '1_preprocessing_output', 'class_composition.csv')
-my_metadata.file <- file.path('%metadata%')
+my_metadata.file <- file.path('data/processed/fticr_metadata.csv')
 my_outdir <- file.path(output_dir, '5_statistics')
 
-norm_method <- '%norm_method%'
+norm_method <- 'sum'
 
 ## Loading tables
 matrix <-  read_csv(my_matrix.file) %>% 
@@ -49,6 +49,7 @@ class_comp <- read_csv(my_classcomp.file) %>%
   column_to_rownames(var = 'SampleID')
 metadata <- read_csv(my_metadata.file)
 df <- read_csv(my_report.file)
+figure_metadata <- read_json(file.path(current_dir, 'index.json'))
 
 # Reformat data files ----
 
@@ -68,19 +69,10 @@ my_colors <- set_names(get_palette('Dark2', length(unique(metadata[[group1]]))),
 
 # NMDS ----
 
-nmds_scores <- calculate_nmds(matrix, normalized_with = norm_method)
+nmds_obj <- calculate_nmds(matrix, normalized_with = norm_method)
 
 filename <- file.path(my_outdir, '1.3_nmds_scores.csv')
-write_csv(nmds_scores, filename)
-
-## NMDS plot ----
-
-nmds_plot <- plot_ordination(nmds_scores, x = NMDS1, y = NMDS2,
-                             color_by = group1, col_vec = my_colors,
-                             title = 'NMDS Ordination') 
-
-filename <- file.path(my_outdir, '1.4_NMDS_plot.png')
-ggsave(filename, nmds_plot, dpi = 300, width = 6, height = 4)
+write_csv(nmds_scores$scores, filename)
 
 # PERMANOVA ----
 
@@ -92,6 +84,37 @@ permanova_table <- data.frame(permanova) %>%
 
 filename <- file.path(my_outdir, '2.1_permanova.csv')
 write.csv(permanova_table, filename, row.names = TRUE)
+
+nmds_plot <- plot_ordination(nmds_obj$scores, x = NMDS1, y = NMDS2,
+                             color_by = group1, col_vec = my_colors,
+                             add_info = list(permanova = permanova, 
+                                             nmds = nmds_obj$nmds),
+                             title = 'NMDS Ordination') 
+
+filename <- file.path(my_outdir, '1.4_NMDS_plot.png')
+ggsave(filename, nmds_plot$plot, dpi = 300, width = 6, height = 4)
+
+add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
+                    figure_title = nmds_plot$plot$labels$title,
+                    figure_type = 'Ordination plot',
+                    caption = "NMDS ordination of metabolite abundances",
+                    description = nmds_plot$meta$description,
+                    insights = nmds_plot$meta$insight,
+                    x_axis_label = 'NMDS1',
+                    y_axis_label = 'NMDS2',
+                    grouping_variables = group1,
+                    data_source = list(
+                      input_file = my_matrix.file,
+                      columns_used = c(metadata$SampleID, group1)
+                    ),
+                    r_script_path = file.path(output_dir, '5_statistics', 'data_statistics.R'),
+                    analysis_category = 'Statistics',
+                    figure_info = list(
+                      figure_file = file,
+                      figure_width = 6,
+                      figure_height = 4,
+                      dpi = 300
+                    ))
 
 # PCA of Compound classes ----
 
@@ -123,7 +146,10 @@ pc2 <- paste0('PC2 (',
 
 pca_plot <- plot_ordination(pca_class$coordinates, x = PC1, y = PC2,
                             color_by = group1, col_vec = my_colors,
-                            title = 'PCA Compound Classes') +
+                            add_info = list(pca = pca_class),
+                            title = 'PCA Compound Classes') 
+
+pca_plot$plot <- pca_plot$plot +
   labs(x = pc1,
        y = pc2) +
   new_scale_color() +
@@ -138,16 +164,38 @@ pca_plot <- plot_ordination(pca_class$coordinates, x = PC1, y = PC2,
                linewidth = 0.8,
                show.legend = FALSE) +
   geom_text_repel(data = pca_class$loadings,
-                           aes(x = ifelse(Dim.1 * 2 > 0, Dim.1 * 2 + 1, Dim.1 * 2 - 1),
-                               y = ifelse(Dim.2 * 2 > 0, Dim.2 * 2 + 1, Dim.2 * 2 - 1),
-                               label = name,
-                               color = name),
-                           inherit.aes = FALSE,
-                           hjust = 'inward',
-                           show.legend = FALSE)
+                  aes(x = ifelse(Dim.1 * 2 > 0, Dim.1 * 2 + 0.2*Dim.1, Dim.1 * 2 - 0.2*Dim.1),
+                      y = ifelse(Dim.2 * 2 > 0, Dim.2 * 2 + 0.2*Dim.2, Dim.2 * 2 - 0.2*Dim.2),
+                      label = name,
+                      color = name),
+                  inherit.aes = FALSE,
+                  hjust = 'inward',
+                  show.legend = FALSE)
 
 filename <- file.path(my_outdir, '3.4_PCA_plot_by_compound_class.png')
 ggsave(filename, pca_plot, dpi = 300, width = 6, height = 4)
+
+add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
+                    figure_title = pca_plot$plot$labels$title,
+                    figure_type = 'Ordination plot',
+                    caption = "PCA ordination plot based of compound classes",
+                    description = pca_plot$meta$description,
+                    insights = pca_plot$meta$insight,
+                    x_axis_label = 'PC1',
+                    y_axis_label = 'PC2',
+                    grouping_variables = group1,
+                    data_source = list(
+                      input_file = my_classcomp.file,
+                      columns_used = c(metadata$SampleID, group1)
+                    ),
+                    r_script_path = file.path(output_dir, '5_statistics', 'data_statistics.R'),
+                    analysis_category = 'Statistics',
+                    figure_info = list(
+                      figure_file = file,
+                      figure_width = 6,
+                      figure_height = 4,
+                      dpi = 300
+                    ))
 
 # PCA by molecular characteristics ----
 
@@ -192,7 +240,10 @@ pc2 <- paste0('PC2 (',
 
 pca_plot <- plot_ordination(pca_molchar$coordinates, x = PC1, y = PC2,
                             color_by = group1, col_vec = my_colors,
-                            title = 'PCA Molecular Characteristics') +
+                            add_info = list(pca = pca_molchar),
+                            title = 'PCA Molecular Characteristics') 
+
+pca_plot$plot <- pca_plot$plot +
   labs(x = pc1,
        y = pc2) +
   new_scale_color() +
@@ -207,15 +258,35 @@ pca_plot <- plot_ordination(pca_molchar$coordinates, x = PC1, y = PC2,
                linewidth = 0.8,
                show.legend = FALSE) +
   geom_text_repel(data = pca_molchar$loadings,
-                           aes(x = ifelse(Dim.1 * 2 > 0, Dim.1 * 2 + 1, Dim.1 * 2 - 1),
-                               y = ifelse(Dim.2 * 2 > 0, Dim.2 * 2 + 1, Dim.2 * 2 - 1),
-                               label = name,
-                               color = name),
-                           inherit.aes = FALSE,
-                           hjust = 'inward',
-                           show.legend = FALSE)
+                  aes(x = ifelse(Dim.1 * 2 > 0, Dim.1 * 2 + 0.2*Dim.1, Dim.1 * 2 - 0.2*Dim.1),
+                      y = ifelse(Dim.2 * 2 > 0, Dim.2 * 2 + 0.2*Dim.2, Dim.2 * 2 - 0.2*Dim.2),
+                      label = name,
+                      color = name),
+                  inherit.aes = FALSE,
+                  hjust = 'inward',
+                  show.legend = FALSE)
 
 filename <- file.path(my_outdir, '4.4_PCA_plot_by_compound_class.png')
 ggsave(filename, pca_plot, dpi = 300, width = 6, height = 4)
 
-
+add_figure_metadata(figure_id = str_remove(basename(filename), '.png'),
+                    figure_title = pca_plot$plot$labels$title,
+                    figure_type = 'Ordination plot',
+                    caption = "PCA ordination plot based of molecular characteristics",
+                    description = pca_plot$meta$description,
+                    insights = pca_plot$meta$insight,
+                    x_axis_label = 'PC1',
+                    y_axis_label = 'PC2',
+                    grouping_variables = group1,
+                    data_source = list(
+                      input_file = my_classcomp.file,
+                      columns_used = c(metadata$SampleID, group1)
+                    ),
+                    r_script_path = file.path(output_dir, '5_statistics', 'data_statistics.R'),
+                    analysis_category = 'Statistics',
+                    figure_info = list(
+                      figure_file = file,
+                      figure_width = 6,
+                      figure_height = 4,
+                      dpi = 300
+                    ))

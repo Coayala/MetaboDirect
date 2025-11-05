@@ -56,18 +56,28 @@ custom_theme <- function(angle_x = 0){
 # Plotting functions ----
 
 # ******************************************************************************
-plot_van_krevelen <- function(df, color_by, facet_by = NA){
+plot_van_krevelen <- function(df, color_by, facet_col = NA, facet_row = NA){
   color_by <- color_by
   
-  if(is.na(facet_by)){
+  group_vars <- c(facet_col, facet_row)
+  group_vars <- group_vars[!is.na(group_vars)]
+  
+  if(is.na(facet_col) && is.na(facet_row)){
     df_plot <- df %>% 
       ungroup() %>% 
       select(Mass, OC, HC, Class, all_of(color_by)) %>% 
       distinct()
+  } else if(is.na(facet_row)) {
+    
+    df_plot <- df %>% 
+      ungroup() %>% 
+      select(Mass, OC, HC, Class, all_of(c(color_by, facet_col))) %>% 
+      distinct()
+    
   } else {
     df_plot <- df %>% 
       ungroup() %>% 
-      select(Mass, OC, HC, Class, all_of(c(color_by, facet_by))) %>% 
+      select(Mass, OC, HC, Class, all_of(c(color_by, facet_col, facet_row))) %>% 
       distinct()
   }
   
@@ -83,21 +93,26 @@ plot_van_krevelen <- function(df, color_by, facet_by = NA){
     rect_label +
     custom_theme()
   
-  if(!is.na(facet_by)){
-    facet_formula <- as.formula(paste0('~ ', facet_by))
+  if(!is.na(facet_col) && is.na(facet_row)){
+    facet_formula <- as.formula(paste0('~ ', facet_col))
     p <- p +
       facet_wrap(facet_formula)
+  } else if(!is.na(facet_row)) {
+    facet_formula <- as.formula(paste0(facet_row, '~ ', facet_col))
+    p <- p +
+      facet_grid(facet_formula)
   }
   
   is_num <- is.numeric(df_plot[[color_by]])
   
-  vk_meta <- list(description = descriptions('van_krevelen_thermo_idx',
+  vk_meta <- list(description = descriptions('van_krevelen',
                                              color_by = color_by,
-                                             group = facet_by),
+                                             group = group_vars),
                   insight = insights(contains = c('van_krevelen', color_by),
                                      df_plot = df_plot,
                                      color_by = color_by,
-                                     facet_by = facet_by,
+                                     facet_col = facet_col,
+                                     facet_row = facet_row,
                                      color_continuous = is_num))
   
   return(list(plot = p,
@@ -311,12 +326,52 @@ plot_comp_bar <- function(df, composition, group, title){
               meta = comp_bar_meta))
 }
 
+
+# ******************************************************************************
+plot_upset <- function(mass_list, group_by){
+  
+  group_values <- unique(df_longer[[group_by]])
+  
+  plot <- upset(fromList(mass_list), order.by = "freq", 
+                nsets = length(group_values))
+  
+  upset_meta <- list(description = descriptions('upset_plot',
+                                                group = group_by),
+                     insight = insights(contains = c('upset_plot'),
+                                        mass_list = mass_list))
+  
+  return(list(plot = plot,
+              meta = upset_meta))
+  
+}
+
+plot_venn <- function(mass_list, filt_colors, val1, val2){
+  
+  plot <- ggvenn(mass_list, fill_color = as.character(filt_colors[1:2])) +
+    labs(title = 'Number of metabolites (assigned molecular formula)') +
+    theme(plot.title = element_text(face = 'bold', hjust = 0.5))
+  
+  venn_meta <- list(description = descriptions('venn',
+                                               val1 = val1,
+                                               val2 = val2),
+                    insight = insights(contains = c('venn'),
+                                       mass_list = mass_list))
+  
+  return(list(plot = plot,
+              meta = venn_meta))
+  
+}
+
 # ******************************************************************************
 plot_ordination <- function(df, x, y, color_by, col_vec, title, 
                             shape_by = NA, point_size = 2.5,
-                            x_label = NA, y_label = NA){
+                            add_info = NA, x_label = NA, y_label = NA){
   color_by <- color_by
   shape_by <- shape_by
+  
+  group_vars <- c(color_by, shape_by)
+  group_vars <- group_vars[!is.na(group_vars)]
+  
   if(is.na(shape_by)){
     plot <- ggplot(df) +
       geom_point(aes(x = {{ x }},
@@ -337,7 +392,18 @@ plot_ordination <- function(df, x, y, color_by, col_vec, title,
     labs(title = title) +
     custom_theme()
   
-  return(plot)
+  ord_type <- colnames(df)[2] %>% str_remove('[0-9]')
+  
+  ordination_meta <- list(description = descriptions(paste0(ord_type, '_ordination'),
+                                                     group = group_vars),
+                          insight = insights(contains = 'ordination',
+                                             ord_type = ord_type,
+                                             add_info = add_info,
+                                             color_by = color_by,
+                                             shape_by = shape_by))
+  
+  return(list(plot = plot,
+              meta = ordination_meta))
 }
 
 # ******************************************************************************
@@ -354,7 +420,14 @@ plot_diversity_index <- function(df, group_by, title){
     labs(title = title) +
     custom_theme()
   
-  return(plot)
+  diversity_meta <- list(description = descriptions('diversity', group = group_by),
+                         insight = insights(contains = c('diversity',
+                                                         unique(df$index)),
+                                            df_plot = df,
+                                            group_by = group_by))
+  
+  return(list(plot = plot,
+              meta = diversity_meta))
 }
 
 # Calculate functions ----
@@ -364,7 +437,8 @@ select_masses <- function(df, group, value){
   group <- group
   df %>% 
     filter(!!rlang::ensym(group) == value) %>% 
-    pull(Mass)
+    pull(Mass) %>% 
+    unique()
 }
 
 # ******************************************************************************
@@ -428,6 +502,9 @@ calculate_nmds <- function(mat, normalized_with,
     rownames_to_column(var = 'SampleID') %>% 
     left_join(metadata, by = 'SampleID')
   
+  return(list(scores = nmds_scores,
+              nmds = nmds))
+  
 }
 
 # ******************************************************************************
@@ -474,26 +551,58 @@ calculate_pca <- function(mat){
 }
 
 # ******************************************************************************
-calculate_richness <- function(mat){
-  richness <- specaccum(mat, method = 'random', permutations = 100)
+plot_richness <- function(richness){
   
   richness_long <- as_tibble(richness$perm, rownames = 'Sites') %>%
     pivot_longer(!Sites, names_to = 'permutation', values_to = 'Richness') %>%
     mutate(Sites = as.numeric(Sites))
   
-  return(richness_long)
+  plot <- ggplot(richness_long,
+                 aes(x = Sites,
+                     y = Richness,
+                     group = Sites)) +
+    geom_boxplot(fill = 'yellow') +
+    geom_hline(yintercept = max(richness_long$Richness) * 0.85, color = 'red') +
+    theme_bw() +
+    labs(title = 'Richness plot') +
+    custom_theme()
+  
+  richness_meta <- list(description = descriptions('richness'),
+                        insigth = insights(contains = ('richness'),
+                                           richness = richness))
+  
+  return(list(plot = plot,
+              meta = richness_meta))
 }
 
 # ******************************************************************************
-calculate_rank_abundance <- function(mat){
-  rank_abundance <- tibble(peak = colnames(mat),
-                           intensity_sums = colSums(mat),
-                           presence = colSums(mat != 0)) %>%
+plot_rank_abundance <- function(mat){
+  df_plot <- tibble(peak = colnames(mat),
+                    intensity_sums = colSums(mat),
+                    presence = colSums(mat != 0)) %>%
     arrange(intensity_sums) %>%
     mutate(position = n():1,
            presence_perc = presence/nrow(mat)*100)
   
-  return(rank_abundance)
+  plot <- ggplot(df_plot,
+                 aes(x = position,
+                     y = intensity_sums,
+                     color = presence_perc)) +
+    geom_point() +
+    scale_color_distiller(palette = 'RdYlBu', limits = c(0, 100)) +
+    theme_bw() +
+    labs(title = 'Rank abundance plot',
+         y = 'Total relative abundance',
+         x = 'Molecular rank',
+         color = 'Presence') +
+    custom_theme()
+  
+  rank_abundance_meta <- list(description = descriptions('rank_abundance'),
+                              insight = insights(contains = c('rank_abundance'),
+                                                 df_plot = df_plot))
+  
+  return(list(plot = plot,
+              meta = rank_abundance_meta))
 }
 
 # ******************************************************************************
@@ -581,9 +690,9 @@ get_kegg_compound_info <- function(cpd_id, mass, formula){
 }
 
 descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
-                         color_by = NA){
+                         color_by = NA, val1 = NA, val2 = NA, ord_type = NA){
   broad_des <- list(
-    van_krevelen_thermo_idx = glue::glue(
+    van_krevelen = glue::glue(
       "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
       "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
       "Plot is colored based on {thermo_idx}, and faceted by {group[1]}.",
@@ -608,11 +717,52 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
       "different types of metabolites.",
       bar_group = bar_group,
       group = group
+    ),
+    upset = glue::glue(
+      "The upset plot shows how many metabolites are shared between different sets of samples. It's ",
+      "particularly useful for analyzing complex relationships between many sets. Sample sets ",
+      "in this plot are based on {group[1]}.",
+      group = group
+    ),
+    venn = glue::glue(
+      "This Venn diagram shows how many metabolites are shared and unique between sample sets: ",
+      "{val1} and {val2}.",
+      val1 = val1,
+      val2 = val2
+    ),
+    richness = glue::glue(
+      "This plot shows how the number of detected metabolites increases with sampling effort. ",
+      "If sampling effort was sufficient curve is expected to gradually plateus as fewer ",
+      "new metabolites are detected with additional samples."
+    ),
+    rank_abundance = glue::glue(
+      'The rank abundance plot ranks the detected masses by their relative abundance and the number of ',
+      'samples they were found in. It allows to determine wheter the most peaks samples are also those ',
+      'that are found on most of the samples or not.'
+    ),
+    diversity = glue::glue(
+      "Figure uses boxplots to visualize the differences in diversity indexes across the different ",
+      "sample groups defined by the variable {group[1]}.",
+      group = group
+    ),
+    NMDS_ordination = glue::glue(
+      "NMDS ordination is a technique that arranges samples in reduced dimensional space based on ",
+      "rank-order distances, preserving the relative dissimilarity between samples without ",
+      "assuming linear relationships. The NMDS ordination plot show community composition patterns ",
+      "where closer points represent more similar samples. Points are colored by {group[1]}",
+      group = group
+    ),
+    PC_ordination = glue::glue(
+      "Principal Component Analysis (PCA) is a linear ordination technique that creates new orthogonal axes ",
+      "(principal components) that maximize the variance explained in the dataset, with PC1 explaining the most ",
+      "variance and subsequent axes explaining progressively less. It assumes linear relationships between variables ",
+      "PCA plots display samples along these principal component axes. Points are colored by {group[1]}",
+      group = group
     )
   )
   
-  if(is.na(group)){
-    broad_des$van_krevelen_thermo_idx <- glue::glue(
+  if(any(is.na(group))){
+    broad_des$van_krevelen <- glue::glue(
       "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
       "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
       "Plot is colored based on {color_by}.",
@@ -622,6 +772,10 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
   }
   
   if(length(group) == 2){
+    broad_des$van_krevelen <- glue::glue(broad_des$density,
+                                         ' and {group[2]}',
+                                         group = group)
+    
     broad_des$density <- glue::glue(broad_des$density,
                                     ' and {group[2]}',
                                     group = group)
@@ -629,37 +783,60 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
     broad_des$violin <- glue::glue(broad_des$violin,
                                    ' and faceted based on {group[2]}',
                                    group = group)
+    broad_des$NMDS_ordination <- glue::glue(broad_des$NMDS_ordination,
+                                            ' and shapes represent {group[2]}',
+                                            group = group)
+    broad_des$PC_ordination <- glue::glue(broad_des$PC_ordination,
+                                          ' and shapes represent {group[2]}',
+                                          group = group)
   }
   
   return(broad_des[[plot_type]])
 }
 
-vk_insight <- function(df_plot, color_by, facet_by = NA,
+vk_insight <- function(df_plot, color_by, facet_col = NA, facet_row = NA,
                        color_continuous = TRUE){
   
-  group_vars <- c(facet_by, 'Class')
+  group_vars <- c(facet_col, facet_row, 'Class')
   group_vars <- group_vars[!is.na(group_vars)]
   
   counts <- df_plot %>% 
     group_by(across(all_of(group_vars))) %>% 
     count()
   
-  if(is.na(facet_by)){
+  if(is.na(facet_col) && is.na(facet_row)){
     points_insight <- counts %>% 
       mutate(insight = glue::glue('{n} masses as {Class}'))
     
     insight <- paste0(points_insight$insight, collapse = ', ')
     
-  } else {
-    points_insight <- map(unique(df_plot[[facet_by]]), function(g){
+  } else if(is.na(facet_row)) {
+    points_insight <- map(unique(df_plot[[facet_col]]), function(fc){
       temp <- counts %>%
-        filter(.data[[facet_by]] == g) %>% 
+        filter(.data[[facet_col]] == fc) %>% 
         mutate(insight = glue::glue('{n} masses as {Class}'))
       
       points_insight <- glue::glue(
-        'For group "{g}": ',
+        'For group {fc}: ',
         paste0(temp$insight, collapse = ', ')
       )
+    }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+  } else {
+    points_insight <- map(unique(df_plot[[facet_col]]), function(fc){
+      
+      temp <- map(unique(df_plot[[facet_row]]), function(fr){
+        tt <- counts %>%
+          filter(.data[[facet_col]] == fc,
+                 .data[[facet_row]] == fr) %>% 
+          mutate(insight = glue::glue('{n} masses as {Class}'))
+        
+        ti_1 <- glue::glue(
+          'For {facet_col} {fc} and {facet_row} {fr}: ',
+          paste0(tt$insight, collapse = ', ')
+        )
+      }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+      
+      
     }) %>% reduce(`c`) %>% paste0(collapse = '. ')
   }
   
@@ -853,6 +1030,177 @@ comp_bar_insight <- function(df_plot, group, composition){
   
 }
 
+upset_insight <- function(mass_list){
+  
+  
+  df_mass <- imap(mass_list, function(ml, nm){
+    data.frame(Mass = ml) %>% 
+      mutate(group = nm)
+  }) %>% reduce(rbind) %>% 
+    group_by(Mass) %>% 
+    summarise(group = paste(group, collapse = ',')) %>% 
+    group_by(group) %>% 
+    count(name = 'count') 
+  
+  total_masses <- sum(df_mass$count)
+  
+  top <- df_mass %>% 
+    ungroup() %>% 
+    slice_max(order_by = count, n = 5) %>% 
+    mutate(insight = glue::glue('{group} ({round(count/total_masses *100, 2)}%)'))
+  
+  insight <- glue::glue(
+    'Most metabolites are found in sets: ',
+    paste(top$insight, collapse = ', ')
+  )
+  
+}
+
+venn_insight <- function(mass_list){
+  
+  df_mass <- imap(mass_list, function(ml, nm){
+    data.frame(Mass = ml) %>% 
+      mutate(group = nm)
+  }) %>% reduce(rbind) %>% 
+    group_by(Mass) %>% 
+    summarise(group = paste(group, collapse = ',')) %>% 
+    group_by(group) %>% 
+    count(name = 'count') %>% 
+    mutate(group = ifelse(str_detect(group, ','), 'Shared', group))
+  
+  total_masses <- sum(df_mass$count)
+  
+  top <- df_mass %>% 
+    mutate(insight = glue::glue('{group} ({round(count/total_masses *100, 2)}%)'))
+  
+  insight <- glue::glue(
+    'Metabolite distribution: ',
+    paste(top$insight, collapse = ', ')
+  )
+  
+}
+
+richness_insight <- function(richness){
+  
+  asymp_model <- fitspecaccum(richness, 'asymp')
+  
+  current_richness <- max(richness$richness)
+  
+  plateu_ratio <- current_richness / coef(asymp_model)[1]
+  
+  if(plateu_ratio > 0.9){
+    is_plateu <- glue::glue("The richness curves plateus showing that sampling was sufficient to capture ",
+                            "the organic matter diversity of the samples")
+  } else {
+    is_plateu <- glue::glue("The richness curves does not plateu showing that more sampling is needed to capture ",
+                            "the organic matter diversity of the samples")
+  }
+  
+  insight <- glue::glue(
+    "The species accumulation curves show that the maximum metabolite richness achieved is ",
+    "{current_richness}. {is_plateu}"
+  )
+  
+}
+
+rank_abundance_insight <- function(df_plot){
+  
+  top_5 <- df_plot %>% 
+    slice_max(order_by = intensity_sums, prop = 0.05)
+  
+  top_5_mean_pres <- mean(top_5$presence_perc)
+  
+  bot_5 <- df_plot %>% 
+    slice_min(order_by = intensity_sums, prop = 0.05)
+  
+  bot_5_mean_pres <- mean(bot_5$presence_perc)
+  
+  
+  insight <- glue::glue(
+    "The rank abundance plot shows that the top 5% more abundant metabolites appear in ",
+    "around {round(top_5_mean_pres, 2)}% of the samples. The bottom 5% less abundant ",
+    "metabolites appear in {round(bot_5_mean_pres, 2)}% of the samples."
+  )
+  
+}
+
+diversity_insight <- function(df_plot, group_by){
+  boxplot_data <-  df_plot %>% 
+    group_by(across(all_of(group_by)), index) %>% 
+    summarise(
+      q1 = quantile(values, 0.25, na.rm = TRUE),
+      median = quantile(values, 0.5, na.rm = TRUE),
+      q3 = quantile(values, 0.75, na.rm = TRUE),
+      iqr = q3 - q1,
+      lower_bound = q1 - 1.5*iqr,
+      upper_bound = q3 + 1.5*iqr,
+      lower_whisker = min(values[values >= lower_bound], na.rm = TRUE),
+      upper_whisker = max(values[values <= upper_bound], na.rm = TRUE)
+    ) %>% 
+    ungroup() 
+  
+  boxplot_insight <- map(unique(df_plot$index), function(idx){
+    temp <- boxplot_data %>% 
+      filter(index == idx) %>% 
+      mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
+             insight = glue::glue('For {group_by} {.data[[group_by]]} the boxplot has a ',
+                                  'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
+                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
+    
+    final <- glue::glue(
+      'For diversity index {idx}: ',
+      paste0(temp$insight, collapse = ' ')
+    )
+  }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+}
+
+ordination_insight <- function(ord_type, add_info, color_by, shape_by = NA){
+  
+  if(ord_type == 'NMDS'){
+    if(is.na(shape_by)){
+      if(add_info$permanova$`Pr(>F)`[1] < 0.05){
+        permanova_ins <- glue::glue(
+          "The permutational analysis of variance found a significant structure of the community ",
+          "based on {color_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)}."
+        )
+      } else{
+        permanova_ins <- glue::glue(
+          "No significant structure of the community based on {color_by}."
+        )
+      }
+    } else {
+      if(add_info$permanova$`Pr(>F)`[1] < 0.05){
+        permanova_ins <- glue::glue(
+          "The permutational analysis of variance found a significant structure of the community ",
+          "based on {color_by} and {shape_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)}."
+        )
+      } else{
+        permanova_ins <- glue::glue(
+          "No significant structure of the community based on {color_by} and {shape_by}."
+        )
+      }
+    }
+    
+    stress_ins <- glue::glue(
+      "NMDS stress is {round(add_info$nmds$stress,2)}",
+    )
+    
+    final_ins <- paste(permanova_ins, stress_ins, collapse = ' ')
+    
+  } else {
+    axis1 <- round(add_info$pca$eigenvalues$variance.percent[1], digits = 2)
+    axis2 <- round(add_info$pca$eigenvalues$variance.percent[2], digits = 2)
+    
+    final_ins <- glue::glue(
+      "PCA ordination plot shows that PC1 explains {axis1}% of the variability amongst the samples, ",
+      "while PC2 explains {axis2}% of the variability."
+    )
+  }
+  
+  return(final_ins)
+  
+}
+
 insights <- function(contains, ...){
   
   dots <- list(...)
@@ -891,6 +1239,38 @@ insights <- function(contains, ...){
       "Nitrogen-containing compounds suggest biological/protein-like material; sulfur indicates ",
       "contributions from microbial metabolism or marine sources; phosphorus reflects biological activity. ",
       "Compositional shifts reveal changes in organic matter origin and processing."
+    ),
+    Shannon = paste0(
+      "Measures both species (metabolite) richness and evenness by considering the abundance of each metabolite ", 
+      ", with higher values indicating greater diversity. Used to compare diversity between different communities or treatments"
+    ),
+    Gini_Simpson = paste0(
+      "Calculates the probability that two randomly selected individuals (metabolites) belong to different species, ",
+      "ranging from 0-1 where 1 indicates maximum diversity. Used to compare community diversity while being less ",
+      "sensitive to rare species than Shannon index, making it robust for comparing communities with different ",
+      "sampling intensities."
+    ),
+    Chao1 = paste0(
+      "Estimates the true total species richness (including unobserved species) based on the number of singletons ",
+      "and doubletons in the sample. Used to assess sampling completeness and estimate how many species might ",
+      "be missed, particularly valuable when comparing communities with different sampling efforts or rare species."
+    ),
+    Elemental_composition = paste0(
+      "Using Rao's quadratic entropy to measure functional diversity based on differences in elemental composition ",
+      "between molecules, where higher values indicate greater chemical composition diversity. Used to assess how ",
+      "biochemically diverse a community is in terms of stoichiometry, helping understand biogeochemical cycling potential."
+    ),
+    Reactivity = paste0(
+      "Using Rao's quadratic entropy to measure functional diversity based on the nominal oxidation state of carbon, ",
+      "(NOSC) reflecting differences in thermodynamic favorability and metabolic accessibility of compounds. ",
+      "Used to evaluate the range of energy-yielding potential within a community, indicating metabolic ",
+      "versatility and the availability of compounds across different redox states."
+    ),
+    Insaturation_and_aromaticity = paste0(
+      "Using Rao's quadratic entropy to measure functional diversity based on molecular structure complexity, ",
+      "including double bond equivalents and aromatic character, reflecting molecular stability and bioavailability. ",
+      "Used to assess structural complexity within communities, indicating the range from ",
+      "labile (easily degraded) to recalcitrant (persistent) compounds, which affects decomposition rates and carbon cycling."
     )
   )
   
@@ -898,34 +1278,69 @@ insights <- function(contains, ...){
   
   for(value in contains){
     if(value =='van_krevelen'){
-      temp <-  vk_insight(df_plot = dots$df_plot, 
-                          color_by = dots$color_by, 
-                          facet_by = dots$facet_by,
-                          color_continuous = dots$color_continuous)
+      temp <- vk_insight(df_plot = dots$df_plot, 
+                         color_by = dots$color_by, 
+                         facet_col = dots$facet_col,
+                         facet_row = dots$facet_row,
+                         color_continuous = dots$color_continuous)
       
       res <- c(res, temp)
       
     } else if(value == 'density') {
-      temp <-  density_insight(plot_data = dots$plot_data,
-                               facet_col = dots$facet_col,
-                               facet_row = dots$facet_row,
-                               index = dots$index)
+      temp <- density_insight(plot_data = dots$plot_data,
+                              facet_col = dots$facet_col,
+                              facet_row = dots$facet_row,
+                              index = dots$index)
       
       res <- c(res, temp)
       
     } else if(value == 'violin') {
-      temp = violin_insight(df_plot = dots$df_plot,
-                            stat_df = dots$stat_df,
-                            color_by = dots$color_by,
-                            facet_by = dots$facet_by,
-                            index = dots$index)
+      temp <- violin_insight(df_plot = dots$df_plot,
+                             stat_df = dots$stat_df,
+                             color_by = dots$color_by,
+                             facet_by = dots$facet_by,
+                             index = dots$index)
       
       res <- c(res, temp)
       
     } else if(value == 'composition_bar') {
-      temp = comp_bar_insight(df_plot = dots$df_plot,
-                              group = dots$group,
-                              composition = dots$composition)
+      temp <- comp_bar_insight(df_plot = dots$df_plot,
+                               group = dots$group,
+                               composition = dots$composition)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'upset_plot') {
+      temp <- upset_insight(mass_list = dots$mass_list)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'venn') {
+      temp <- venn_insight(mass_list = dots$mass_list)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'richness') {
+      temp <- richness_insight(richness = dots$richness)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'rank_abundance') {
+      temp <- rank_abundance_insight(df_plot = dots$df_plot)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'diversity') {
+      temp <- diversity_insight(df_plot = dots$df_plot,
+                                group_by = dots$group_by)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'ordination') {
+      temp <- ordination_insight(ord_type = dots$ord_type,
+                                 add_info = dots$add_info,
+                                 color_by = dots$color_by,
+                                 shape = dots$shape_by)
       
       res <- c(res, temp)
       
