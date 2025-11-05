@@ -2,7 +2,7 @@
 # 
 # MetaboDirect
 # Custom functions
-# MetaboDirect version 1.0
+# MetaboDirect for agent
 # by Christian Ayala
 #     based on scripts and functions by Nathalia Graf Grachet
 # Licensed under the MIT license. See LICENSE.md file.
@@ -58,10 +58,23 @@ custom_theme <- function(angle_x = 0){
 # ******************************************************************************
 plot_van_krevelen <- function(df, color_by, facet_by = NA){
   color_by <- color_by
-  p <- ggplot(df,
-              aes(x = OC,
-                  y = HC,
-                  color = !!rlang::ensym(color_by))) +
+  
+  if(is.na(facet_by)){
+    df_plot <- df %>% 
+      ungroup() %>% 
+      select(Mass, OC, HC, Class, all_of(color_by)) %>% 
+      distinct()
+  } else {
+    df_plot <- df %>% 
+      ungroup() %>% 
+      select(Mass, OC, HC, Class, all_of(c(color_by, facet_by))) %>% 
+      distinct()
+  }
+  
+  p <- df_plot %>% 
+    ggplot(aes(x = OC,
+               y = HC,
+               color = !!rlang::ensym(color_by))) +
     geom_point() +
     labs(x = 'O:C',
          y = 'H:C',
@@ -76,14 +89,46 @@ plot_van_krevelen <- function(df, color_by, facet_by = NA){
       facet_wrap(facet_formula)
   }
   
-  return(p)
+  is_num <- is.numeric(df_plot[[color_by]])
+  
+  vk_meta <- list(description = descriptions('van_krevelen_thermo_idx',
+                                             color_by = color_by,
+                                             group = facet_by),
+                  insight = insights(contains = c('van_krevelen', color_by),
+                                     df_plot = df_plot,
+                                     color_by = color_by,
+                                     facet_by = facet_by,
+                                     color_continuous = is_num))
+  
+  return(list(plot = p,
+              meta = vk_meta))
 }
 
 # ******************************************************************************
 plot_density <- function(df, index, color_by, facet_col, facet_row = NA){
   index <- index
   color_by <- color_by
-  p <- ggplot(df_longer,
+  
+  group_vars <- c(facet_col, facet_row)
+  group_vars <- group_vars[!is.na(group_vars)]
+  
+  if(is.na(facet_row)){
+    df_plot <- df %>% 
+      ungroup() %>% 
+      select(Mass,
+             all_of(c(index, color_by,
+                      facet_col))) %>% 
+      distinct()
+  } else {
+    df_plot <- df %>% 
+      ungroup() %>% 
+      select(Mass,
+             all_of(c(index, color_by,
+                      facet_col, facet_row))) %>% 
+      distinct()
+  }
+  
+  p <- ggplot(df_plot,
               aes(x = !!rlang::ensym(index),
                   fill = !!rlang::ensym(color_by))) +
     geom_density(alpha = 0.7) +
@@ -102,16 +147,31 @@ plot_density <- function(df, index, color_by, facet_col, facet_row = NA){
       facet_grid(facet_formula)
   }
   
-  return(p)
+  density_meta <- list(description = descriptions('density',
+                                                  thermo_idx = index,
+                                                  group = group_vars),
+                       insight = insights(contains = c('density', index),
+                                          plot_data = ggplot_build(p),
+                                          facet_col = facet_col,
+                                          facet_row = facet_row,
+                                          index = index))
+  
+  return(list(plot = p,
+              meta = density_meta))
 }
 
 # ******************************************************************************
-plot_violin <- function(df, index, color_by, facet_by = NA, title){
+plot_violin <- function(df, index, color_by, facet_by = NA, title,
+                        calculate_stat_signif = TRUE){
   index <- index
   color_by <- color_by
   
+  group_vars <- c(color_by, facet_by)
+  group_vars <- group_vars[!is.na(group_vars)]
+  
   # Testing normality
   df_test <- df %>% 
+    ungroup() %>% 
     select(Mass, all_of(index)) %>% 
     distinct()
   pval <- try(shapiro.test(df_test[[index]])$p.value)
@@ -119,26 +179,44 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title){
   # Comparing means
   stat_formula <- as.formula(paste0(index, '~ ', color_by))
   if(!is.na(facet_by)){
-    stat_df <- df %>% 
-      group_by(!!rlang::ensym(facet_by))
-  } else stat_df <- df
-  
-  if(pval < 0.05 || str_detect(pval, 'Error')){
-    stat_df <- stat_df %>% 
-      dunn_test(stat_formula) %>% 
-      add_significance() %>% 
-      add_xy_position(step.increase = 1, scales = 'free_y')
+    df_plot <- df %>% 
+      ungroup() %>%
+      select(Mass, all_of(c(index, color_by, facet_by))) %>% 
+      distinct() %>% 
+      group_by(across(all_of(facet_by)))
   } else {
-    stat_df <- stat_df %>% 
-      tukey_hsd(stat_formula) %>% 
-      add_significance() %>% 
-      add_xy_position(step.increase = 1, scales = 'free_y')
+    df_plot <- df %>% 
+      ungroup() %>%
+      select(Mass, all_of(c(index, color_by))) %>% 
+      distinct()
   }
   
-  p <- ggplot(df,
-              aes(x = !!rlang::ensym(color_by),
-                  y = !!rlang::ensym(index),
-                  fill = !!rlang::ensym(color_by))) +
+  if(calculate_stat_signif){
+    if(pval < 0.05 || str_detect(pval, 'Error')){
+      stat_df <- df_plot %>% 
+        dunn_test(stat_formula) %>% 
+        add_significance() %>% 
+        add_xy_position(step.increase = 1, scales = 'free_y')
+    } else {
+      stat_df <- df_plot %>% 
+        tukey_hsd(stat_formula) %>% 
+        add_significance() %>% 
+        add_xy_position(step.increase = 1, scales = 'free_y')
+    }
+    
+    
+  } else {
+    stat_df <- data.frame(group1 = NA,
+                          group2 = NA,
+                          p.adj = 1,
+                          p.adj.signif = 'ns',
+                          y.position = NA)
+  }
+  
+  p <- df_plot %>% 
+    ggplot(aes(x = !!rlang::ensym(color_by),
+               y = !!rlang::ensym(index),
+               fill = !!rlang::ensym(color_by))) +
     geom_violin(alpha = 0.7) +
     geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
     theme_bw() +
@@ -153,7 +231,8 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title){
                          label = 'p.adj.signif', 
                          inherit.aes = FALSE,
                          hide.ns = TRUE) +
-      facet_wrap(facet_formula)
+      facet_wrap(facet_formula,
+                 scales = 'free_y')
   } else {
     p <- p +
       stat_pvalue_manual(data = stat_df,
@@ -162,11 +241,23 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title){
                          hide.ns = TRUE)
   }
   
-  return(p)
+  violin_meta <- list(description = descriptions('violin',
+                                                 thermo_idx = index,
+                                                 group = group_vars),
+                      insight = insights(contains = c('violin', index),
+                                         df_plot = df_plot, 
+                                         stat_df = stat_df, 
+                                         color_by = color_by, 
+                                         facet_by = facet_by, 
+                                         index = index))
+  
+  return(list(plot = p,
+              meta = violin_meta))
 }
 
 # ******************************************************************************
 plot_comp_bar <- function(df, composition, group, title){
+  
   if(length(group) == 2){
     group_a <- group[1]
     group_b <- group[2]
@@ -187,9 +278,11 @@ plot_comp_bar <- function(df, composition, group, title){
     colors <- get_palette('Set3', length(unique(df$Element)))
   }
   
-  plot <- df %>% 
+  df_plot <- df %>% 
     summarise(Count = mean(Count, na.rm = TRUE)) %>%
-    mutate(Perc_count = Count/sum(Count, na.rm = TRUE)*100) %>%
+    mutate(Perc_count = Count/sum(Count, na.rm = TRUE)*100)
+  
+  plot <- df_plot %>%
     ggplot(aes(x = !!rlang::ensym(group_a),
                y = Perc_count,
                fill = !!rlang::ensym(composition))) +
@@ -204,7 +297,18 @@ plot_comp_bar <- function(df, composition, group, title){
     plot <- plot + 
       facet_wrap(facet_formula, scales = 'free_x')
   }
-  return(plot)
+  
+  comp_bar_meta <- list(description = descriptions('composition_bar',
+                                                   group = group,
+                                                   bar_group = composition),
+                        insight = insights(contains = c('composition_bar', composition),
+                                           df_plot = df_plot,
+                                           group = group,
+                                           composition = composition))
+  
+  
+  return(list(plot = plot,
+              meta = comp_bar_meta))
 }
 
 # ******************************************************************************
@@ -265,11 +369,11 @@ select_masses <- function(df, group, value){
 
 # ******************************************************************************
 calculate_weighted <- function(df, index){
-  new_names <- paste0(index, c('_weigthed', '_magnitude_average'))
+  new_names <- paste0(index, c('_weighted', '_magnitude_average'))
   names(new_names) <- c('wt', 'm_avg')
   weighted_df <- df %>%  
-    select(Mass, SampleID, NormIntensity, all_of(c(index))) %>% 
-    mutate(wt = !!rlang::ensym(index) * NormIntensity) %>% 
+    select(Mass, SampleID, NormIntensity, all_of(c(index))) %>%
+    mutate(wt = .data[[index]] * NormIntensity) %>% 
     group_by(SampleID) %>% 
     mutate(m_avg = sum(wt, na.rm = TRUE)/sum(NormIntensity, na.rm = TRUE)) %>% 
     select(Mass,SampleID, all_of(index), wt, m_avg) %>% 
@@ -440,8 +544,8 @@ calculate_functional_div_index <- function(fun_df, mat){
   final_df <- functional_diversity %>% 
     pivot_longer(!SampleID, names_to = 'index', values_to = 'values') %>% 
     left_join(metadata, by = 'SampleID') %>% 
-  
-  return(final_df)
+    
+    return(final_df)
   
 }
 
@@ -476,5 +580,403 @@ get_kegg_compound_info <- function(cpd_id, mass, formula){
   return(cpd_df)
 }
 
+descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
+                         color_by = NA){
+  broad_des <- list(
+    van_krevelen_thermo_idx = glue::glue(
+      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
+      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
+      "Plot is colored based on {thermo_idx}, and faceted by {group[1]}.",
+      color_by = color_by,
+      group= group
+    ),
+    density = glue::glue(
+      "Density plot showing the distribution of values for {thermo_idx} across ",
+      "all samples.",
+      " Plot is colored based on {group[1]}, and faceted by {group[1]}",
+      group = group
+    ),
+    violin = glue::glue(
+      "Figure uses boxplots surrounded by violin plots to show changes in the distribution ",
+      "of {thermo_idx} values across different groups. And if there is any significance differences ",
+      "among the groups. Plot is colored based on {group[1]}",
+      group = group
+    ),
+    composition_bar = glue::glue(
+      "Figure is a stacked bar that shows the relative abundances of the detected metabolites based on ",
+      "their {bar_group}. Each bar represent a different sample group based on {group[1]}. Colors represent ",
+      "different types of metabolites.",
+      bar_group = bar_group,
+      group = group
+    )
+  )
+  
+  if(is.na(group)){
+    broad_des$van_krevelen_thermo_idx <- glue::glue(
+      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
+      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
+      "Plot is colored based on {color_by}.",
+      color_by = color_by,
+      group= group
+    )
+  }
+  
+  if(length(group) == 2){
+    broad_des$density <- glue::glue(broad_des$density,
+                                    ' and {group[2]}',
+                                    group = group)
+    
+    broad_des$violin <- glue::glue(broad_des$violin,
+                                   ' and faceted based on {group[2]}',
+                                   group = group)
+  }
+  
+  return(broad_des[[plot_type]])
+}
 
+vk_insight <- function(df_plot, color_by, facet_by = NA,
+                       color_continuous = TRUE){
+  
+  group_vars <- c(facet_by, 'Class')
+  group_vars <- group_vars[!is.na(group_vars)]
+  
+  counts <- df_plot %>% 
+    group_by(across(all_of(group_vars))) %>% 
+    count()
+  
+  if(is.na(facet_by)){
+    points_insight <- counts %>% 
+      mutate(insight = glue::glue('{n} masses as {Class}'))
+    
+    insight <- paste0(points_insight$insight, collapse = ', ')
+    
+  } else {
+    points_insight <- map(unique(df_plot[[facet_by]]), function(g){
+      temp <- counts %>%
+        filter(.data[[facet_by]] == g) %>% 
+        mutate(insight = glue::glue('{n} masses as {Class}'))
+      
+      points_insight <- glue::glue(
+        'For group "{g}": ',
+        paste0(temp$insight, collapse = ', ')
+      )
+    }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+  }
+  
+  if(color_continuous){
+    min_val <- min(df_plot[[color_by]], na.rm = TRUE)
+    max_val <- max(df_plot[[color_by]], na.rm = TRUE)
+    
+    color_insight <- glue::glue(
+      '. Plot is colored based on the {color_by} of each peak. {color_by} ranges ',
+      'from {min_val} to {max_val}.',
+      color_by = color_by,
+      min_val = min_val,
+      max_val = max_val
+    )
+  } else {
+    color_insight <- glue::glue(
+      '. Plot is colored based on the group of samples were each of the masses were detected. ',
+      'Sample groups are defined by the "{color_by}" variable.'
+    )
+  }
+  
+  res <- paste0(
+    "The position of the masses in the van Krevelen diagram can be used to ",
+    "group detected compounds into broad molecular classes. The plot shows: ",
+    points_insight,
+    color_insight
+  )
+  
+  return(res)
+}
+
+density_insight <- function(plot_data, facet_col, facet_row, index){
+  
+  density_data <- plot_data$data[[1]]
+  
+  max_density <- density_data %>% 
+    select(PANEL, density, x) %>% 
+    group_by(PANEL) %>% 
+    slice_max(order_by = density, n = 1)
+  
+  if(is.na(facet_row)){
+    facets <- plot_data$layout$layout %>% 
+      select(PANEL, all_of(facet_col)) %>% 
+      left_join(max_density, by = 'PANEL') %>% 
+      mutate(thermo_idx = index,
+             insight = glue::glue('{thermo_idx} value with the highest density in ',
+                                  '{facet_col} {.data[[facet_col]]} is {round(x, 3)}'))
+  } else {
+    facets <- plot_data$layout$layout %>% 
+      select(PANEL, all_of(c(facet_col, facet_row))) %>% 
+      left_join(max_density, by = 'PANEL') %>% 
+      mutate(thermo_idx = index,
+             insight = glue::glue('{thermo_idx} value with the highest density in ',
+                                  '{facet_col} {.data[[facet_col]]} and {facet_row} {.data[[facet_row]]} is {round(x, 3)}'))
+  }
+  
+  return(paste0(facets$insight, collapse = ', '))
+  
+}
+
+violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
+  
+  if(is.na(facet_by)){
+    boxplot_data <- df_plot %>% 
+      group_by(across(all_of(color_by))) %>% 
+      summarise(
+        q1 = quantile(.data[[index]], 0.25, na.rm = TRUE),
+        median = quantile(.data[[index]], 0.5, na.rm = TRUE),
+        q3 = quantile(.data[[index]], 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        lower_bound = q1 - 1.5*iqr,
+        upper_bound = q3 + 1.5*iqr,
+        lower_whisker = min(.data[[index]][.data[[index]] >= lower_bound], na.rm = TRUE),
+        upper_whisker = max(.data[[index]][.data[[index]] <= upper_bound], na.rm = TRUE)
+      ) %>% 
+      ungroup() %>% 
+      mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
+             insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
+                                  'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
+                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
+    
+    boxplot_insight <- paste0(boxplot_data$insight, collapse = ', ')
+    
+    sig_stat <- stat_df %>% 
+      filter(p.adj < 0.05)
+    
+    if(nrow(sig_stat) > 0){
+      sig_stat <- sig_stat %>% 
+        mutate(insight = glue::glue('Significant differences found between {group1} and {group2} ',
+                                    '(p-value = {round(p.adj, 5)})'))
+      
+      sig_insight <- paste0(sig_stat$insight, collapse = '. ')
+      
+      boxplot_insight <- paste0(c(boxplot_insight, sig_insight), collapse = ' ')
+    }
+    
+    
+  } else {
+    boxplot_data <- df_plot %>% 
+      group_by(across(all_of(c(color_by, facet_by)))) %>% 
+      summarise(
+        q1 = quantile(.data[[index]], 0.25, na.rm = TRUE),
+        median = quantile(.data[[index]], 0.5, na.rm = TRUE),
+        q3 = quantile(.data[[index]], 0.75, na.rm = TRUE),
+        iqr = q3 - q1,
+        lower_bound = q1 - 1.5*iqr,
+        upper_bound = q3 + 1.5*iqr,
+        lower_whisker = min(.data[[index]][.data[[index]] >= lower_bound], na.rm = TRUE),
+        upper_whisker = max(.data[[index]][.data[[index]] <= upper_bound], na.rm = TRUE)
+      )
+    
+    boxplot_insight <- map(unique(df_plot[[facet_by]]), function(g){
+      temp <- boxplot_data %>% 
+        filter(.data[[facet_by]] == g) %>% 
+        mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
+               insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
+                                    'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
+                                    'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
+      
+      final <- glue::glue(
+        'For panel {g}: ',
+        paste0(temp$insight, collapse = ', ')
+      )
+    }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+    
+    sig_stat <- stat_df %>% 
+      filter(p.adj < 0.05)
+    
+    if(nrow(sig_stat) > 0){
+      sig_stat <- map(unique(sig_stat[[facet_by]]), function(g){
+        
+        temp  %>% 
+          filter(.data[[facet_by]] == g) %>%
+          mutate(insight = glue::glue('Significant differences found between {group1} and {group2} ',
+                                      '(p-value = {round(p.adj, 5)})'))
+        
+        
+        final <- glue::glue(
+          'For panel {g}: ',
+          paste0(sig_stat$insight, collapse = '. ')
+        )
+        
+      }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+      
+      boxplot_insight <- paste0(c(boxplot_insight, sig_insight), collapse = ' ')
+    }
+    
+  }
+  
+  return(boxplot_insight)
+  
+}
+
+comp_bar_insight <- function(df_plot, group, composition){
+  
+  if(length(group) == 1){
+    bar_insight <- map(unique(df_plot[[group]]), function(g){
+      temp <- df_plot %>%
+        filter(.data[[group]] == g) %>% 
+        mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
+      
+      ins <- glue::glue(
+        'For group "{g}": ',
+        paste0(temp$insight, collapse = ', ')
+      )
+    }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+  }  else {
+    bar_insight <- map(unique(df_plot[[group[2]]]), function(f){
+      
+      subres <- map(unique(df_plot[[group[1]]]), function(g){
+        temp <- df_plot %>%
+          filter(.data[[group]] == g) %>% 
+          mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
+        
+        subins <- glue::glue(
+          'For group "{g}": ',
+          paste0(temp$insight, collapse = ', ')
+        )
+      }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+      
+      ins <- glue::glue(
+        'For panel "{f}": ',
+        sub_res
+      )
+      
+    })%>% reduce(`c`) %>% paste0(collapse = '. ')
+    
+  }
+  
+  return(bar_insight)
+  
+}
+
+insights <- function(contains, ...){
+  
+  dots <- list(...)
+  
+  other_options <- list(
+    GFE = paste0(
+      "Gibbs Free Energy (GFE) reflects thermodynamic stability and bioavailability. ",
+      "Lower GFE values indicate more reduced, energy-rich compounds (e.g., lipids), ",
+      "while higher values suggest oxidized, recalcitrant materials"
+    ),
+    AI_mod = paste0(
+      "Modified Aromaticity Index (AI_mod) quantifies aromatic character. ",
+      "Higher AI_mod values (>0.5) indicate condensed aromatic structures typical of ",
+      "pyrogenic or highly processed organic matter. Lower values suggest aliphatic or ",
+      "less condensed structures. Variations may reflect differences in source material ",
+      "or degradation history."
+    ),
+    DBE = paste0(
+      "Double Bond Equivalents (DBE) indicate molecular unsaturation and ring structures. ",
+      "Higher DBE values suggest aromatic rings and unsaturated bonds characteristic of ",
+      "complex, stable organic compounds. Lower values indicate saturated, aliphatic structures"
+    ),
+    NOSC = paste0(
+      "Nominal Oxidation State of Carbon (NOSC) reflects the average oxidation state. ",
+      "Positive NOSC indicates oxidized compounds (e.g., carboxylic acids), while negative ",
+      "values indicate reduced compounds (e.g., hydrocarbons, lipids). Shifts in NOSC ",
+      "distributions suggest changes in redox chemistry or organic matter processing."
+    ),
+    Class = paste0(
+      "Molecular class composition reveals the relative abundance of biochemical compound categories ",
+      "(e.g., lipids, proteins, lignins, tannins, condensed hydrocarbons). Differences across sample groups",
+      " indicate variations in organic matter sources, biological activity, or degradation pathways."
+    ),
+    Element = paste0(
+      "Elemental composition (CHO, CHON, CHOS, etc.) provides insight into heteroatom content. ",
+      "Nitrogen-containing compounds suggest biological/protein-like material; sulfur indicates ",
+      "contributions from microbial metabolism or marine sources; phosphorus reflects biological activity. ",
+      "Compositional shifts reveal changes in organic matter origin and processing."
+    )
+  )
+  
+  res <- c()
+  
+  for(value in contains){
+    if(value =='van_krevelen'){
+      temp <-  vk_insight(df_plot = dots$df_plot, 
+                          color_by = dots$color_by, 
+                          facet_by = dots$facet_by,
+                          color_continuous = dots$color_continuous)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'density') {
+      temp <-  density_insight(plot_data = dots$plot_data,
+                               facet_col = dots$facet_col,
+                               facet_row = dots$facet_row,
+                               index = dots$index)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'violin') {
+      temp = violin_insight(df_plot = dots$df_plot,
+                            stat_df = dots$stat_df,
+                            color_by = dots$color_by,
+                            facet_by = dots$facet_by,
+                            index = dots$index)
+      
+      res <- c(res, temp)
+      
+    } else if(value == 'composition_bar') {
+      temp = comp_bar_insight(df_plot = dots$df_plot,
+                              group = dots$group,
+                              composition = dots$composition)
+      
+      res <- c(res, temp)
+      
+    } else if(value %in% names(other_options)){
+      temp <- other_options[[value]]
+      
+      res <- c(res, temp)
+    }
+    
+  }
+  
+  res_final <- paste(res, collapse = ' ')
+  
+  return(res_final)
+}
+
+add_figure_metadata <- function(
+    figure_id,
+    figure_title,
+    figure_type,
+    caption = "",
+    description = "",
+    insights = "",
+    x_axis_label = "",
+    y_axis_label = "",
+    grouping_variables = NULL,
+    data_source = "",
+    r_script_path = "",
+    modifiable_parameters = NULL,
+    analysis_category = "",
+    figure_info = ""
+) {
+  
+  info <- list(
+    figure_id = figure_id,
+    figure_title = figure_title,
+    figure_type = figure_type,
+    caption = caption,
+    description = description,
+    insights = insights,
+    x_axis_label = x_axis_label,
+    y_axis_label = y_axis_label,
+    grouping_variables = grouping_variables,
+    data_source = data_source,
+    r_script_path = r_script_path,
+    modifiable_parameters = modifiable_parameters,
+    analysis_category = analysis_category,
+    figure_info = figure_info
+  )
+  
+  # Add to global list
+  figure_metadata <<- append(figure_metadata, list(info))
+}
 
