@@ -149,7 +149,8 @@ plot_density <- function(df, index, color_by, facet_col, facet_row = NA){
     geom_density(alpha = 0.7) +
     theme_bw() +
     labs(title = paste(index, 'density plot'),
-         x = index) +
+         x = index,
+         y = 'Density') +
     custom_theme()
   
   if(is.na(facet_row)){
@@ -192,7 +193,6 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title,
   pval <- try(shapiro.test(df_test[[index]])$p.value)
   
   # Comparing means
-  stat_formula <- as.formula(paste0(index, '~ ', color_by))
   if(!is.na(facet_by)){
     df_plot <- df %>% 
       ungroup() %>%
@@ -207,6 +207,7 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title,
   }
   
   if(calculate_stat_signif){
+    stat_formula <- as.formula(paste0(index, '~ ', color_by))
     if(pval < 0.05 || str_detect(pval, 'Error')){
       stat_df <- df_plot %>% 
         dunn_test(stat_formula) %>% 
@@ -229,14 +230,15 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title,
   }
   
   p <- df_plot %>% 
-    ggplot(aes(x = !!rlang::ensym(color_by),
-               y = !!rlang::ensym(index),
-               fill = !!rlang::ensym(color_by))) +
+    ggplot(aes(x = .data[[color_by]],
+               y = .data[[index]],
+               fill = .data[[color_by]])) +
     geom_violin(alpha = 0.7) +
     geom_boxplot(width = 0.1, outlier.size = 0.2, show.legend = F) +
     theme_bw() +
     labs(title = title,
-         x = color_by) +
+         x = color_by,
+         y = index) +
     custom_theme(angle_x = 45)
   
   if(!is.na(facet_by)){
@@ -335,7 +337,7 @@ plot_upset <- function(mass_list, group_by){
   plot <- upset(fromList(mass_list), order.by = "freq", 
                 nsets = length(group_values))
   
-  upset_meta <- list(description = descriptions('upset_plot',
+  upset_meta <- list(description = descriptions('upset',
                                                 group = group_by),
                      insight = insights(contains = c('upset_plot'),
                                         mass_list = mass_list))
@@ -373,18 +375,18 @@ plot_ordination <- function(df, x, y, color_by, col_vec, title,
   group_vars <- group_vars[!is.na(group_vars)]
   
   if(is.na(shape_by)){
-    plot <- ggplot(df) +
-      geom_point(aes(x = {{ x }},
-                     y = {{ y }},
-                     color = !!rlang::ensym(color_by)),
-                 size = point_size)
+    plot <- ggplot(df,
+                   aes(x = {{ x }},
+                       y = {{ y }},
+                       color = !!rlang::ensym(color_by))) +
+      geom_point(size = point_size)
   } else {
-    plot <- ggplot(df) +
-      geom_point(aes(x = {{ x }},
-                     y = {{ y }},
-                     color = !!rlang::ensym(color_by),
-                     shape = !!rlang::ensym(shape_by)),
-                 size = point_size)
+    plot <- ggplot(df,
+                   aes(x = {{ x }},
+                       y = {{ y }},
+                       color = !!rlang::ensym(color_by),
+                       shape = !!rlang::ensym(shape_by))) +
+      geom_point(size = point_size)
   }
   
   plot <- plot + 
@@ -407,23 +409,25 @@ plot_ordination <- function(df, x, y, color_by, col_vec, title,
 }
 
 # ******************************************************************************
-plot_diversity_index <- function(df, group_by, title){
+plot_diversity_index <- function(div_table, group_by, title){
   group_by <- group_by
   
-  plot <- df %>% 
-    ggplot() +
-    geom_boxplot(aes(x = !!rlang::ensym(group_by),
-                     y = values,
-                     fill = !!rlang::ensym(group_by))) +
+  plot <- div_table %>% 
+    ggplot(aes(x = .data[[group_by]],
+               y = values,
+               fill = .data[[group_by]])) +
+    geom_boxplot() +
     scale_fill_manual(values = my_colors) +
     facet_wrap(~index, scales = 'free_y') +
-    labs(title = title) +
+    labs(title = title,
+         x = group_by,
+         y = 'Index value') +
     custom_theme()
   
   diversity_meta <- list(description = descriptions('diversity', group = group_by),
                          insight = insights(contains = c('diversity',
-                                                         unique(df$index)),
-                                            df_plot = df,
+                                                         unique(div_table$index)),
+                                            df_plot = div_table,
                                             group_by = group_by))
   
   return(list(plot = plot,
@@ -452,7 +456,8 @@ calculate_weighted <- function(df, index){
     mutate(m_avg = sum(wt, na.rm = TRUE)/sum(NormIntensity, na.rm = TRUE)) %>% 
     select(Mass,SampleID, all_of(index), wt, m_avg) %>% 
     rename_with(.cols = c(wt, m_avg), .fn = function(x) new_names[x]) %>% 
-    pivot_longer(!c(SampleID, Mass), names_to = 'weighted_idx', values_to = 'value') %>% 
+    pivot_longer(!c(SampleID, Mass), names_to = 'weighted_idx', 
+                 values_to = 'Magnitude-averaged/weigthed index') %>% 
     left_join(metadata, by = 'SampleID') %>% 
     ungroup()
   
@@ -489,10 +494,10 @@ calculate_nmds <- function(mat, normalized_with,
                                              maxit = 999,
                                              trymax = 500,
                                              wascores = TRUE))
-  filename <- file.path(my_outdir, '1.1_NMDS.log')
+  filename <- file.path(my_outdir, '5.1.1_NMDS.log')
   write_lines(as.data.frame(nmds.log), filename)
   
-  filename <- file.path(my_outdir, '1.2_NMDS_stressplot.png')
+  filename <- file.path(my_outdir, '5.1.2_NMDS_stressplot.png')
   
   png(filename, res = 300, height = 3600, width = 3600)
   capture.output(stressplot(nmds))
@@ -564,11 +569,13 @@ plot_richness <- function(richness){
     geom_boxplot(fill = 'yellow') +
     geom_hline(yintercept = max(richness_long$Richness) * 0.85, color = 'red') +
     theme_bw() +
-    labs(title = 'Richness plot') +
+    labs(title = 'Richness plot',
+         x = 'Number of sites',
+         y = 'Richness') +
     custom_theme()
   
   richness_meta <- list(description = descriptions('richness'),
-                        insigth = insights(contains = ('richness'),
+                        insight = insights(contains = ('richness'),
                                            richness = richness))
   
   return(list(plot = plot,
@@ -854,7 +861,7 @@ vk_insight <- function(df_plot, color_by, facet_col = NA, facet_row = NA,
   } else {
     color_insight <- glue::glue(
       '. Plot is colored based on the group of samples were each of the masses were detected. ',
-      'Sample groups are defined by the "{color_by}" variable.'
+      'Sample groups are defined by the {color_by} variable.'
     )
   }
   
@@ -957,7 +964,7 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
                                     'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
       
       final <- glue::glue(
-        'For panel {g}: ',
+        'For facet {g}: ',
         paste0(temp$insight, collapse = ', ')
       )
     }) %>% reduce(`c`) %>% paste0(collapse = '. ')
@@ -966,16 +973,16 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
       filter(p.adj < 0.05)
     
     if(nrow(sig_stat) > 0){
-      sig_stat <- map(unique(sig_stat[[facet_by]]), function(g){
+      sig_insight <- map(unique(sig_stat[[facet_by]]), function(g){
         
-        temp  %>% 
+        temp <- sig_stat  %>% 
           filter(.data[[facet_by]] == g) %>%
           mutate(insight = glue::glue('Significant differences found between {group1} and {group2} ',
                                       '(p-value = {round(p.adj, 5)})'))
         
         
         final <- glue::glue(
-          'For panel {g}: ',
+          'For facet {g}: ',
           paste0(sig_stat$insight, collapse = '. ')
         )
         
@@ -996,6 +1003,7 @@ comp_bar_insight <- function(df_plot, group, composition){
     bar_insight <- map(unique(df_plot[[group]]), function(g){
       temp <- df_plot %>%
         filter(.data[[group]] == g) %>% 
+        filter(!is.nan(Perc_count)) %>% 
         mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
       
       ins <- glue::glue(
@@ -1006,19 +1014,20 @@ comp_bar_insight <- function(df_plot, group, composition){
   }  else {
     bar_insight <- map(unique(df_plot[[group[2]]]), function(f){
       
-      subres <- map(unique(df_plot[[group[1]]]), function(g){
-        temp <- df_plot %>%
-          filter(.data[[group]] == g) %>% 
+      sub_res <- map(unique(df_plot[[group[1]]]), function(g){
+        temp <<- df_plot %>%
+          filter(.data[[group[1]]] == g) %>% 
+          filter(!is.nan(Perc_count)) %>% 
           mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
         
         subins <- glue::glue(
-          'For group "{g}": ',
+          'For group {g}: ',
           paste0(temp$insight, collapse = ', ')
         )
       }) %>% reduce(`c`) %>% paste0(collapse = '. ')
       
       ins <- glue::glue(
-        'For panel "{f}": ',
+        'For facet {f}: ',
         sub_res
       )
       
@@ -1161,7 +1170,7 @@ ordination_insight <- function(ord_type, add_info, color_by, shape_by = NA){
       if(add_info$permanova$`Pr(>F)`[1] < 0.05){
         permanova_ins <- glue::glue(
           "The permutational analysis of variance found a significant structure of the community ",
-          "based on {color_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)}."
+          "based on {color_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)})."
         )
       } else{
         permanova_ins <- glue::glue(
@@ -1172,7 +1181,7 @@ ordination_insight <- function(ord_type, add_info, color_by, shape_by = NA){
       if(add_info$permanova$`Pr(>F)`[1] < 0.05){
         permanova_ins <- glue::glue(
           "The permutational analysis of variance found a significant structure of the community ",
-          "based on {color_by} and {shape_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)}."
+          "based on {color_by} and {shape_by} (p_value = {round(add_info$permanova$`Pr(>F)`[1], 2)})."
         )
       } else{
         permanova_ins <- glue::glue(
@@ -1357,41 +1366,137 @@ insights <- function(contains, ...){
   return(res_final)
 }
 
-add_figure_metadata <- function(
+update_figure_list <- function(figure_id = '', 
+                               figure_title = ''){
+  
+  list_current_idx <- length(figure_list)
+  
+  metadata_file <- file.path('figures_metadata', paste0(figure_id, '.json'))
+  
+  info <- list(figure_id = figure_id,
+               figure_title = figure_title,
+               metadata_file = metadata_file)
+  
+  figure_list[[list_current_idx + 1]] <<- info
+  
+}
+
+save_figure_metadata <- function(
+    plot_obj,  
     figure_id,
-    figure_title,
+    analysis_module,
     figure_type,
-    caption = "",
-    description = "",
-    insights = "",
-    x_axis_label = "",
-    y_axis_label = "",
-    grouping_variables = NULL,
-    data_source = "",
-    r_script_path = "",
-    modifiable_parameters = NULL,
-    analysis_category = "",
-    figure_info = ""
+    figure_title = NA,
+    x_axis_label = NA,
+    y_axis_label = NA,
+    caption,
+    figure_file,
+    group_aes,
+    modifiable_aesthetics,
+    has_legend = TRUE,
+    custom_legend = NULL,
+    units = 'none',
+    data_source,
+    r_script_path,
+    functions_used,
+    resolution,
+    height,
+    width
 ) {
   
+  # Getting information from the plot
+  p <- plot_obj$plot
+  
+  if(is.na(figure_title)){
+    figure_title <- p@labels$title
+  }
+  
+  if(any(is.na(x_axis_label))){
+    x_axis_label <- p@labels$x
+  }
+  
+  if(any(is.na(y_axis_label))){
+    y_axis_label <- p@labels$y
+  }
+  
+  grouping_variables <- list()
+  for(i in group_aes){
+    if(all(i == 'facets')){
+      if(!is.null(p@facet$params$facets)){
+        grouping_variables[[i]] <- list(wrap = names(p@facet$params$facets))
+      } else {
+        grouping_variables[[i]] <- list(cols = names(p@facet$params$cols),
+                                        rows = names(p@facet$params$rows))
+      }
+    } else if(all(i %in% c('colour', 'color', 'shape', 'fill', 'x', 'y'))) {
+      grouping_variables[i] <- as.character(p@mapping[i]) %>% 
+        str_remove('~') %>% 
+        str_remove('.data\\[\\["') %>% 
+        str_remove('"\\]\\]')
+    } else {
+      grouping_variables <- group_aes
+    }
+  }
+  
+  legend_variables <- list()
+  if(has_legend){
+    accepted_legend_vars <- c('colour', 'color', 'fill', 'shape')
+    for(m in names(p@mapping)){
+      if(m %in% accepted_legend_vars){
+        legend_variables[m] <- as.character(p@mapping[m]) %>% 
+          str_remove('~') %>% 
+          str_remove('.data\\[\\["') %>% 
+          str_remove('"\\]\\]')
+      } 
+    }
+  } else {
+    if(is.null(custom_legend)){
+      legend_variables['none'] <- 'none'
+    }
+  }
+  
+  if(!is.null(custom_legend)){
+    legend_variables <- custom_legend
+  }
+  
+  # Saving all data as JSON
   info <- list(
     figure_id = figure_id,
-    figure_title = figure_title,
+    analysis_module = analysis_module,
     figure_type = figure_type,
+    figure_title = figure_title,
     caption = caption,
-    description = description,
-    insights = insights,
-    x_axis_label = x_axis_label,
-    y_axis_label = y_axis_label,
-    grouping_variables = grouping_variables,
+    description = plot_obj$meta$description,
+    insights = plot_obj$meta$insight,
+    plot_info = list(
+      x_axis_label = x_axis_label,
+      y_axis_label = y_axis_label,
+      grouping_variables = grouping_variables,
+      modifiable_aesthetics = modifiable_aesthetics,
+      units = units,
+      legend = legend_variables
+    ),
     data_source = data_source,
-    r_script_path = r_script_path,
-    modifiable_parameters = modifiable_parameters,
-    analysis_category = analysis_category,
-    figure_info = figure_info
+    script_path = list(script_path = r_script_path,
+                       functions = file.path(dirname(dirname(r_script_path)),
+                                             'custom_functions.R')),
+    functions_used = functions_used,
+    figure_file_info = list(
+      figure_file = figure_file,
+      last_modified = file.mtime(figure_file),
+      resolution = resolution,
+      width = width,
+      height = height
+    )
   )
   
   # Add to global list
-  figure_metadata <<- append(figure_metadata, list(info))
+  write_json(info, 
+             file.path(dirname(dirname(r_script_path)),
+                       'figures_metadata', 
+                       paste0(figure_id, '.json')),
+             auto_unbox = TRUE,
+             pretty = TRUE)
 }
+
 

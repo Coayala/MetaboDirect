@@ -4,3 +4,5 @@
 .RData
 .Ruserdata
 index.json
+metabodirect.egg-info
+build/*

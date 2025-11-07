@@ -13,6 +13,7 @@ import time
 import datetime
 import sys
 import shutil
+import json
 import pandas as pd
 import py4cytoscape as p4c
 from loguru import logger
@@ -128,11 +129,25 @@ def main():
     logger.log('PROCESS', 'Starting data diagnostics\n')
 
     logger.info('Calculating number of peaks detected per sample')
-    diagnostics.peaks_per_sample(df_all, metadata, args.group, path=list_dir[1])
+    index_1 = diagnostics.peaks_per_sample(df_all, metadata, args.group, path=list_dir)
     logger.info('Calculating number of assigned molecular formulas per sample')
-    diagnostics.formula_per_sample(df, metadata, args.group, path=list_dir[1])
+    index_2 = diagnostics.formula_per_sample(df, metadata, args.group, path=list_dir)
     logger.info("Calculating error distribution per group/s: {}", args.group)
-    diagnostics.error_per_group(df, args.group, path=list_dir[1])
+    index_3 = diagnostics.error_per_group(df, args.group, path=list_dir)
+    
+    figure_index = {
+        'analysis_module': '2. Diagnostics',
+        'script_name': 'diagnostics.py',
+        'last_run': str(datetime.datetime.now()),
+        'figures': [
+            index_1,
+            index_2,
+            index_3
+        ]
+    }
+    
+    with open(os.path.join(args.outdir, 'index.json'), "w") as json_file:
+        json.dump(figure_index, json_file)
 
     logger.log('PROCESS', 'Data diagnostics finished\n')
 
