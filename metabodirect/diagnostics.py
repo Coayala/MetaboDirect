@@ -51,7 +51,7 @@ def peaks_per_sample(df, metadata, group, path):
         'figure_title': 'Peaks per sample',
         'caption': 'Bar plot of detected metabolites',
         'description': f'This barplot shows how many peaks were detected in each sample. Bar heigths represent the amount of peaks in a sample. Bars are colored by {group[0]}',
-        'insights': f'The average number of peaks detected per sample is: {round(np.mean(stats_per_sample['Counts']))}',
+        'insights': f'The average number of peaks detected per sample is: {round(np.mean(stats_per_sample["Counts"]))}',
         'plot_info': {
             'x_axis_label': 'SampleID',
             'y_axis_label': 'Counts',
@@ -76,7 +76,7 @@ def peaks_per_sample(df, metadata, group, path):
     }
     
     with open(os.path.join(path[6], '2.1.2_stats_peaks_per_sample.json'), "w") as json_file:
-        json.dump(figure_metadata, json_file)
+        json.dump(figure_metadata, json_file, indent=4)
         
     figure_index = {
         'figure_id': '2.1.2_stats_peaks_per_sample',
@@ -129,7 +129,7 @@ def formula_per_sample(df, metadata, group, path):
         'figure_title': 'Formulas per sample',
         'caption': 'Bar plot of detected metabolites that have molecular formula',
         'description': f'This barplot shows how many metabolites were assigned a molecular formula in each sample. Bar heigths represent the amount of peaks in a sample. Bars are colored by {group[0]}',
-        'insights': f'The average number of masses assigned a molecular formula per sample is: {round(np.mean(stats_per_sample['Counts']))}',
+        'insights': f'The average number of masses assigned a molecular formula per sample is: {round(np.mean(stats_per_sample["Counts"]))}',
         'plot_info': {
             'x_axis_label': 'SampleID',
             'y_axis_label': 'Counts',
@@ -154,7 +154,7 @@ def formula_per_sample(df, metadata, group, path):
     }
 
     with open(os.path.join(path[6], '2.2.2_stats_formula_per_sample.json'), "w") as json_file:
-        json.dump(figure_metadata, json_file)
+        json.dump(figure_metadata, json_file, indent=4)
 
     figure_index = {
         'figure_id': '2.2.2_stats_formula_per_sample',
@@ -220,7 +220,7 @@ def error_per_group(df, group, path):
     }
 
     with open(os.path.join(path[6], '2.3.2_error_distribution_per_group.json'), "w") as json_file:
-        json.dump(figure_metadata, json_file)
+        json.dump(figure_metadata, json_file, indent=4)
 
     figure_index = {
         'figure_id': '2.3.2_error_distribution_per_group',

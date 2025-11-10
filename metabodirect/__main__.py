@@ -147,7 +147,7 @@ def main():
     }
     
     with open(os.path.join(args.outdir, 'index.json'), "w") as json_file:
-        json.dump(figure_index, json_file)
+        json.dump(figure_index, json_file, indent=4)
 
     logger.log('PROCESS', 'Data diagnostics finished\n')
 
