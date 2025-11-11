@@ -41,6 +41,10 @@ def make_directories(outdir):
 # --------------------------------------------------
 def sample_filtering(df, metadata, filter_by, path, args):
     """Filter samples based on selected features and values."""
+    
+    el_list = ['C', 'H', 'O', 'N', 'S', 'P']
+    if args.additional_elements:
+        el_list.extend(args.additional_elements)
 
     # Get the variable a values specified for sample filtering
     filter_col = filter_by[0]
@@ -56,13 +60,13 @@ def sample_filtering(df, metadata, filter_by, path, args):
     filt_metadata.to_csv(os.path.join(path, 'filtered_metadata.csv'), index=False)
 
     # Saving a new input file containing only the samples remaining after filtering
-    from_formularity = [
-        'Mass', 'C', 'H', 'O', 'N', 'C13', 'S', 'P', 'Na', 'El_comp', 'Class',
-        'NeutralMass', 'Error_ppm', 'Candidates'
-    ]
+    keep_cols = ['Mass', 'Error_ppm']
+    
+    keep_cols.extend(el_list)
+    
     col_df = filt_metadata['SampleID'].to_list()
-    from_formularity.extend(col_df)
-    filt_df = df[from_formularity]
+    keep_cols.extend(col_df)
+    filt_df = df[keep_cols]
     filt_df.to_csv(os.path.join(path, 'filtered_input.csv'), index=False)
 
     logger.info('Number of samples after filtering: {}',
@@ -78,7 +82,7 @@ def filter_c13(df):
 
     shape_i = df.shape[0]
 
-    df = df[df['C13'] == 0]
+    # df = df[df['C13'] == 0]
     df = df.reset_index(drop=True)
 
     shape_f = df.shape[0]
@@ -99,11 +103,11 @@ def filter_mz(df, min_mz=None, max_mz=None):
 
 
 # --------------------------------------------------------------
-def filter_peak_presence(df, args, min_peak=2):
+def filter_peak_presence(df, metadata, min_peak=2):
     """ Optional filtering. Filter out peaks not appearing in the selected min_number of samples """
 
     # Selecting only columns with peak masses and abundances per sample
-    selected_cols = get_list_samples(df, args)
+    selected_cols = get_list_samples(metadata)
     selected_cols.append('Mass')
     peak_df = df[selected_cols]
 
@@ -128,7 +132,7 @@ def filter_error_ppm(df, err_range=0.5):
 
 
 # --------------------------------------------------
-def data_filtering(df, mass_filter, peak_filter, error_filter, args):
+def data_filtering(df, metadata, args, mass_filter, peak_filter, error_filter):
     """Filter data based on a specified m/z range, presence of isotopes and quality."""
 
     logger.info('Number of m/z in provided file: {}', df.shape[0])
@@ -146,7 +150,7 @@ def data_filtering(df, mass_filter, peak_filter, error_filter, args):
                 filt_df.shape[0])
 
     # Filter peaks based on the number of samples they appear
-    filt_df = filter_peak_presence(filt_df, args, min_peak=peak_filter)
+    filt_df = filter_peak_presence(filt_df, metadata, min_peak=peak_filter)
     logger.info('Number of m/z in at least {} samples: {}',
                 peak_filter, filt_df.shape[0])
 
@@ -157,9 +161,8 @@ def data_filtering(df, mass_filter, peak_filter, error_filter, args):
 
     return filt_df
 
+
 # --------------------------------------------------------------
-
-
 def molecular_formula(df, args):
     """ Get a molecular formula """
 
@@ -180,10 +183,12 @@ def molecular_formula(df, args):
     df['MolecularFormula'] = [''] * df.shape[0]
 
     for el in el_list:
-        df['MolecularFormula'] = df['MolecularFormula'] + elements[el]
+        df['MolecularFormula'] = df['MolecularFormula'] + elements[el] + " "
+        
+    df['MolecularFormula'] = df['MolecularFormula'].str.strip()
 
     if 'El_comp' not in df.columns:
-        df['El_comp'] = [re.sub(r'\d', '', mf)
+        df['El_comp'] = [re.sub(r'13C|18O|15N|33S|34S|\d| ', '', mf)
                          for mf in df['MolecularFormula']]
 
     return df
@@ -191,47 +196,68 @@ def molecular_formula(df, args):
 
 # --------------------------------------------------------------
 def calculate_ratios(df):
-    """ Calculate ratios of O:C and H:C and indices of NOSC, GFE, DBE, AI, etc. """
-
+    """ Calculate ratios of O:C and H:C and indices of NOSC, GFE, DBE, AI, etc. """ 
+    
     df[['C', 'H', 'O', 'N', 'S', 'P']] = df[['C', 'H', 'O', 'N', 'S',
                                              'P']].replace(np.nan, 0)
 
     df[['C', 'H', 'O', 'N', 'S', 'P']] = df[['C', 'H', 'O', 'N', 'S',
                                              'P']].astype(float)
+    
+    # New df for columns that are not be kept
+    df2 = df.copy(deep=True)
+    if '13C' in df2.columns:
+        df['13C'] = df['13C'].replace(np.nan, 0)
+        df['13C'] = df['13C'].astype(float)
+        df2['C'] = df['C'] + df['13C']
+    if '18O' in df2.columns:
+        df['18O'] = df['18O'].replace(np.nan, 0)
+        df['18O'] = df['18O'].astype(float)
+        df2['O'] = df['O'] + df['18O']
+    if '15N' in df2.columns:
+        df['15N'] = df['15N'].replace(np.nan, 0)
+        df['15N'] = df['15N'].astype(float)
+        df2['N'] = df['N'] + df['15N']
+    if '34S' in df2.columns:
+        df['34S'] = df['34S'].replace(np.nan, 0)
+        df['34S'] = df['34S'].astype(float)
+        df2['S'] = df['S'] + df['34S']
+    if '33S' in df2.columns:
+        df['33S'] = df['33S'].replace(np.nan, 0)
+        df['33S'] = df['33S'].astype(float)
+        df2['S'] = df2['S'] + df['33S']
 
-    df['OC'] = df['O'] / df['C']
-    df['HC'] = df['H'] / df['C']
+    df['OC'] = df2['O'] / df2['C']
+    df['HC'] = df2['H'] / df2['C']
 
     # Thermodynamics
-    df['NOSC'] = -((4 * df['C'] + df['H'] - 3 * df['N'] - 2 * df['O']
-                    + 5 * df['P'] - 2 * df['S']) / (df['C'])) + 4
+    df['NOSC'] = -((4 * df2['C'] + df2['H'] - 3 * df2['N'] - 2 * df2['O']
+                    + 5 * df2['P'] - 2 * df2['S']) / (df2['C'])) + 4
 
     df['GFE'] = -(28.5 * df['NOSC']) + 60.3
 
     # Koch, B. P. and Dittmar, T. doi:10.1002/rcm.2386, 2006.
-    df['DBE'] = 1 + 0.5 * (2 * df['C'] - df['H'] + df['N'] + df['P'])
+    df['DBE'] = 1 + 0.5 * (2 * df2['C'] - df2['H'] + df2['N'] + df2['P'])
 
     df['DBE_O'] = (1 + 0.5
-                   * (2 * df['C'] - df['H'] + df['N'] + df['P'])) - df['O']
+                   * (2 * df2['C'] - df2['H'] + df2['N'] + df2['P'])) - df2['O']
 
-    df['AI'] = (1 + df['C'] - df['O'] - df['S']
-                - ((df['H'] + df['P'] + df['N']) * 0.5)) / (
-        df['C'] - df['O'] - df['S'] - df['N'] - df['P'])
+    df['AI'] = (1 + df2['C'] - df2['O'] - df2['S']
+                - ((df2['H'] + df2['P'] + df2['N']) * 0.5)) / (
+        df2['C'] - df2['O'] - df2['S'] - df2['N'] - df2['P'])
 
     # Modified aromaticity index
 
-    df2 = df.copy(deep=True)
+    df2['num'] = (1 + df2['C'] - (df2['O'] * 0.5) - df2['S'] - (
+        (df2['H'] + df2['P'] + df2['N']) * 0.5))
 
-    df2['num'] = (1 + df['C'] - (df['O'] * 0.5) - df['S'] - (
-        (df['H'] + df['P'] + df['N']) * 0.5))
-
-    df2['den'] = (df['C'] - (df['O'] * 0.5) - df['S'] - df['N'] - df['P'])
+    df2['den'] = (df2['C'] - (df2['O'] * 0.5) - df2['S'] - df2['N'] - df2['P'])
 
     df['AI_mod'] = df2['num'] / df2['den']
     df['AI_mod'] = df['AI_mod'].apply(lambda x: 0 if x < 0 else x)
 
-    df['DBE_AI'] = 1 + df['C'] - df['O'] - df['S'] - (
-        0.5 * (df['H'] + df['N'] + df['P']))
+    df['DBE_AI'] = 1 + df2['C'] - df2['O'] - df2['S'] - (
+        0.5 * (df2['H'] + df2['N'] + df2['P']))
 
     list_new_columns = [
         'OC', 'HC', 'NOSC', 'GFE', 'DBE', 'DBE_O', 'AI', 'AI_mod', 'DBE_AI'
@@ -273,31 +299,31 @@ def calculate_classes(df):
 
 
 # --------------------------------------------------------------
-def get_list_samples(df, args):
-    """ Returns a list of sample names and a list of Formularity columns """
+def get_list_samples(metadata):
+    """ Returns a list of sample names based on metadata info """
 
-    default_cols = ['Mass', 'C', 'H', 'O', 'N', 'S', 'P', 'Na',
-                    'C13', 'Class', 'Candidates',]
-    if args.additional_elements:
-        default_cols.extend(args.additional_elements)
+    # default_cols = ['Mass', 'C', 'H', 'O', 'N', 'S', 'P', 'Na',
+    #                 'C13', 'Class', 'Candidates',]
+    # if args.additional_elements:
+    #     default_cols.extend(args.additional_elements)
 
-    calculated_indices = [
-        'NeutralMass', 'Error_ppm', 'El_comp', 'MolecularFormula', 'OC', 'HC',
-        'NOSC', 'GFE', 'DBE', 'DBE_O', 'AI', 'AI_mod', 'DBE_AI', 'Class',
-        'El_comp'
-    ]
+    # calculated_indices = [
+    #     'NeutralMass', 'Error_ppm', 'El_comp', 'MolecularFormula', 'OC', 'HC',
+    #     'NOSC', 'GFE', 'DBE', 'DBE_O', 'AI', 'AI_mod', 'DBE_AI', 'Class',
+    #     'El_comp'
+    # ]
 
-    default_cols.extend(calculated_indices)
+    # default_cols.extend(calculated_indices)
 
-    extended_list = default_cols
+    # extended_list = default_cols
 
-    list_samples = [x for x in df.columns.to_list() if x not in extended_list]
+    list_samples = metadata['SampleID'].to_list()
 
     return list_samples
 
 
 # --------------------------------------------------------------
-def reorder_columns(df, args):
+def reorder_columns(df, metadata, args):
     """ Reorder columns so indices are not in the end of the """
 
     default_cols = ['Mass', 'C', 'H', 'O', 'N', 'S', 'P']
@@ -305,13 +331,13 @@ def reorder_columns(df, args):
         default_cols.extend(args.additional_elements)
 
     calculated_indices = [
-        'NeutralMass', 'Error_ppm', 'MolecularFormula', 'El_comp', 'Class',
+        'Error_ppm', 'MolecularFormula', 'El_comp', 'Class',
         'OC', 'HC', 'NOSC', 'GFE', 'DBE', 'DBE_O', 'AI', 'AI_mod', 'DBE_AI'
     ]
 
     default_cols.extend(calculated_indices)
 
-    samples_list = get_list_samples(df, args)
+    samples_list = get_list_samples(metadata)
 
     correct_order = default_cols
 
@@ -323,23 +349,23 @@ def reorder_columns(df, args):
 
 
 # --------------------------------------------------
-def thermo_idx_and_classes(df, args):
+def thermo_idx_and_classes(df, metadata, args):
     """Calculate thermodynamic indices and the associated class of compounds based on the molecular formula."""
 
     df = calculate_ratios(df)
     df = calculate_classes(df)
     df = molecular_formula(df, args)
-    df = reorder_columns(df, args)
+    df = reorder_columns(df, metadata, args)
 
     return df
 
 
 # --------------------------------------------------
-def data_normalization(df, args, norm_method, norm_subset, subset_parameter=1,
+def data_normalization(df, metadata, norm_method, norm_subset, subset_parameter=1,
                        log=False):
     """Normalize direct injection data based on the specified parameters."""
 
-    samples = get_list_samples(df, args)
+    samples = get_list_samples(metadata)
     input_data = df[samples]
 
     # Pivoting the data, so it removes the masses that are not present in any of the samples
@@ -418,10 +444,10 @@ def data_normalization(df, args, norm_method, norm_subset, subset_parameter=1,
 
 
 # --------------------------------------------------------------
-def get_summary(df, args, on='Class'):
+def get_summary(df, metadata, on='Class'):
     """ Get summary of class or elemental composition """
 
-    samples = get_list_samples(df, args)
+    samples = get_list_samples(metadata)
 
     samples.append(on)
 
@@ -442,10 +468,10 @@ def get_summary(df, args, on='Class'):
 
 
 # --------------------------------------------------------------
-def get_summary_indices(df, args, on='NOSC'):
+def get_summary_indices(df, metadata, on='NOSC'):
     """ Get the summary stats for the indices: median, mean, std, weighted mean and weighted std """
 
-    samples = get_list_samples(df, args)
+    samples = get_list_samples(metadata)
 
     samples.append(on)
 
@@ -474,15 +500,15 @@ def get_summary_indices(df, args, on='NOSC'):
 
 
 # --------------------------------------------------
-def calculate_summaries(df, args, path):
+def calculate_summaries(df, metadata, path):
     """Get summaries for class composition, elemental composition and thermodynamic indices."""
 
-    class_comp = get_summary(df, args, on='Class')
-    el_comp = get_summary(df, args, on='El_comp')
+    class_comp = get_summary(df, metadata, on='Class')
+    el_comp = get_summary(df, metadata, on='El_comp')
 
-    idx_stats = pd.DataFrame(get_list_samples(df, args), columns=['SampleID'])
+    idx_stats = pd.DataFrame(get_list_samples(metadata), columns=['SampleID'])
     for i in ['NOSC', 'GFE', 'DBE', 'AI']:
-        temp = get_summary_indices(df, args, i)
+        temp = get_summary_indices(df, metadata, on = i)
         idx_stats = idx_stats.merge(temp, on='SampleID')
 
     class_comp.to_csv(os.path.join(path, 'class_composition.csv'), index=False)
@@ -494,11 +520,11 @@ def calculate_summaries(df, args, path):
 
 
 # --------------------------------------------------------------
-def get_matrix(df, args):
+def get_matrix(df, metadata):
     """ Make a matrix for multivariate analysis like NMDS, PCA.
     Matrix based on m/z and not molec formula """
 
-    samples = get_list_samples(df, args)
+    samples = get_list_samples(metadata)
 
     samples.append('Mass')
 

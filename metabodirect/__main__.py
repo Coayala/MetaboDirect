@@ -58,7 +58,8 @@ def main():
     if args.filter_by:
         logger.info('Filtering samples based on {} = {}',
                     args.filter_by[0], args.filter_by[1])
-        df, metadata = preprocessing.sample_filtering(df, metadata,
+        df, metadata = preprocessing.sample_filtering(df, 
+                                                      metadata,
                                                       args.filter_by,
                                                       path=list_dir[0],
                                                       args=args)
@@ -69,20 +70,21 @@ def main():
 
     # Filtering peaks
     df = preprocessing.data_filtering(df,
+                                      metadata,
+                                      args=args,
                                       mass_filter=args.mass_filter,
                                       peak_filter=args.peak_filter,
-                                      error_filter=args.error_filter,
-                                      args=args)
+                                      error_filter=args.error_filter)
 
     # Calculating indices
     logger.info('Calculating thermodynamic indexes')
-    df = preprocessing.thermo_idx_and_classes(df, args)
+    df = preprocessing.thermo_idx_and_classes(df, metadata, args)
 
     # Normalizing data
     logger.info('Normalizing data using the {} method', args.norm_method)
 
     df, df_nonorm = preprocessing.data_normalization(df,
-                                                     args,
+                                                     metadata,
                                                      args.norm_method,
                                                      args.norm_subset,
                                                      args.subset_parameter,
@@ -104,8 +106,8 @@ def main():
     df_formulas.to_csv(filename, index=False)
     logger.info('Report saved as: {}\n', filename)
 
-    preprocessing.calculate_summaries(df_formulas, args, path=list_dir[0])
-    matrix_features = preprocessing.get_matrix(df_formulas, args)
+    preprocessing.calculate_summaries(df_formulas, metadata, path=list_dir[0])
+    matrix_features = preprocessing.get_matrix(df_formulas, metadata)
     matrix_features.to_csv(os.path.join(list_dir[0], 'matrix_features.csv'))
 
     colnames = [col for col in list(df_formulas.columns) if col not in list(metadata['SampleID'])]
