@@ -779,7 +779,7 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
   }
   
   if(length(group) == 2){
-    broad_des$van_krevelen <- glue::glue(broad_des$density,
+    broad_des$van_krevelen <- glue::glue(broad_des$van_krevelen,
                                          ' and {group[2]}',
                                          group = group)
     
