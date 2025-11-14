@@ -1381,6 +1381,14 @@ update_figure_list <- function(figure_id = '',
   
 }
 
+fix_paths <- function(path){
+  components <- strsplit(path, "/")[[1]]
+  remaining_components <- components[-1]
+  fixed_path <- paste(remaining_components, collapse = "/")
+  
+  return(fixed_path)
+}
+
 save_figure_metadata <- function(
     plot_obj,  
     figure_id,
@@ -1458,7 +1466,14 @@ save_figure_metadata <- function(
   if(!is.null(custom_legend)){
     legend_variables <- custom_legend
   }
-  
+
+  # Fix path
+
+  data_source_fixed <- list()
+  for(ds in names(data_source)){
+    data_source_fixed[[ds]] <- fix_paths(data_source[[ds]])
+  }
+
   # Saving all data as JSON
   info <- list(
     figure_id = figure_id,
@@ -1476,13 +1491,12 @@ save_figure_metadata <- function(
       units = units,
       legend = legend_variables
     ),
-    data_source = data_source,
-    script_path = list(script_path = r_script_path,
-                       functions = file.path(dirname(dirname(r_script_path)),
-                                             'custom_functions.R')),
+    data_source = data_source_fixed,
+    script_path = list(script_path = fix_paths(r_script_path),
+                       functions = 'custom_functions.R'),
     functions_used = functions_used,
     figure_file_info = list(
-      figure_file = figure_file,
+      figure_file = fix_paths(figure_file),
       last_modified = file.mtime(figure_file),
       resolution = resolution,
       width = width,

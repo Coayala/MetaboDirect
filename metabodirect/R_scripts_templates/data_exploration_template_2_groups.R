@@ -573,7 +573,7 @@ index_figures <- list(
   diag_index,
   list(
     analysis_module = '3. Exploratory',
-    script_name = file.path(my_outdir, 'data_exploration.R'),
+    script_name = file.path(fix_paths(my_outdir), 'data_exploration.R'),
     last_run = Sys.time(),
     figures = figure_list
   )

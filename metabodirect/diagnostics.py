@@ -61,13 +61,13 @@ def peaks_per_sample(df, metadata, group, path):
             'legend': {'hue': group[0]}
         },
         'data_source ': {
-            'data': os.path.join(path[0], 'Report_processed.csv')
+            'data': os.path.join(os.path.basename(path[0]), 'Report_processed.csv')
             },
         'script_path': {
             'functions': 'diagnostics.py'},
         'functions_used ': {'plot': 'peaks_per_sample()'},
         'figure_file_info': {
-            'figure_file': os.path.join(path[1], '2.1.2_stats_peaks_per_sample.png'),
+            'figure_file': os.path.join(os.path.basename(path[1]), '2.1.2_stats_peaks_per_sample.png'),
             'last_modified': '',
             'resolution': '300',
             'width': '',
@@ -139,13 +139,13 @@ def formula_per_sample(df, metadata, group, path):
             'legend': {'hue': group[0]}
         },
         'data_source ': {
-            'data': os.path.join(path[0], 'Report_processed_MolecFormulas.csv')
+            'data': os.path.join(os.path.basename(path[0]), 'Report_processed_MolecFormulas.csv')
         },
         'script_path': {
             'functions': 'diagnostics.py'},
         'functions_used ': {'plot': 'formula_per_sample()'},
         'figure_file_info': {
-            'figure_file': os.path.join(path[1], '2.2.2_stats_formula_per_sample.png'),
+            'figure_file': os.path.join(os.path.basename(path[1]), '2.2.2_stats_formula_per_sample.png'),
             'last_modified': '',
             'resolution': '300',
             'width': '',
@@ -205,13 +205,13 @@ def error_per_group(df, group, path):
             'legend': {'hue': group[0]}
         },
         'data_source ': {
-            'data': os.path.join(path[0], 'Report_processed.csv')
+            'data': os.path.join(os.path.basename(path[0]), 'Report_processed.csv')
         },
         'script_path': {
             'functions': 'diagnostics.py'},
         'functions_used ': {'plot': 'error_per_group()'},
         'figure_file_info': {
-            'figure_file': os.path.join(path[1], '2.3.2_error_distribution_per_group.png'),
+            'figure_file': os.path.join(os.path.basename(path[1]), '2.3.2_error_distribution_per_group.png'),
             'last_modified': '',
             'resolution': '300',
             'width': '',

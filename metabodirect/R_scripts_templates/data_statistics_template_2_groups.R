@@ -321,7 +321,7 @@ index_figures <- read_json(file.path(output_dir, 'index.json'))
 
 index_figures[[4]] <- list(
   analysis_module = '5. Statistics',
-  script_name = file.path(my_outdir, 'data_statistics.R'),
+  script_name = file.path(fix_paths(my_outdir), 'data_statistics.R'),
   last_run = Sys.time(),
   figures = figure_list
 )
