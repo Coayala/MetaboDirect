@@ -481,7 +481,8 @@ walk(groups, function(g){
       custom_legend = list(A = list(color = 'Presence'),
                            B = list(fill = 'Presence'),
                            C = list(fill = 'Class')),
-      data_source = list(data = list(my_data.file, my_classcomp.file),
+      data_source = list(data = my_data.file, 
+                         data2 = my_classcomp.file,
                          sample_metadata = my_metadata.file),
       r_script_path = file.path(my_outdir, 'data_exploration.R'),
       functions_used = list(plot = list(A = 'plot_van_krevelent()',
@@ -567,7 +568,7 @@ walk(groups, function(g){
   
 })
 
-diag_index <- read_json(file.path(output_dir, 'index.json'))
+diag_index <- read_json(file.path(output_dir, "index.json"))
 
 index_figures <- list(
   diag_index,
