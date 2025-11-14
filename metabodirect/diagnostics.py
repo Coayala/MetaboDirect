@@ -81,7 +81,7 @@ def peaks_per_sample(df, metadata, group, path):
     figure_index = {
         'figure_id': '2.1.2_stats_peaks_per_sample',
         'figure_title': 'Peaks per sample',
-        'metadata_file': os.path.join(path[6], '2.1.2_stats_peaks_per_sample.json')
+        'metadata_file': os.path.join(os.path.basename(path[6]), '2.1.2_stats_peaks_per_sample.json')
     }
 
     return figure_index
@@ -159,7 +159,7 @@ def formula_per_sample(df, metadata, group, path):
     figure_index = {
         'figure_id': '2.2.2_stats_formula_per_sample',
         'figure_title': 'Peaks per sample',
-        'metadata_file': os.path.join(path[6], '2.2.2_stats_formula_per_sample.json')
+        'metadata_file': os.path.join(os.path.basename(path[6]), '2.2.2_stats_formula_per_sample.json')
     }
 
     return figure_index
@@ -225,7 +225,7 @@ def error_per_group(df, group, path):
     figure_index = {
         'figure_id': '2.3.2_error_distribution_per_group',
         'figure_title': 'Peaks per sample',
-        'metadata_file': os.path.join(path[6], '2.3.2_error_distribution_per_group.json')
+        'metadata_file': os.path.join(os.path.basename(path[6]), '2.3.2_error_distribution_per_group.json')
     }
 
     return figure_index
