@@ -290,7 +290,7 @@ pca_plot_ready <- pca_plot$plot +
                   hjust = 'inward',
                   show.legend = FALSE)
 
-filename <- file.path(my_outdir, '5.3.4_PCA_plot_by_compound_class.png')
+filename <- file.path(my_outdir, '5.3.4_PCA_plot_by_molecular_characteristics.png')
 ggsave(filename, pca_plot_ready, dpi = 300, width = 6, height = 4)
 
 update_figure_list(figure_id = str_remove(basename(filename), '.png'),
