@@ -6,3 +6,5 @@
 index.json
 metabodirect.egg-info
 build/*
+.vscode
+log*

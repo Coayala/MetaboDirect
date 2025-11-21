@@ -91,8 +91,10 @@ thermo_idx <- set_names(c('GFE', 'AI_mod', 'DBE', 'NOSC'),
 
 ## Van Krevenlen plot ----
 vk_plots <- map(thermo_idx, function(idx){
-  res <- plot_van_krevelen(df_longer, color_by = idx, 
-                           facet_col = group1, facet_row = group2) 
+  res <- plot_van_krevelen(df_longer, 
+                           color_by = idx, 
+                           facet_col = group1, 
+                           facet_row = group2) 
   
   res$plot <- res$plot + 
     scale_color_viridis_c(direction = -1)
@@ -122,7 +124,8 @@ walk2(vk_plots, plot_filenames, function(plot_obj, file){
     functions_used = list(plot = 'plot_van_krevelen()'),
     resolution = 300,
     height = 12,
-    width = 6
+    width = 6,
+    palette = list(color = 'viridis')
   )
   
 })
@@ -164,7 +167,8 @@ walk2(density_plots, plot_filenames, function(plot_obj, file){
     functions_used = list(plot = 'plot_density()'),
     resolution = 300,
     height = 12,
-    width = 6
+    width = 6,
+    palette = list(fill = 'Dark2')
   )
   
 })
@@ -208,7 +212,8 @@ walk2(violin_plots, plot_filenames, function(plot_obj, file){
     functions_used = list(plot = 'plot_violin()'),
     resolution = 300,
     height = 12,
-    width = 6
+    width = 6,
+    palette = list(fill = "Dark2")
   )
 })
 
@@ -255,7 +260,8 @@ walk2(wt_violins, plot_filenames, function(plot_obj, file){
                           plot = 'plot_violin()'),
     resolution = 300,
     height = 12,
-    width = 6
+    width = 6,
+    palette = list(fill = "Dark2")
   )
 })
 
@@ -285,7 +291,8 @@ save_figure_metadata(
   functions_used = list(plot = 'plot_comp_bar()'),
   resolution = 300,
   height = 8,
-  width = 8
+  width = 8,
+  palette = list(fill = "Set3")
 )
 
 
@@ -315,7 +322,8 @@ save_figure_metadata(
   functions_used = list(plot = 'plot_comp_bar()'),
   resolution = 300,
   height = 8,
-  width = 8
+  width = 8,
+  palette = list(fill = "Set3")
 )
 
 # Comparisons ----
@@ -360,7 +368,8 @@ walk(groups, function(g){
     functions_used = list(plot = 'plot_van_krevelen()'),
     resolution = 300,
     height = 12,
-    width = 6
+    width = 6,
+    palette = list(color = 'default')
   )
   
   ## Upset plot all features group 1
@@ -458,9 +467,9 @@ walk(groups, function(g){
                       meta = list(description = list(A = vk_comb$meta$description,
                                                      B = violin_comb$meta$description,
                                                      C = class_comb$meta$description),
-                                  insight = list(vk_comb$meta$insight,
-                                                 violin_comb$meta$insight,
-                                                 class_comb$meta$insight))),  
+                                  insight = list(A = vk_comb$meta$insight,
+                                                 B = violin_comb$meta$insight,
+                                                 C = class_comb$meta$insight))),  
       figure_id = str_remove(basename(filename), '.png'),
       analysis_module = '3. Exploratory',
       figure_type = 'Combined plot',
@@ -478,9 +487,12 @@ walk(groups, function(g){
                        C = list(x = 'Presence')),
       modifiable_aesthetics = list('none'),
       has_legend = FALSE,
-      custom_legend = list(A = list(color = 'Presence'),
-                           B = list(fill = 'Presence'),
-                           C = list(fill = 'Class')),
+      custom_legend = list(A = list(variables = list(color = 'Presence'),
+                                    palette = list(color = 'Dark2')),
+                           B = list(variables = list(fill = 'Presence'),
+                                    palette = list(fill = 'Dark2')),
+                           C = list(variables = list(fill = 'Class'),
+                                    palette = list(fill = 'Set3'))),
       data_source = list(data = my_data.file, 
                          data2 = my_classcomp.file,
                          sample_metadata = my_metadata.file),
@@ -559,7 +571,8 @@ walk(groups, function(g){
       functions_used = list(plot = 'plot_venn()'),
       resolution = 300,
       height = 12,
-      width = 6
+      width = 6,
+      palette = list(fill = 'Dark2')
     )
     
     ii<<- ii +1

@@ -130,7 +130,8 @@ save_figure_metadata(
                         plot = 'plot_ordination()'),
   resolution = 300,
   height = 6,
-  width = 4
+  width = 4,
+  palette = list(colour = "Dark2")
 )
 
 # PCA of Compound classes ----
@@ -213,7 +214,8 @@ save_figure_metadata(
                         plot = 'plot_ordination()'),
   resolution = 300,
   height = 6,
-  width = 4
+  width = 4,
+  palette = list(colour = "Dark2")
 )
 
 # PCA by molecular characteristics ----
@@ -309,7 +311,8 @@ save_figure_metadata(
                         plot = 'plot_ordination()'),
   resolution = 300,
   height = 6,
-  width = 4
+  width = 4,
+  palette = list(colour = "Dark2")
 )
 
 index_figures <- read_json(file.path(output_dir, 'index.json'))

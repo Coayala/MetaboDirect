@@ -23,7 +23,7 @@ def make_directories(outdir):
 
     list_dir = [
         preprocess_dir, diagnostics_dir, exploratory_dir, diversity_dir,
-        stats_dir, transf_dir, fig_metadata, transf_sub_dir
+        stats_dir, transf_dir, transf_sub_dir, fig_metadata
     ]
 
     list_dir = [os.path.join(project_name, x) for x in list_dir]

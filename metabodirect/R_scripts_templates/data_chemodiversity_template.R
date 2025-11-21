@@ -129,7 +129,8 @@ save_figure_metadata(
   functions_used = list(plot = 'plot_rank_abundance()'),
   resolution = 300,
   height = 12,
-  width = 6
+  width = 6,
+  palette = list(color = "RdYlBu")
 )
 
 ## Diversity Index ----
@@ -162,7 +163,8 @@ save_figure_metadata(
                         plot = 'plot_diversity_index()'),
   resolution = 300,
   height = 12,
-  width = 6
+  width = 6,
+  palette = list(fill = "Dark2")
 )
 
 # Functional diversity ----
@@ -197,7 +199,8 @@ save_figure_metadata(
                         plot = 'plot_diversity_index()'),
   resolution = 300,
   height = 12,
-  width = 6
+  width = 6,
+  palette = list(fill = "Dark2")
 )
 
 index_figures <- read_json(file.path(output_dir, 'index.json'))

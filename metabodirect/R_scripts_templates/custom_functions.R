@@ -206,7 +206,9 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title,
       distinct()
   }
   
-  if(calculate_stat_signif){
+  mult_groups <- length(unique(df_plot[[index]])) == 1
+  
+  if(calculate_stat_signif && mult_groups){
     stat_formula <- as.formula(paste0(index, '~ ', color_by))
     if(pval < 0.05 || str_detect(pval, 'Error')){
       stat_df <- df_plot %>% 
@@ -698,11 +700,12 @@ get_kegg_compound_info <- function(cpd_id, mass, formula){
 
 descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
                          color_by = NA, val1 = NA, val2 = NA, ord_type = NA){
+  
   broad_des <- list(
     van_krevelen = glue::glue(
       "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
       "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
-      "Plot is colored based on {thermo_idx}, and faceted by {group[1]}.",
+      "Plot is colored based on {color_by}, and faceted by {group[1]}",
       color_by = color_by,
       group= group
     ),
@@ -768,16 +771,6 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
     )
   )
   
-  if(any(is.na(group))){
-    broad_des$van_krevelen <- glue::glue(
-      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
-      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
-      "Plot is colored based on {color_by}.",
-      color_by = color_by,
-      group= group
-    )
-  }
-  
   if(length(group) == 2){
     broad_des$van_krevelen <- glue::glue(broad_des$van_krevelen,
                                          ' and {group[2]}',
@@ -798,6 +791,16 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
                                           group = group)
   }
   
+  if(length(group) == 0){
+    broad_des$van_krevelen <- glue::glue(
+      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
+      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
+      "Plot is colored based on {color_by}.",
+      color_by = color_by,
+      group= group
+    )
+  }
+  
   return(broad_des[[plot_type]])
 }
 
@@ -815,7 +818,7 @@ vk_insight <- function(df_plot, color_by, facet_col = NA, facet_row = NA,
     points_insight <- counts %>% 
       mutate(insight = glue::glue('{n} masses as {Class}'))
     
-    insight <- paste0(points_insight$insight, collapse = ', ')
+    points_insight <- paste0(points_insight$insight, collapse = ', ')
     
   } else if(is.na(facet_row)) {
     points_insight <- map(unique(df_plot[[facet_col]]), function(fc){
@@ -923,9 +926,9 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
       mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
              insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
                                   'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
-                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
+                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}'))
     
-    boxplot_insight <- paste0(boxplot_data$insight, collapse = ', ')
+    boxplot_insight <- paste0(boxplot_data$insight, collapse = '. ')
     
     sig_stat <- stat_df %>% 
       filter(p.adj < 0.05)
@@ -961,11 +964,11 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
         mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
                insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
                                     'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
-                                    'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
+                                    'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}'))
       
       final <- glue::glue(
         'For facet {g}: ',
-        paste0(temp$insight, collapse = ', ')
+        paste0(temp$insight, collapse = '. ')
       )
     }) %>% reduce(`c`) %>% paste0(collapse = '. ')
     
@@ -983,7 +986,7 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
         
         final <- glue::glue(
           'For facet {g}: ',
-          paste0(sig_stat$insight, collapse = '. ')
+          paste0(temp$insight, collapse = '. ')
         )
         
       }) %>% reduce(`c`) %>% paste0(collapse = '. ')
@@ -1007,7 +1010,7 @@ comp_bar_insight <- function(df_plot, group, composition){
         mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
       
       ins <- glue::glue(
-        'For group "{g}": ',
+        'For group {g}: ',
         paste0(temp$insight, collapse = ', ')
       )
     }) %>% reduce(`c`) %>% paste0(collapse = '. ')
@@ -1409,7 +1412,8 @@ save_figure_metadata <- function(
     functions_used,
     resolution,
     height,
-    width
+    width,
+    palette = NA
 ) {
   
   # Getting information from the plot
@@ -1466,14 +1470,14 @@ save_figure_metadata <- function(
   if(!is.null(custom_legend)){
     legend_variables <- custom_legend
   }
-
+  
   # Fix path
-
+  
   data_source_fixed <- list()
   for(ds in names(data_source)){
     data_source_fixed[[ds]] <- fix_paths(data_source[[ds]])
   }
-
+  
   # Saving all data as JSON
   info <- list(
     figure_id = figure_id,
@@ -1489,7 +1493,10 @@ save_figure_metadata <- function(
       grouping_variables = grouping_variables,
       modifiable_aesthetics = modifiable_aesthetics,
       units = units,
-      legend = legend_variables
+      legend = list(
+        variables = legend_variables,
+        palette = palette
+      )
     ),
     data_source = data_source_fixed,
     script_path = list(script_path = fix_paths(r_script_path),
