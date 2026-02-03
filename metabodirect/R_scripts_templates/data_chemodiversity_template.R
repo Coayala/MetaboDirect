@@ -76,7 +76,6 @@ richness <- specaccum(norm_intensity_matrix,
 
 richness_plot <- plot_richness(richness)
 
-#richness_plot <- 
 
 filename <- file.path(my_outdir, '4.1_Diversity_plot_richness.png')
 ggsave(filename, richness_plot$plot, dpi = 300, width = 12, height = 6)
@@ -92,8 +91,9 @@ save_figure_metadata(
   caption = paste0('Species (richness) accumulation plot showing how many metabolites ',
                    'are detected based on samplimg effort'),
   figure_file = filename,
-  group_aes = 'none',
-  modifiable_aesthetics = 'none',
+  group_aes = list(none = 'none'),
+  modifiable_aesthetics = list(none = 'none'),
+  has_legend = FALSE,
   data_source = list(data = my_data.file,
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),
@@ -121,8 +121,8 @@ save_figure_metadata(
   caption = paste0('Rank abundance plot showing the distribution of presence vs ',
                    'relative abundance of metabolites'),
   figure_file = filename,
-  group_aes = 'none',
-  modifiable_aesthetics = 'none',
+  group_aes = list(none = 'none'),
+  modifiable_aesthetics = list(none = 'none'),
   data_source = list(data = my_data.file,
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),

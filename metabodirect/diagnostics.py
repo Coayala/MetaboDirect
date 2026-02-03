@@ -55,10 +55,25 @@ def peaks_per_sample(df, metadata, group, path):
         'plot_info': {
             'x_axis_label': 'SampleID',
             'y_axis_label': 'Counts',
-            'grouping_variables': {'hue' : group[0]},
-            'modifiable_aesthetics': {'hue' : group[0]},
+            'grouping_variables': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            },
+            'modifiable_aesthetics': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            },
             'units': 'none',
-            'legend': {'hue': group[0]}
+            'legend': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            }
         },
         'data_source ': {
             'data': os.path.join(os.path.basename(path[0]), 'Report_processed.csv')
@@ -133,10 +148,25 @@ def formula_per_sample(df, metadata, group, path):
         'plot_info': {
             'x_axis_label': 'SampleID',
             'y_axis_label': 'Counts',
-            'grouping_variables': {'hue': group[0]},
-            'modifiable_aesthetics': {'hue': group[0]},
+            'grouping_variables': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            },
+            'modifiable_aesthetics': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            },
             'units': 'none',
-            'legend': {'hue': group[0]}
+            'legend': {
+                'hue': {
+                    'variable': group[0],
+                    'values': stats_per_sample[group[0]].unique().tolist()
+                }
+            }
         },
         'data_source ': {
             'data': os.path.join(os.path.basename(path[0]), 'Report_processed_MolecFormulas.csv')
@@ -186,6 +216,27 @@ def error_per_group(df, group, path):
     grid.set_axis_labels(y_var="Error (ppm)")
     plt.savefig(os.path.join(path[1], '2.3.2_error_distribution_per_group.png'), dpi=300, bbox_inches="tight")
     
+    if len(group) == 1:
+        facet_for_metadata = {
+            'col_facet': {
+                'variable': group[0],
+                'values': error[group[0]].unique().tolist()
+            }
+        }
+    else:
+        facet_for_metadata = {
+            'cols': {
+                'variable': group[0],
+                'values': error[group[0]].unique().tolist()
+            },
+            'rows': {
+                'variable': group[1],
+                'values': error[group[1]].unique().tolist()
+            }
+        }
+    
+    
+    
     figure_metadata = {
         'figure_id': '2.3.2_error_distribution_per_group',
         'analysis_module': '2. Diagnostics',
@@ -197,12 +248,27 @@ def error_per_group(df, group, path):
         'plot_info': {
             'x_axis_label': 'Mass',
             'y_axis_label': 'Error (ppm)',
-            'grouping_variables': {'hue': group[0],
-                                   'facet': group[0]},
-            'modifiable_aesthetics': {'hue': group[0],
-                                      'facet': group[0]},
+            'grouping_variables': {
+                'hue': {
+                    'variable': group[0],
+                    'values': error[group[0]].unique().tolist()
+                },
+                'facets': facet_for_metadata
+            },
+            'modifiable_aesthetics': {
+                'hue': {
+                    'variable': group[0],
+                    'values': error[group[0]].unique().tolist()
+                },
+                'facets': facet_for_metadata
+            },
             'units': 'none',
-            'legend': {'hue': group[0]}
+            'legend': {
+                'hue': {
+                    'variable': group[0],
+                    'values': error[group[0]].unique().tolist()
+                }
+            }
         },
         'data_source ': {
             'data': os.path.join(os.path.basename(path[0]), 'Report_processed.csv')

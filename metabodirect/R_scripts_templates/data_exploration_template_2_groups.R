@@ -252,7 +252,7 @@ walk2(wt_violins, plot_filenames, function(plot_obj, file){
                      'thermodynamic indexes across sample groups.'),
     figure_file = file,
     group_aes = c('fill', 'x'),
-    modifiable_aesthetics = list('facets'),
+    modifiable_aesthetics = list('fill', 'facets'),
     data_source = list(data = my_data.file,
                        sample_metadata = my_metadata.file),
     r_script_path = file.path(my_outdir, 'data_exploration.R'),
@@ -398,8 +398,11 @@ walk(groups, function(g){
     figure_title = paste0('Upset plot - ', g),
     x_axis_label = 'none',
     y_axis_label = 'Intersection size',
-    group_aes = list(none = 'none'),
-    modifiable_aesthetics = list('none'),
+    group_aes = list(group = list(
+      variable = g,
+      values = unique(df_longer[[g]])
+    )),
+    modifiable_aesthetics = list(none = 'none'),
     has_legend = FALSE,
     data_source = list(data = my_data.file,
                        sample_metadata = my_metadata.file),
@@ -479,20 +482,58 @@ walk(groups, function(g){
                        'C) Molecular class composition bars'),
       figure_file = filename,
       figure_title = paste0(val1, ' vs ', val2),
-      x_axis_label = list(A = 'O:C', B = 'Presence', C = 'Presence'),
-      y_axis_label = list(A = 'H:C', B = 'GFE', C = 'Percentage'),
-      group_aes = list(A = list(color = 'Presence'),
-                       B = list(fill = 'Presence',
-                                x = 'Presence'),
-                       C = list(x = 'Presence')),
-      modifiable_aesthetics = list('none'),
+      x_axis_label = list('Panel A' = 'O:C', 
+                          'Panel B' = 'Presence', 
+                          C = 'Presence'),
+      y_axis_label = list('Panel A' = 'H:C', 
+                          'Panel B' = 'GFE', 
+                          'Panel C' = 'Percentage'),
+      group_aes = list(
+        'Panel A' = list(
+          color = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          )
+        ),
+        'Panel B' = list(
+          color = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          ),
+          x = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          )
+        ),
+        'Panel C' = list(
+          x = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          )
+        )
+      ),
+      modifiable_aesthetics = list(none = 'none'),
       has_legend = FALSE,
-      custom_legend = list(A = list(variables = list(color = 'Presence'),
-                                    palette = list(color = 'Dark2')),
-                           B = list(variables = list(fill = 'Presence'),
-                                    palette = list(fill = 'Dark2')),
-                           C = list(variables = list(fill = 'Class'),
-                                    palette = list(fill = 'Set3'))),
+      custom_legend = list(
+        'Panel A' = list(
+          color = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          )
+        ),
+        'Panel B' = list(
+          color = list(
+            variable = 'Presence',
+            values = list(val1, val2, 'Shared')
+          )
+        ),
+        'Panel C' = list(
+          color = list(
+            variable = 'Class',
+            values = unique(class_comp$Class)
+          )
+        )
+      ),
       data_source = list(data = my_data.file, 
                          data2 = my_classcomp.file,
                          sample_metadata = my_metadata.file),
@@ -531,7 +572,10 @@ walk(groups, function(g){
       figure_title = paste0('Upset plot - ', val1, ' vs ', val2),
       x_axis_label = 'none',
       y_axis_label = 'Intersection size',
-      group_aes = list(color = g),
+      group_aes = list(group = list(
+        variable = g,
+        values = list(val1, val2)
+      )),
       modifiable_aesthetics = list('none'),
       has_legend = FALSE,
       data_source = list(data = my_data.file,
@@ -562,7 +606,10 @@ walk(groups, function(g){
       figure_title = paste0('Venn plot - ', val1, ' vs ', val2),
       x_axis_label = 'none',
       y_axis_label = 'none',
-      group_aes = list(none = 'none'),
+      group_aes = list(group = list(
+        variable = g,
+        values = list(val1, val2)
+      )),
       modifiable_aesthetics = list('none'),
       has_legend = FALSE,
       data_source = list(data = my_data.file,

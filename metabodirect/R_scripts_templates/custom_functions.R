@@ -206,9 +206,7 @@ plot_violin <- function(df, index, color_by, facet_by = NA, title,
       distinct()
   }
   
-  mult_groups <- length(unique(df_plot[[index]])) == 1
-  
-  if(calculate_stat_signif && mult_groups){
+  if(calculate_stat_signif){
     stat_formula <- as.formula(paste0(index, '~ ', color_by))
     if(pval < 0.05 || str_detect(pval, 'Error')){
       stat_df <- df_plot %>% 
@@ -308,7 +306,8 @@ plot_comp_bar <- function(df, composition, group, title){
     geom_col(color = 'black') +
     scale_fill_manual(values = colors) +
     labs(title = title,
-         y = 'Percentage') +
+         y = 'Percentage',
+         x = group[1]) +
     custom_theme()
   
   if(length(group) == 2){
@@ -700,12 +699,11 @@ get_kegg_compound_info <- function(cpd_id, mass, formula){
 
 descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
                          color_by = NA, val1 = NA, val2 = NA, ord_type = NA){
-  
   broad_des <- list(
     van_krevelen = glue::glue(
       "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
       "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
-      "Plot is colored based on {color_by}, and faceted by {group[1]}",
+      "Plot is colored based on {thermo_idx}, and faceted by {group[1]}.",
       color_by = color_by,
       group= group
     ),
@@ -771,6 +769,16 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
     )
   )
   
+  if(any(is.na(group))){
+    broad_des$van_krevelen <- glue::glue(
+      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
+      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
+      "Plot is colored based on {color_by}.",
+      color_by = color_by,
+      group= group
+    )
+  }
+  
   if(length(group) == 2){
     broad_des$van_krevelen <- glue::glue(broad_des$van_krevelen,
                                          ' and {group[2]}',
@@ -791,16 +799,6 @@ descriptions <- function(plot_type, thermo_idx = NA, group = NA, bar_group = NA,
                                           group = group)
   }
   
-  if(length(group) == 0){
-    broad_des$van_krevelen <- glue::glue(
-      "Van Krevelen diagrams are figures used to visualize FTICR-MS detected peaks ",
-      "based on their Oxygen to Carbon (O:C) and Hydrogen to Carbon (H:C) ratios. ",
-      "Plot is colored based on {color_by}.",
-      color_by = color_by,
-      group= group
-    )
-  }
-  
   return(broad_des[[plot_type]])
 }
 
@@ -818,7 +816,7 @@ vk_insight <- function(df_plot, color_by, facet_col = NA, facet_row = NA,
     points_insight <- counts %>% 
       mutate(insight = glue::glue('{n} masses as {Class}'))
     
-    points_insight <- paste0(points_insight$insight, collapse = ', ')
+    insight <- paste0(points_insight$insight, collapse = ', ')
     
   } else if(is.na(facet_row)) {
     points_insight <- map(unique(df_plot[[facet_col]]), function(fc){
@@ -924,11 +922,11 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
       ) %>% 
       ungroup() %>% 
       mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
-             insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
+             insight = glue::glue('For group {.data[[color_by]]}: the boxplot has a ',
                                   'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
-                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}'))
+                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}.'))
     
-    boxplot_insight <- paste0(boxplot_data$insight, collapse = '. ')
+    boxplot_insight <- paste0(boxplot_data$insight, collapse = ', ')
     
     sig_stat <- stat_df %>% 
       filter(p.adj < 0.05)
@@ -958,19 +956,14 @@ violin_insight <- function(df_plot, stat_df, color_by, facet_by, index){
         upper_whisker = max(.data[[index]][.data[[index]] <= upper_bound], na.rm = TRUE)
       )
     
-    boxplot_insight <- map(unique(df_plot[[facet_by]]), function(g){
-      temp <- boxplot_data %>% 
-        filter(.data[[facet_by]] == g) %>% 
-        mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
-               insight = glue::glue('For {color_by} {.data[[color_by]]} the boxplot has a ',
-                                    'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
-                                    'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}'))
-      
-      final <- glue::glue(
-        'For facet {g}: ',
-        paste0(temp$insight, collapse = '. ')
-      )
-    }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+    boxplot_insight <- boxplot_data %>% 
+      arrange(.data[[facet_by]], .data[[color_by]]) %>% 
+      mutate(across(c(q1, median, q3, lower_whisker, upper_whisker), ~round(.x, 3)),
+             insight = glue::glue('For facet {.data[[facet_by]]} - group {.data[[color_by]]}: the boxplot has a ',
+                                  'median of {median}, upper hinge of {q3}, lower hinge of {q1} ',
+                                  'upper whisker of {upper_whisker}, and lower whisker of {lower_whisker}'))
+    
+    boxplot_insight <- paste0(boxplot_insight$insight, collapse = '. ')
     
     sig_stat <- stat_df %>% 
       filter(p.adj < 0.05)
@@ -1007,10 +1000,10 @@ comp_bar_insight <- function(df_plot, group, composition){
       temp <- df_plot %>%
         filter(.data[[group]] == g) %>% 
         filter(!is.nan(Perc_count)) %>% 
-        mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
+        mutate(insight = glue::glue('{.data[[composition]]} = {round(Perc_count, 2)}%'))
       
       ins <- glue::glue(
-        'For group {g}: ',
+        'For group "{g}": ',
         paste0(temp$insight, collapse = ', ')
       )
     }) %>% reduce(`c`) %>% paste0(collapse = '. ')
@@ -1019,9 +1012,10 @@ comp_bar_insight <- function(df_plot, group, composition){
       
       sub_res <- map(unique(df_plot[[group[1]]]), function(g){
         temp <<- df_plot %>%
-          filter(.data[[group[1]]] == g) %>% 
+          filter(.data[[group[1]]] == g,
+                 .data[[group[2]]] == f) %>% 
           filter(!is.nan(Perc_count)) %>% 
-          mutate(insight = glue::glue('{round(Perc_count, 2)}% of masses are {.data[[composition]]}'))
+          mutate(insight = glue::glue('{.data[[composition]]} = {round(Perc_count, 2)}%'))
         
         subins <- glue::glue(
           'For group {g}: ',
@@ -1059,7 +1053,7 @@ upset_insight <- function(mass_list){
   top <- df_mass %>% 
     ungroup() %>% 
     slice_max(order_by = count, n = 5) %>% 
-    mutate(insight = glue::glue('{group} ({round(count/total_masses *100, 2)}%)'))
+    mutate(insight = glue::glue('{group} = {count} ({round(count/total_masses *100, 2)}%)'))
   
   insight <- glue::glue(
     'Most metabolites are found in sets: ',
@@ -1083,7 +1077,7 @@ venn_insight <- function(mass_list){
   total_masses <- sum(df_mass$count)
   
   top <- df_mass %>% 
-    mutate(insight = glue::glue('{group} ({round(count/total_masses *100, 2)}%)'))
+    mutate(insight = glue::glue('{group} = {count} ({round(count/total_masses *100, 2)}%)'))
   
   insight <- glue::glue(
     'Metabolite distribution: ',
@@ -1163,7 +1157,7 @@ diversity_insight <- function(df_plot, group_by){
       'For diversity index {idx}: ',
       paste0(temp$insight, collapse = ' ')
     )
-  }) %>% reduce(`c`) %>% paste0(collapse = '. ')
+  }) %>% reduce(`c`) %>% paste0(collapse = ' ')
 }
 
 ordination_insight <- function(ord_type, add_info, color_by, shape_by = NA){
@@ -1253,17 +1247,17 @@ insights <- function(contains, ...){
       "Compositional shifts reveal changes in organic matter origin and processing."
     ),
     Shannon = paste0(
-      "Measures both species (metabolite) richness and evenness by considering the abundance of each metabolite ", 
-      ", with higher values indicating greater diversity. Used to compare diversity between different communities or treatments"
+      "The Shannon diversity index measures both species (metabolite) richness and evenness by considering the abundance of each metabolite ", 
+      ", with higher values indicating greater diversity. Used to compare diversity between different communities or treatments."
     ),
     Gini_Simpson = paste0(
-      "Calculates the probability that two randomly selected individuals (metabolites) belong to different species, ",
+      "The Ginni-Simpson diversity index calculates the probability that two randomly selected individuals (metabolites) belong to different species, ",
       "ranging from 0-1 where 1 indicates maximum diversity. Used to compare community diversity while being less ",
       "sensitive to rare species than Shannon index, making it robust for comparing communities with different ",
       "sampling intensities."
     ),
     Chao1 = paste0(
-      "Estimates the true total species richness (including unobserved species) based on the number of singletons ",
+      "The Chao1 richness estimator estimates the true total species richness (including unobserved species) based on the number of singletons ",
       "and doubletons in the sample. Used to assess sampling completeness and estimate how many species might ",
       "be missed, particularly valuable when comparing communities with different sampling efforts or rare species."
     ),
@@ -1385,11 +1379,12 @@ update_figure_list <- function(figure_id = '',
 }
 
 fix_paths <- function(path){
-  components <- strsplit(path, "/")[[1]]
-  remaining_components <- components[-1]
-  fixed_path <- paste(remaining_components, collapse = "/")
-  
-  return(fixed_path)
+  ####### Not needed anymore
+  # components <- strsplit(path, "/")[[1]]
+  # remaining_components <- components[-1]
+  # fixed_path <- paste(remaining_components, collapse = "/")
+  # 
+  return(path)
 }
 
 save_figure_metadata <- function(
@@ -1435,18 +1430,100 @@ save_figure_metadata <- function(
   for(i in group_aes){
     if(all(i == 'facets')){
       if(!is.null(p@facet$params$facets)){
-        grouping_variables[[i]] <- list(wrap = names(p@facet$params$facets))
+        grouping_variables[[i]] <- list(
+          wrap = list(
+            variable = names(p@facet$params$facets),
+            values =  sort(unique(p@data[[names(p@facet$params$facets)]])) 
+          )
+        )
       } else {
-        grouping_variables[[i]] <- list(cols = names(p@facet$params$cols),
-                                        rows = names(p@facet$params$rows))
+        grouping_variables[[i]] <- list(
+          cols = list(
+            variable = names(p@facet$params$cols),
+            values =  p_build$layout$layout[[names(p@facet$params$cols)]] %>% unique() %>% as.list()
+            
+          ),
+          rows = list(
+            variable = names(p@facet$params$rows),
+            values =  p_build$layout$layout[[names(p@facet$params$rows)]] %>% unique() %>% as.list()
+          )
+        )
       }
     } else if(all(i %in% c('colour', 'color', 'shape', 'fill', 'x', 'y'))) {
-      grouping_variables[i] <- as.character(p@mapping[i]) %>% 
+      
+      variable <- as.character(p@mapping[i]) %>% 
         str_remove('~') %>% 
         str_remove('.data\\[\\["') %>% 
         str_remove('"\\]\\]')
+      
+      values <- p@data[[variable]]
+      
+      if(is.numeric(values)){
+        values = list(
+          min = min(values),
+          max = max(values)
+        )
+      } else {
+        values = sort(unique(values))
+      }
+      
+      grouping_variables[[i]] <- list(
+        variable = variable,
+        values = values
+      )
     } else {
       grouping_variables <- group_aes
+    }
+  }
+  
+  modifiable_aesthetics_ready <- list()
+  for(i in modifiable_aesthetics){
+    
+    if(all(i == 'facets')){
+      if(!is.null(p@facet$params$facets)){
+        modifiable_aesthetics_ready[[i]] <- list(
+          wrap = list(
+            variable = names(p@facet$params$facets),
+            values =  sort(unique(p@data[[names(p@facet$params$facets)]])) 
+          )
+        )
+      } else {
+        modifiable_aesthetics_ready[[i]] <- list(
+          cols = list(
+            variable = names(p@facet$params$cols),
+            values =  p_build$layout$layout[[names(p@facet$params$cols)]] %>% unique() %>% as.list()
+            
+          ),
+          rows = list(
+            variable = names(p@facet$params$rows),
+            values =  p_build$layout$layout[[names(p@facet$params$rows)]] %>% unique() %>% as.list()
+          )
+        )
+      }
+    } else if(all(i %in% c('colour', 'color', 'shape', 'fill', 'x', 'y'))) {
+      
+      variable <- as.character(p@mapping[i]) %>% 
+        str_remove('~') %>% 
+        str_remove('.data\\[\\["') %>% 
+        str_remove('"\\]\\]')
+      
+      values <- p@data[[variable]]
+      
+      if(is.numeric(values)){
+        values = list(
+          min = min(values),
+          max = max(values)
+        )
+      } else {
+        values = sort(unique(values))
+      }
+      
+      modifiable_aesthetics_ready[[i]] <- list(
+        variable = variable,
+        values = values
+      )
+    } else {
+      modifiable_aesthetics_ready <- modifiable_aesthetics
     }
   }
   
@@ -1455,10 +1532,27 @@ save_figure_metadata <- function(
     accepted_legend_vars <- c('colour', 'color', 'fill', 'shape')
     for(m in names(p@mapping)){
       if(m %in% accepted_legend_vars){
-        legend_variables[m] <- as.character(p@mapping[m]) %>% 
+        
+        variable <- as.character(p@mapping[m]) %>% 
           str_remove('~') %>% 
           str_remove('.data\\[\\["') %>% 
           str_remove('"\\]\\]')
+        
+        values <- p@data[[variable]]
+        
+        if(is.numeric(values)){
+          values = list(
+            min = min(values),
+            max = max(values)
+          )
+        } else {
+          values = sort(unique(values))
+        }
+        
+        legend_variables[[m]] <- list(
+          variable = variable,
+          values = values
+        )
       } 
     }
   } else {
@@ -1491,12 +1585,9 @@ save_figure_metadata <- function(
       x_axis_label = x_axis_label,
       y_axis_label = y_axis_label,
       grouping_variables = grouping_variables,
-      modifiable_aesthetics = modifiable_aesthetics,
+      modifiable_aesthetics = modifiable_aesthetics_ready,
       units = units,
-      legend = list(
-        variables = legend_variables,
-        palette = palette
-      )
+      legend = legend_variables
     ),
     data_source = data_source_fixed,
     script_path = list(script_path = fix_paths(r_script_path),
