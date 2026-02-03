@@ -1414,6 +1414,8 @@ save_figure_metadata <- function(
   # Getting information from the plot
   p <- plot_obj$plot
   
+  p_build <- try(ggplot_build(p))
+  
   if(is.na(figure_title)){
     figure_title <- p@labels$title
   }
