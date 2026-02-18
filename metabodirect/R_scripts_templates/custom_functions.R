@@ -592,6 +592,8 @@ plot_rank_abundance <- function(mat){
     mutate(position = n():1,
            presence_perc = presence/nrow(mat)*100)
   
+  write_csv(df_plot, file.path(my_outdir, "4.2.1_rank_abundance_plot.csv"))
+  
   plot <- ggplot(df_plot,
                  aes(x = position,
                      y = intensity_sums,
@@ -620,7 +622,7 @@ calculate_diversity_index <- function(mat, norm_mat){
                       Gini_Simpson = diversity(norm_mat, index = 'simpson'),
                       Chao1 = estimateR(round(mat))['S.chao1',])  
   
-  filename <- file.path(my_outdir, '2.1_abundance_diversity_index.csv')
+  filename <- file.path(my_outdir, '4.3.1.1_abundance_diversity_index.csv')
   write_csv(diversity, filename)
   
   final_df <- diversity %>% 
@@ -655,7 +657,7 @@ calculate_functional_div_index <- function(fun_df, mat){
                                  Insaturation_and_aromaticity = 
                                    rao.diversity(mat, ia_traits)$FunRao) 
   
-  filename <- file.path(my_outdir, '3.1_functional_diversity.csv')
+  filename <- file.path(my_outdir, '4.3.2.1_functional_diversity.csv')
   write_csv(functional_diversity, filename)
   
   final_df <- functional_diversity %>% 

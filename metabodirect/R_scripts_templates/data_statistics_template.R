@@ -113,7 +113,7 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = nmds_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = nmds_plot,  
+  plot_obj = nmds_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '5. Statistics',
   figure_type = 'Ordination plot',
@@ -123,7 +123,8 @@ save_figure_metadata(
   y_axis_label = 'NMDS2',
   group_aes = c('colour', 'shape'),
   modifiable_aesthetics = c('colour', 'shape'),
-  data_source = list(data = my_matrix.file,
+  data_source = list(raw_data = my_matrix.file,
+                     ordination_scores = file.path(my_outdir, "5.1.3_nmds_scores.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_statistics.R'),
   functions_used = list(calculate = c('calculate_nmds()', 'calculate_permanova()'),
@@ -152,6 +153,9 @@ ggsave(filename, pca_class$scree_plot, dpi = 300, width = 6, height = 4.5)
 
 filename <- file.path(my_outdir, '5.2.3_pca_coordinates_by_compound_class.csv')
 write_csv(pca_class$coordinates, filename)
+
+filename <- file.path(my_outdir, "5.2.4_pca_loadings_by_compound_class.csv")
+write_csv(pca_class$loadings, filename)
 
 ## PCA_plot Compound classes ----
 
@@ -197,17 +201,19 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = pca_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = pca_plot,  
+  plot_obj = pca_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '5. Statistics',
   figure_type = 'Ordination plot',
-  caption = "PCA ordination plot based of compound classes",
+  caption = "PCA ordination plot based on the relative abundance of the predicted molecular classes",
   figure_file = filename,
   x_axis_label = pc1,
   y_axis_label = pc2,
   group_aes = c('colour', 'shape'),
   modifiable_aesthetics = c('colour', 'shape'),
-  data_source = list(data = my_classcomp.file,
+  data_source = list(raw_data = my_classcomp.file,
+                     ordination_scores = file.path(my_outdir, "5.2.3_pca_coordinates_by_compound_class.csv"),
+                     ordination_loadings = file.path(my_outdir, "5.2.4_pca_loadings_by_compound_class.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_statistics.R'),
   functions_used = list(calculate = 'calculate_pca()',
@@ -249,6 +255,9 @@ ggsave(filename, pca_molchar$scree_plot, dpi = 300, width = 6, height = 4.4)
 
 filename <- file.path(my_outdir, '5.3.3_pca_coordinates_by_molecular_characteristics.csv')
 write_csv(pca_molchar$coordinates, filename)
+
+filename <- file.path(my_outdir, "5.3.4_pca_loadings_by_molecular_characteristics.csv")
+write_csv(pca_molchar$loadings, filename)
 
 ## PCA_plot Compound classes ----
 
@@ -294,17 +303,19 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = pca_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = pca_plot,  
+  plot_obj = pca_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '5. Statistics',
   figure_type = 'Ordination plot',
-  caption = "PCA ordination plot based of molecular characteristics",
+  caption = "PCA ordination plot based on the abundance-weighted average of the distinct biochemical indexes (molecular characteristics) calculated for the detected compounds",
   figure_file = filename,
   x_axis_label = pc1,
   y_axis_label = pc2,
   group_aes = c('colour', 'shape'),
   modifiable_aesthetics = c('colour', 'shape'),
-  data_source = list(data = my_report.file,
+  data_source = list(raw_data = my_report.file,
+                     ordination_scores = file.path(my_outdir, "5.3.3_pca_coordinates_by_molecular_characteristics.csv"),
+                     ordination_loadings = file.path(my_outdir, "5.3.4_pca_loadings_by_molecular_characteristics.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_statistics.R'),
   functions_used = list(calculate = 'calculate_pca()',

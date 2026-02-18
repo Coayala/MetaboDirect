@@ -30,10 +30,10 @@ def peaks_per_sample(df, metadata, group, path):
                     data=stats_per_sample,
                     order=stats_per_sample.sort_values(by=[group[0], 'Counts'])['SampleID'],
                     saturation=0.7,
-                    errcolor='.2',
+                    err_kws={'color': '.2',
+                             'linewidth': 1.25},
                     errorbar="sd",
                     capsize=0.2,
-                    errwidth=1.25,
                     dodge=False)
 
     plt.setp(p.get_xticklabels(), rotation=45, size=8, ha='right')
@@ -123,10 +123,10 @@ def formula_per_sample(df, metadata, group, path):
                     data=stats_per_sample,
                     order=stats_per_sample.sort_values(by=[group[0], 'Counts'])['SampleID'],
                     saturation=0.7,
-                    errcolor='.2',
+                    err_kws={'color': '.2',
+                             'linewidth': 1.25},
                     errorbar="sd",
                     capsize=0.2,
-                    errwidth=1.25,
                     dodge=False)
 
     plt.setp(f.get_xticklabels(), rotation=45, size=8, ha='right')

@@ -108,7 +108,7 @@ walk2(vk_plots, plot_filenames, function(plot_obj, file){
                      figure_title = plot_obj$plot$labels$title)
   
   save_figure_metadata(
-    plot_obj = plot_obj,  
+    plot_obj = plot_obj,
     figure_id = str_remove(basename(file), '.png'),
     analysis_module = '3. Exploratory',
     figure_type = 'van Krevelen diagram',
@@ -150,7 +150,7 @@ walk2(density_plots, plot_filenames, function(plot_obj, file){
                      figure_title = plot_obj$plot$labels$title)
   
   save_figure_metadata(
-    plot_obj = plot_obj,  
+    plot_obj = plot_obj,
     figure_id = str_remove(basename(file), '.png'),
     analysis_module = '3. Exploratory',
     figure_type = 'Density plot',
@@ -193,15 +193,15 @@ walk2(violin_plots, plot_filenames, function(plot_obj, file){
                      figure_title = plot_obj$plot$labels$title)
   
   save_figure_metadata(
-    plot_obj = plot_obj,  
+    plot_obj = plot_obj,
     figure_id = str_remove(basename(file), '.png'),
     analysis_module = '3. Exploratory',
     figure_type = 'Violin and box plot',
     caption = paste0('Violin and boxplots showing differences in thermodynamic indexes ',
                      'across sample groups.'),
     figure_file = file,
-    group_aes = c('facets', 'fill', 'x'),
-    modifiable_aesthetics = list('fill', 'facets'),
+    group_aes = c('fill', 'x'),
+    modifiable_aesthetics = list('fill'),
     data_source = list(data = my_data.file,
                        sample_metadata = my_metadata.file),
     r_script_path = file.path(my_outdir, 'data_exploration.R'),
@@ -240,7 +240,7 @@ walk2(wt_violins, plot_filenames, function(plot_obj, file){
                      figure_title = plot_obj$plot$labels$title)
   
   save_figure_metadata(
-    plot_obj = plot_obj,  
+    plot_obj = plot_obj,
     figure_id = str_remove(basename(file), '.png'),
     analysis_module = '3. Exploratory',
     figure_type = 'Violin and box plot',
@@ -248,7 +248,7 @@ walk2(wt_violins, plot_filenames, function(plot_obj, file){
                      'thermodynamic indexes across sample groups.'),
     figure_file = file,
     group_aes = c('fill', 'x'),
-    modifiable_aesthetics = list('facets'),
+    modifiable_aesthetics = list('fill'),
     data_source = list(data = my_data.file,
                        sample_metadata = my_metadata.file),
     r_script_path = file.path(my_outdir, 'data_exploration.R'),
@@ -264,7 +264,7 @@ walk2(wt_violins, plot_filenames, function(plot_obj, file){
 ## Plot - Class comp bar ----
 
 class_bar <- plot_comp_bar(class_comp, composition = 'Class',
-                           group = c(group1), title = 'Molecular Class')
+                           group = c(group1), title = 'Molecular Class Composition')
 
 filename <- file.path(my_outdir, '3.5_Composition_by_class.png')
 ggsave(filename, class_bar$plot, dpi = 300, width = 8, height = 8)
@@ -273,11 +273,11 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = class_bar$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = class_bar,  
+  plot_obj = class_bar,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '3. Exploratory',
   figure_type = 'Composition bar',
-  caption = 'Stacked bar plot showing the molecular class composition of the detected masses',
+  caption = 'Stacked bar plot showing the relative abundances of molecular class composition of the detected masses per sample',
   figure_file = filename,
   group_aes = c('x'),
   modifiable_aesthetics = list('x'),
@@ -304,11 +304,11 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = el_bar$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = el_bar,  
+  plot_obj = el_bar,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '3. Exploratory',
   figure_type = 'Composition bar',
-  caption = 'Stacked bar plot showing the elemental composition of the detected masses',
+  caption = 'Stacked bar plot showing the relative abundances of the different elemental compositions of the detected masses per sample',
   figure_file = filename,
   group_aes = c('x'),
   modifiable_aesthetics = list('x'),
@@ -350,7 +350,7 @@ walk(groups, function(g){
                      figure_title = vk_plot$plot$labels$title)
   
   save_figure_metadata(
-    plot_obj = vk_plot,  
+    plot_obj = vk_plot,
     figure_id = str_remove(basename(filename), '.png'),
     analysis_module = '3. Exploratory',
     figure_type = 'van Krevelen diagram',
@@ -571,7 +571,7 @@ walk(groups, function(g){
       group_aes = list(group = list(
         variable = g,
         values = list(val1, val2)
-      ))
+      )),
       modifiable_aesthetics = list('none'),
       has_legend = FALSE,
       data_source = list(data = my_data.file,

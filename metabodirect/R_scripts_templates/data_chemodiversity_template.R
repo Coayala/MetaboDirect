@@ -80,21 +80,29 @@ richness_plot <- plot_richness(richness)
 filename <- file.path(my_outdir, '4.1_Diversity_plot_richness.png')
 ggsave(filename, richness_plot$plot, dpi = 300, width = 12, height = 6)
 
+
+richness_df <- as_tibble(richness$perm, rownames = "Sites") %>%
+  pivot_longer(!Sites, names_to = "permutation", values_to = "Richness") %>%
+  mutate(Sites = as.numeric(Sites))
+
+write_csv(richness_df, file.path(my_outdir, "4.1.1_richness_permutations.csv"))
+
 update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = richness_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = richness_plot,  
+  plot_obj = richness_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '4. Chemodiversity',
   figure_type = 'Richness plot',
   caption = paste0('Species (richness) accumulation plot showing how many metabolites ',
-                   'are detected based on samplimg effort'),
+                   'are detected based on sampling effort'),
   figure_file = filename,
   group_aes = list(none = 'none'),
   modifiable_aesthetics = list(none = 'none'),
   has_legend = FALSE,
   data_source = list(data = my_data.file,
+                     processed_data = file.path(my_outdir, "4.1.1_richness_permutations.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),
   functions_used = list(plot = 'plot_richness()'),
@@ -111,19 +119,20 @@ filename <- file.path(my_outdir, '4.2_Diversity_plot_rank_abundance.png')
 ggsave(filename, rank_plot$plot, dpi = 300, width = 12, height = 6)
 
 update_figure_list(figure_id = str_remove(basename(filename), '.png'),
-                   figure_title = richness_plot$plot$labels$title)
+                   figure_title = rank_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = rank_plot,  
+  plot_obj = rank_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '4. Chemodiversity',
   figure_type = 'Rank abundance plot',
   caption = paste0('Rank abundance plot showing the distribution of presence vs ',
-                   'relative abundance of metabolites'),
+                   'total relative abundance of metabolites'),
   figure_file = filename,
   group_aes = list(none = 'none'),
   modifiable_aesthetics = list(none = 'none'),
   data_source = list(data = my_data.file,
+                     processed_data = file.path(my_outdir, "4.2.1_rank_abundance_plot.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),
   functions_used = list(plot = 'plot_rank_abundance()'),
@@ -147,7 +156,7 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = diversity_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = diversity_plot,  
+  plot_obj = diversity_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '4. Chemodiversity',
   figure_type = 'Diversity plot',
@@ -157,6 +166,7 @@ save_figure_metadata(
   group_aes = c('fill', 'x'),
   modifiable_aesthetics = c('fill', 'x'),
   data_source = list(data = my_data.file,
+                     diversity_index_data = file.path(my_outdir, "4.3.1.1_abundance_diversity_index.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),
   functions_used = list(calculate = 'calculate_diversity_index()',
@@ -182,17 +192,18 @@ update_figure_list(figure_id = str_remove(basename(filename), '.png'),
                    figure_title = functional_div_plot$plot$labels$title)
 
 save_figure_metadata(
-  plot_obj = functional_div_plot,  
+  plot_obj = functional_div_plot,
   figure_id = str_remove(basename(filename), '.png'),
   analysis_module = '4. Chemodiversity',
   figure_type = 'Diversity plot',
   caption = paste0("Functional based diversity metrics (Rao's quadratic entropy) based on: ",
-                   'Elemental composition, NOSC (reactivity) and ',
-                   'DBE/AI_mod (insaturation_and_aromaticity'),
+                   'Elemental composition (elemental counts), NOSC (reactivity) and ',
+                   'DBE/AI_mod (insaturation_and_aromaticity)'),
   figure_file = filename,
   group_aes = c('fill', 'x'),
   modifiable_aesthetics = c('fill', 'x'),
   data_source = list(data = my_data.file,
+                     diversity_index_data = file.path(my_outdir, "4.3.2.1_functional_diversity.csv"),
                      sample_metadata = my_metadata.file),
   r_script_path = file.path(my_outdir, 'data_chemodiversity.R'),
   functions_used = list(calculate = 'calculate_functional_div_index()',
@@ -213,6 +224,6 @@ index_figures[[3]] <- list(
 )
 
 write_json(index_figures, 
-           file.path(output_dir, 'index.json'), 
+           file.path(output_dir, 'index.json'),
            auto_unbox = TRUE, 
            pretty = TRUE)
