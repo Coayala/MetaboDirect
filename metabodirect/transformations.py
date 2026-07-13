@@ -53,10 +53,15 @@ def calculate_transformations(df, keys, path, err_thresh=0.001):
         # to find the original masses.
         X, Y = np.indices((len(mz_list), len(mz_list)))
 
-        # Now, for all mass differences (in the range of 1-766 Da),
-        # create a list of (delta, src_idx, target_idx) and sort by mass delta.
-        valid_locs = np.where((diffs > 1) & (diffs < 766), True, False)
+        # Build valid range from the actual key masses so all transformations
+        # (including sub-1 Da entries) are considered.
+        # This updated code will detect the masses range automatically instead of harcoded
+        key_masses = [mf for _, _, _, mf in keys]
+        min_mf = min(key_masses) - err_thresh
+        max_mf = max(key_masses) + err_thresh
+        valid_locs = np.where((diffs >= min_mf) & (diffs <= max_mf), True, False)
         candidates = zip(diffs[valid_locs], X[valid_locs], Y[valid_locs])
+
 
         # Sort by mass delta (first element in tuple).
         # Using operator.itemgetter is a skosh faster than
